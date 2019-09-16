@@ -1,0 +1,398 @@
+<!doctype html>
+<!-- Modeled after the following standard. -->
+<!--
+  Material Design Lite
+  Copyright 2015 Google Inc. All rights reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License
+-->
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <title>-tsuki moji</title>
+  <!--  - A Love, Letter -->
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" sizes="192x192" href="">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Material Design Lite">
+  <link rel="apple-touch-icon-precomposed" href="">
+
+  <!-- Tile icon for Win8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="">
+  <meta name="msapplication-TileColor" content="#101">
+
+  <link rel="shortcut icon" href="assets/images/favicon.png">
+
+  <!-- Vue -->
+  <!-- development version, includes helpful console warnings -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+  <!-- production version, optimized for size and speed -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+  <!-- Vuetify -->
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+
+  <!-- Vuesax -->
+  <link href="https://cdn.jsdelivr.net/npm/vuesax/dist/vuesax.css" rel="stylesheet">
+
+  <!-- Feather Icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
+
+  <!-- Animate CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.5.2/animate.min.css">
+
+  <!-- Material -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU"
+    crossorigin="anonymous">
+  <!-- jQuery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.1.0/gl-matrix.js'></script>
+
+  <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
+  <!-- asd
+    <link rel="canonical" href="http://www.example.com/">
+    -->
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.grey-orange.min.css">
+  <link rel="stylesheet" href="/styles/css/loader.css">
+  <link rel="stylesheet" href="/styles/css/styles.css">
+  <link rel="stylesheet" href="/styles/css/anime.css">
+  <link rel="stylesheet" href="/styles/css/note.css">
+
+  <style>
+    #key {
+      position: fixed;
+      display: block;
+      right: 0;
+      bottom: 0;
+      margin-right: 40px;
+      margin-bottom: 40px;
+      z-index: 900;
+    }
+    
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
+
+</head>
+
+<body>
+  <div id="loader-wrapper">
+    <div id="lil-loader">
+      <span><a href="#">Hear We Are.</a></span>
+    </div>
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+  </div>
+  <canvas id="star-canvas"></canvas>
+  <!-- Note to self: Im still unsure if writing a website while thinking webapp is the idea. 
+      Alas, It's all I know at present.
+-->
+  <!-- App ID -->
+  <div id="moji" class="moji ">
+    <br>
+    <!-- NOTE: OS Header Bar -->
+    <vs-navbar v-model="activeItem" class="nabarx" :color="colorx" text-color="whitesmoke" active-text-color="rgba(255,255,255,1)">
+      &nbsp;
+      <vs-navbar-title>
+        <i class="fas fa-ankh"></i>
+      </vs-navbar-title>
+
+      <!-- Index -->
+      <vs-navbar-item index="0">
+        <vs-dropdown vs-trigger-click>
+          Index
+          <vs-dropdown-menu>
+            <vs-dropdown-item>
+              ...
+            </vs-dropdown-item>
+          </vs-dropdown-menu>
+        </vs-dropdown>
+      </vs-navbar-item>
+
+      <!-- Solutions -->
+      <vs-navbar-item index="1">
+        <a href="#">Solutions</a>
+      </vs-navbar-item>
+      <!-- About -->
+      <vs-navbar-item index="2">
+        <a href="#">About</a>
+      </vs-navbar-item>
+
+      <vs-spacer></vs-spacer>
+      <!-- Bluetooth -->
+      <vs-navbar-item index="3">
+        <v-icon small color="white darken-2">bluetooth</v-icon>
+      </vs-navbar-item>
+      <!-- Network -->
+      <vs-navbar-item index="4">
+        <v-icon small color="white darken-2">network_wifi</v-icon>
+        <!-- <v-icon small color="white darken-2">signal_cellular_null</v-icon> -->
+      </vs-navbar-item>
+      <!-- Volume -->
+      <vs-navbar-item index="5">
+        <v-icon small color="white darken-2">volume_off</v-icon>
+      </vs-navbar-item>
+      <!-- Battery -->
+      <vs-navbar-item index="6">
+        <v-icon small color="white darken-2">battery_full</v-icon>
+      </vs-navbar-item>
+      <!-- Time -->
+      <vs-navbar-item index="7">
+        <span style="color: whitesmoke" id="clock"></span>
+      </vs-navbar-item>
+      <!-- Search -->
+      <vs-navbar-item index="8">
+        <v-icon small color="white darken-2">search</v-icon>
+      </vs-navbar-item>
+      <!-- S.I. :: Soon Enough -->
+      <vs-navbar-item index="9">
+        <vs-avatar src="/assets/media/medCat.png" size="small" />
+      </vs-navbar-item>
+      <!-- Menu -->
+      <vs-navbar-item index="10">
+        <v-icon small color="white darken-2">menu</v-icon>
+      </vs-navbar-item>
+      &nbsp;
+      &nbsp;
+    </vs-navbar>
+
+    <!-- NOTE: OS Header Bar End. -->
+
+
+
+    <div class="splashBox">
+      <vs-popup title="" style="color:rgb(255,255,255)" :background-color-popup="popColor" title="background"
+        :active.sync="popOut">
+
+        <vs-row vs-justify="center">
+          <vs-col vs-type="flex" vs-justify="center" vs-align="center" vs-w="6">
+            <vs-card>
+              <vs-tooltip text="...namasté.">
+                <div slot="header">
+                  <span id="testSpan">{{ testSpan }}</span>
+                </div>
+              </vs-tooltip>
+              <!-- Contact Chip -->
+
+              <vs-tooltip text="The Author">
+                <vs-chip color="RGB(26, 3, 23, 0.5)" @click.native="popIn=true">
+                  <vs-avatar @click="popOut=false" src="https://www.gravatar.com/avatar/480dc17bd67917b2a5bf68b246a5c197?s=600">
+                    <span color="white" id="typing">...</span>
+                </vs-chip>
+
+              </vs-tooltip>
+
+              <div>
+                <vs-tooltip text="The Stack: ">
+                  <vs-divider position="center">
+                    <span color="white" id="typing">...</span>
+                  </vs-divider>
+                </vs-tooltip>
+
+                <vs-tooltip text="...compiling.">
+                  <vs-progress class="body-pulse" :height="4" indeterminate color="RGB(26, 3, 23, 0.7)"></vs-progress>
+                </vs-tooltip>
+
+              </div>
+              <div slot="footer">
+                <vs-row vs-justify="flex-end">
+                  <!-- <v-btn @click="linkUp()" flat icon color="">
+                    <i class="material-icons" role="presentation">hourglass_empty</i>
+                  </v-btn> -->
+
+                  <!-- <v-btn id="showSnackBtn" color="RGB(26, 3, 23, 0.7)" flat icon color="">
+                    <i data-feather="arrow-up"></i>
+                  </v-btn> -->
+
+                </vs-row>
+              </div>
+            </vs-card>
+          </vs-col>
+        </vs-row>
+
+        <div id="snackbar-wrap" class="mdl-js-snackbar mdl-snackbar">
+          <div class="mdl-snackbar__text"></div>
+          <button class="mdl-snackbar__action" type="button"></button>
+        </div>
+
+        <!-- Inner Pop -->
+        <vs-popup class="" title="" :background-color-popup="popColor" :active.sync="popIn">
+
+          <vs-card actionable class="cardx">
+            <div slot="header">
+              <p>...soon enough.</p>
+            </div>
+
+            <div slot="media">
+              <vs-tooltip text="...poetry in progress.">
+                <!-- the termynal container -->
+                <div id="termynal"></div>
+              </vs-tooltip>
+            </div>
+
+            <div>
+              <span>Isreal, The Infamous UnderCat.</span>
+            </div>
+            <div slot="footer">
+              <vs-row vs-justify="flex-end">
+
+                <v-btn href="https://github.com/SourceAura/" flat icon color="">
+                  <vs-tooltip text="GitHub">
+                    <i data-feather="github"></i>
+                  </vs-tooltip>
+                </v-btn>
+                <v-btn href="https://twitter.com/SourceAura" flat icon color="">
+                  <vs-tooltip text="Twitter">
+                    <i data-feather="twitter"></i>
+                  </vs-tooltip>
+                </v-btn>
+                <v-btn href="https://github.com/SourceAura/sourceaura.github.io" flat icon color="">
+                  <vs-tooltip text="Source">
+                    <i data-feather="code"></i>
+                  </vs-tooltip>
+                </v-btn>
+              </vs-row>
+            </div>
+          </vs-card>
+
+        </vs-popup>
+
+      </vs-popup>
+
+      <p color="white" id="typing">...</p>
+    </div>
+
+    <!-- Key -->
+    <v-btn id="key" @click="popOut=true" class="nav__button mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon body-pulse">
+      <i class="material-icons" role="presentation">fingerprint</i>
+    </v-btn>
+  </div>
+
+
+</body>
+
+<script src="src/ui.js"></script>
+<script src="src/loader.js"></script>
+<script src="src/through-space.js"></script>
+<script src="src/vendor/anime.min.js"></script>
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuesax/dist/vuesax.umd.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+<script>
+  feather.replace()
+</script>
+
+<script>
+  var app = new Vue({
+    el: '#moji',
+    data: {
+      length: 3,
+      window: 0,
+      colorx: "rbga(0, 0, 0, 0)",
+      indexActive: 0,
+      keyMsg: '🔐 ' + 'Under ReConstruction.',
+      popColor: "RGB(26, 3, 23, 0.5)",
+      activePrompt: false,
+      popOut: false,
+      popIn: false,
+      mainColor: "RGB(26, 3, 23)",
+      status: 'Namasté',
+      testSpan: '...'
+
+    },
+    created() {
+      // NOTE: UI Updater.
+
+    },
+    updated() {
+
+    },
+    methods: {
+
+      popEx() {
+        popOut = false,
+          popIn = true
+
+      },
+      linkUp() {
+
+
+        let color = `RGB(26, 3, 23, 0.5)`
+        // Time
+        let thisTime = Date.now()
+        // Signal
+
+        // Battery - Energy
+
+        this.$vs.notify({
+          title: 'Namasté: ',
+          position: 'top-center',
+          text: 'Exact Moment: ' + thisTime,
+          color: color
+        })
+
+      }
+    }
+  })
+
+
+
+  (function () {
+    'use strict';
+    var snackWrap = document.querySelector('#snackbar-wrap');
+    var showSnackBtn = document.querySelector('#showSnackBtn');
+    var handler = function (event) {
+      showSnackBtn.style.backgroundColor = '';
+    };
+    showSnackBtn.addEventListener('click', function () {
+      'use strict';
+
+      var data = {
+        message: '🤘 - The Under:Cat - 🖖',
+        timeout: 2100,
+        actionHandler: handler,
+        actionText: 'X'
+      };
+      snackWrap.MaterialSnackbar.showSnackbar(data);
+    });
+  }());
+  // ...
+</script>
+
+
+
+
+</html>
