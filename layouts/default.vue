@@ -1,29 +1,28 @@
 <template>
   <div>
-    <TheNavBar/>
+    <TheNavBar />
     <Nuxt />
     <TheFooter />
   </div>
 </template>
 
 <script>
-export default {
-}
+export default {};
 </script>
 
 <style>
 html {
-  @apply bg-gray-800 font-sans;
+  @apply bg-black font-sans;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
 }
 
 ::-moz-selection {
-    @apply bg-hot-pink text-white;
+  @apply bg-hot-pink text-white;
 }
 ::selection {
-    @apply bg-hot-pink text-white;
+  @apply bg-hot-pink text-white;
 }
 
 /* Page-transition styles must be global */
@@ -110,7 +109,5 @@ html {
 }
 </style>
 <script>
-
-export default {
-}
+export default {};
 </script>

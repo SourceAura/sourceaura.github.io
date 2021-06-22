@@ -1,8 +1,9 @@
 <template>
   <div>
     <HeroSection/>
+    <LazyRecentBlog v-if="$config.log.enabled && posts" :posts="posts"/>
+    <!--  -->
     <GithubCalendar v-if="$config.social.github"/>
-    <LazyRecentBlog v-if="$config.blog.enabled && posts" :posts="posts"/>
   </div>
 </template>
 
@@ -10,7 +11,7 @@
 export default {
   head() {
     return {
-      title: `home -- ${this.$config.name}`,
+      title: `Home -- ${this.$config.name}`,
     }
   },
   data() {

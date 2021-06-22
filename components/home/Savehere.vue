@@ -12,8 +12,8 @@
               <div>
                 <!-- the chip -->
                 <nuxt-link
-                  v-if="$config.log.enabled"
-                  :to="localePath('/log')"
+                  v-if="$config.blog.enabled"
+                  :to="localePath('/blog')"
                   class="group inline-flex hover:bg-black items-center text-white bg-gray-900 rounded-full p-0.5 pr-2 sm:text-base lg:text-sm xl:text-base hover:text-gray-200"
                 >
                   <span
@@ -43,18 +43,25 @@
                 >
                   <span class="md:block">{{ $t("hero.iAm") }}</span>
                   <vue-typer :text="$t('hero.terms')"></vue-typer>
+                  <!-- <div>
+                    <vue-typer :text="$t('hero.terms')"></vue-typer>
+                  </div> -->
                 </h1>
                 <p class="mt-3 text-base text-gray-300 sm:mt-5">
                   {{ $t("hero.aboutMe") }}
                 </p>
-                <!-- <p
+                <p
                   v-if="$config.workedAt.enabled"
                   class="mt-8 text-sm text-white lowercase tracking-wide font-semibold sm:mt-10"
                 >
                   The Stack:
-                </p> -->
-                <div></div>
-                <!-- <div
+                </p>
+                <div>
+                  <v-icon>
+                    mdi-language-javascript
+                  </v-icon>
+                </div>
+                <div
                   v-if="$config.workedAt.enabled"
                   class="mt-5 w-full sm:mx-auto lg:ml-0"
                 >
@@ -79,37 +86,11 @@
                       </a>
                     </div>
                   </div>
-                </div> -->
+                </div>
               </div>
             </div>
             <div class="mt-8 px-5 sm:mt-16 lg:mt-0 lg:col-span-6">
-              <vs-card type="3">
-                <template #title>
-                  <h3>Now Playing:</h3>
-                </template>
-                <template #img>
-                  <img :src="$config.image" alt="" />
-                </template>
-                <template #text>
-                  <p>
-                    Play on Playa ^_^
-                  </p>
-                </template>
-                <template #interactions>
-                  <!-- Base Stack Icons -->
-                  <vs-button danger icon>
-                    <i class="bx bx-heart"></i>
-                  </vs-button>
-                  <vs-button class="btn-chat" shadow primary>
-                    <i class="bx bx-chat"></i>
-                    <span class="span">
-                      54
-                    </span>
-                  </vs-button>
-                </template>
-              </vs-card>
-
-              <!-- <div
+              <div
                 class="flex-shrink-0 w-full sm:mx-auto flex flex-1 items-center justify-center rounded-lg sm:overflow-hidden"
               >
                 <img
@@ -117,7 +98,7 @@
                   :src="$config.image"
                   :alt="$config.name"
                 />
-              </div> -->
+              </div>
             </div>
           </div>
         </div>

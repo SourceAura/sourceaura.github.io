@@ -6,7 +6,7 @@
         404 not found
       </h2>
       <p class="mt-2 px-2 max-w-2xl mx-auto text-sm leading-7 text-gray-400">
-        probably travolta should head back home
+        probably travolta should head back home 
       </p>
     </div>
     <video data-aos="zoom-in" class="mt-10 relative shadow-xl rounded-2xl z-30" width="500" autoplay loop muted playsinline>

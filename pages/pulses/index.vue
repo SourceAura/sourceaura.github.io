@@ -3,10 +3,10 @@
   <div data-aos="fade-up" class="relative max-w-7xl py-6 mx-auto">
     <div class="text-center">
       <h2 class="text-2xl tracking-tight font-extrabold text-gray-200">
-        {{ $t('uses.header') }}
+        {{ $t('pulses.header') }}
       </h2>
       <p class="mt-2 px-2 max-w-2xl mx-auto text-sm leading-7 text-gray-400">
-        {{ $t('uses.subtext') }}
+        {{ $t('pulses.subtext') }}
       </p>
     </div>
   </div>
@@ -41,7 +41,7 @@
     </div>
     <div>
       <dl>
-        <div v-for="(item, index) in $config.uses.meta" :class="index%2 === 0 ? 'bg-gray-800' : 'bg-gray-900'" class="px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+        <div v-for="(item, index) in $config.pulses.meta" :class="index%2 === 0 ? 'bg-gray-800' : 'bg-gray-900'" class="px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm leading-5 font-medium text-gray-500">
             {{ item.title }}
           </dt>
@@ -59,7 +59,7 @@
 export default {
   head() {
     return {
-      title: `uses -- ${this.$config.name}`
+      title: `pulses -- ${this.$config.name}`
     }
   },
   data() {
