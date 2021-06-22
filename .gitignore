@@ -28,7 +28,7 @@ pids
 .nuxt
 
 # Nuxt generate
-dist
+# dist
 
 # vuepress build output
 .vuepress/dist
@@ -80,3 +80,5 @@ typings/
 READMECap.md
 
 CONTRIBUTING.md
+
+.DS_Store
