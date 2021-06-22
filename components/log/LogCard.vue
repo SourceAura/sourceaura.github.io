@@ -1,5 +1,5 @@
 <template>
-  <nuxt-link :to="localePath(`/blog/${post.slug}`)" class="flex transition duration-700 ease-in-out transform hover:translate-y-0.5 hover:scale-105 flex-col rounded-xl shadow-lg overflow-hidden" >
+  <nuxt-link :to="localePath(`/log/${post.slug}`)" class="flex transition duration-700 ease-in-out transform hover:translate-y-0.5 hover:scale-105 flex-col rounded-xl shadow-lg overflow-hidden" >
       <div v-if="post.image" class="hidden sm:flex flex-shrink-0 bg-gray-900">
         <img class="h-36 w-full object-cover" :src="post.image" alt="Blog Image">
       </div>
