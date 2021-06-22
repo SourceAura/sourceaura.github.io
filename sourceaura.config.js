@@ -2,7 +2,7 @@
 
 export default {
   name: "@SourceAura",
-  domain: "template.karngyan.com", // add without https:// , used in meta tags and share urls
+  domain: "sourceaura.netlify.app", // add without https:// , used in meta tags and share urls
   image: "/images/peach-avi.png",
   email: "mail@sourceaura.com",
   googleAnalyticsV4: {
@@ -11,7 +11,7 @@ export default {
   },
   plausibleAnalytics: {
     enabled: false,
-    domain: "template.karngyan.com",
+    domain: "sourceaura.netlify.app", // add without https:// , used in meta tags and share urls
     trackLocalhost: false,
     // leave it empty if plausible is not self hosted
     apiHost: "https://analytics.lookatx.dev" // default: https://plausible.io
@@ -19,7 +19,7 @@ export default {
   // enable if you want comments and likes on posts
   // see how it looks on karngyan.com
   firebase: {
-    enabled: false,
+    enabled: true,
   },
   social: {
     github: "sourceaura",
