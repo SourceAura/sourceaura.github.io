@@ -11,9 +11,9 @@ tags:
   - ipsum
 category: interview
 author:
-  name: karn
-  twitter: gyankarn
-  image: /images/bigheadkarngyan.png
+  name: Is
+  twitter: sourceaura
+  image: /images/peach-avi.png
 ---
 
 # Traderet altera id subitis coeunt in haut

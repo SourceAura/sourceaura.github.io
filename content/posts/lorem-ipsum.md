@@ -11,9 +11,9 @@ tags:
   - ipsum
 category: dev
 author:
-  name: karn
-  twitter: gyankarn
-  image: /images/bigheadkarngyan.png
+  name: Is
+  twitter: sourceaura
+  image: /images/peach-avi.png
 ---
 
 Lorem markdownum facinus tollensque aethera acutae ripa arbor duorum, **vae**.
