@@ -30,3 +30,6 @@
 
 -------
 - 10022018 :: ...found vue... ( was so gonna use the term. but yea. )
+
+-------
+- 06222021 :: Nuxt ftw. Building a castle...same sands. 
