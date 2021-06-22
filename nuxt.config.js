@@ -182,7 +182,7 @@ const nuxtConfig = {
   },
 
   tailwindcss: {
-    jit: false
+    jit: true
   },
 
   loadingIndicator: {
