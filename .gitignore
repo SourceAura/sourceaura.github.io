@@ -91,6 +91,6 @@ static/sw.*
 # Vim swap files
 *.swp
 
-.awspublish-karngyan.com
+sw.*
 
 

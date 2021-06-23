@@ -104,7 +104,7 @@ const nuxtConfig = {
   ],
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
-  buildModules: ["@nuxtjs/vuetify", ["@nuxtjs/tailwindcss"]],
+  buildModules: ["@nuxtjs/vuetify", '@nuxtjs/pwa', ["@nuxtjs/tailwindcss"]],
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     "@nuxtjs/axios",
@@ -115,11 +115,13 @@ const nuxtConfig = {
     "@nuxtjs/toast",
     "@nuxtjs/sitemap"
   ],
-
   pwa: {
     icon: {
-      fileName: "favicon.ico"
+      fileName: "icon.png"
     },
+    // icon: {
+    //   fileName: "favicon.ico"
+    // },
     meta: {
       name: config.domain,
       author: config.name,
