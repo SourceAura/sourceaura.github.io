@@ -6,12 +6,10 @@ createdAt: "2019-09-09 7:77:77"
 # you can skip it to keep the size of blog cards small
 image:
 tags:
-  - random
-  - lorem
-  - ipsum
+  - thinking
 category: interview
 author:
-  name: Is
+  name: SourceAura
   twitter: sourceaura
   image: ./uploads/avi.png
 excerpt: i can think. i can wait. i can fast
