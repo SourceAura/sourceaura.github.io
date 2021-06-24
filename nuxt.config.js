@@ -5,9 +5,9 @@ const createSitemapRoutes = async () => {
   const { $content } = require("@nuxt/content");
   const articles = await $content("posts").fetch();
 
-  if (config.log.enabled) {
+  if (config.petals.enabled) {
     for (const article of articles) {
-      routes.push(`blog/${article.slug}`);
+      routes.push(`petals/${article.slug}`);
     }
   }
 
@@ -100,7 +100,7 @@ const nuxtConfig = {
     "@/components",
     "@/components/home",
     "@/components/logos",
-    "@/components/blog",
+    "@/components/petals",
     "@/components/projects"
   ],
 
