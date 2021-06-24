@@ -12,7 +12,7 @@
               <div>
                 <!-- the chip -->
                 <nuxt-link
-                  v-if="$config.log.enabled"
+                  v-if="$config.petals.enabled"
                   :to="localePath('/log')"
                   class="group inline-flex hover:bg-black items-center text-white bg-gray-900 rounded-full p-0.5 pr-2 sm:text-base lg:text-sm xl:text-base hover:text-gray-200"
                 >

@@ -33,19 +33,19 @@ export default {
     enabled: true,
     url: "https://www.buymeacoffee.com/sourcaura.dev"
   },
+  petals: {
+    enabled: true
+  },
   projects: {
     enabled: true
   },
-  log: {
-    enabled: true
-  },
-  // blog: {
+  // log: {
   //   enabled: true
   // },
-  resume: {
-    enabled: true,
-    pdfUrl: "/RESUME_GYAN_KARN_DARK.pdf" // add files in static folder
-  },
+  // resume: {
+  //   enabled: true,
+  //   pdfUrl: "/RESUME_.pdf" // add files in static folder
+  // },
   uses: {
     enabled: true,
     meta: [
@@ -132,11 +132,9 @@ export default {
       download: "download",
       nav: {
         home: "home",
-        log: "log",
-        // blog: "blog",
+        petals: "petals",
         projects: "projects",
         pulses: "pulses",
-        // uses: "uses",
         // resume: "résumé",
         buyMeACoffee: "buy me a beer",
         signIn: "sign in",
@@ -167,14 +165,14 @@ export default {
         header: "contributions",
         subtext: "github calendar heatmap"
       },
-      // Journal - Log
-      log: {
-        header: "log",
+      // Journal - Petals
+      petals: {
+        header: "petals",
         subtext:
           "always been a poet at my purest. figured i'd share here sometimes. feel free to join in.."
       },
-      recentLog: {
-        header: "recent logs",
+      recentPetal: {
+        header: "recent petals",
         subtext: "balance may all ways be the challenge."
       },
       projects: {
@@ -183,17 +181,7 @@ export default {
           "this page lists some of my personal and work projects. every project has some story, click on the title to read"
       },
       // Journal - Log End
-      // blog: {
-      //   header: "blog",
-      //   subtext:
-      //     "i try to write once in a while. let me know your thoughts in comments or mail@karngyan.com"
-      // },
-
-      // recentBlog: {
-      //   header: "recent blogs",
-      //   subtext: "it takes a lot of time to write man"
-      // },
-      //
+     
       // pulses - real-time activity
       pulses: {
         header: "pulses",

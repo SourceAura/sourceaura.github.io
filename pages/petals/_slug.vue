@@ -12,8 +12,8 @@
               <div class="text-indigo-700 font-bold">
                 <nuxt-link
                   class="hover:text-indigo-500"
-                  :to="localePath('/log')"
-                  >{{ $t("log.header") }}</nuxt-link
+                  :to="localePath('/petals')"
+                  >{{ $t("petals.header") }}</nuxt-link
                 >
                 <span class="text-gray-700">/</span> {{ post.category }}
               </div>
@@ -197,7 +197,7 @@ export default {
   },
   head() {
     return {
-      title: this.post.title + ` -- log -- ${this.$config.name}`,
+      title: this.post.title + ` -- petals -- ${this.$config.name}`,
       meta: [
         {
           hid: "description",

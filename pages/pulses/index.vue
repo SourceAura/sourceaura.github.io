@@ -59,7 +59,7 @@
 export default {
   head() {
     return {
-      title: `pulses -- ${this.$config.name}`
+      title: `Pulses - ${this.$config.name}`
     }
   },
   data() {

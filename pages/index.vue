@@ -1,7 +1,7 @@
 <template>
   <div>
     <HeroSection/>
-    <LazyRecentBlog v-if="$config.log.enabled && posts" :posts="posts"/>
+    <LazyRecentBlog v-if="$config.petals.enabled && posts" :posts="posts"/>
     <!--  -->
     <GithubCalendar v-if="$config.social.github"/>
   </div>
