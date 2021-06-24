@@ -1,43 +1,49 @@
 <template>
   <div>
-    <HeroSection/>
-    <LazyRecentBlog v-if="$config.petals.enabled && posts" :posts="posts"/>
+    <Particles />
+    <HeroSection />
+    <LazyRecentBlog v-if="$config.petals.enabled && posts" :posts="posts" />
     <!--  -->
-    <GithubCalendar v-if="$config.social.github"/>
+    <GithubCalendar v-if="$config.social.github" />
   </div>
 </template>
 
 <script>
+import Particles from '~/components/utilities/Particles.vue';
+
 export default {
+  components: { Particles },
   head() {
     return {
       title: `Home -- ${this.$config.name}`,
-    }
+    };
   },
+  // components: {
+  //   Particles,
+  // },
   data() {
     return {
-      posts: null
-    }
+      posts: null,
+    };
   },
   async created() {
-    const fetchDocsLabel = 'fetchAllPosts'
-    console.time(fetchDocsLabel)
+    const fetchDocsLabel = "fetchAllPosts";
+    console.time(fetchDocsLabel);
     try {
-      const posts = await this.$content('posts')
-        .without(['body', 'toc', 'dir', 'extension', 'path', 'tags'])
+      const posts = await this.$content("posts")
+        .without(["body", "toc", "dir", "extension", "path", "tags"])
         .limit(3)
         .skip(0)
-        .sortBy('createdAt', 'desc')
-        .fetch()
-      this.posts = posts
+        .sortBy("createdAt", "desc")
+        .fetch();
+      this.posts = posts;
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      console.timeEnd(fetchDocsLabel)
+      console.timeEnd(fetchDocsLabel);
     }
   },
-}
+};
 </script>
 
-<style>
-</style>
+<style></style>
