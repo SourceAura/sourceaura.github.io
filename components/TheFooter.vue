@@ -32,11 +32,17 @@
         </div>
         <p class="mt-8 text-sm leading-6 text-gray-400 md:mt-0 md:order-1"> 
           Made with ♥️ by 
-          {{ $config.name }} • based <span class="ceator-preview hover:text-hot-pink text-gray-300">
-          <a class="hidden md:inline-block" rel="noreferrer" target="_blank" href="https://github.com/karngyan">
+
           <creator-preview
             :avatar="avatar"
             :name="name"
+            :description="description"
+            :content="content" :mode="mode" />
+           • based <span class="ceator-preview hover:text-hot-pink text-gray-300">
+          <a class="hidden md:inline-block" rel="noreferrer" target="_blank" href="https://github.com/karngyan">
+          <creator-preview
+            :avatar="mentAvi"
+            :name="mentor"
             :description="description"
             :content="content" :mode="mode" />
           </a>
@@ -59,11 +65,12 @@ export default {
   data() {
     return {
       avatar: 'https://avatars.githubusercontent.com/u/13864703?v=4',
+      mentAvi: "https://github.com/karngyan/karngyan.com",
       name: 'SourceAura',
       mentor: 'Karngyan',
       mode: 'dark',
       description: 'Software Engineer who tinkers with side projects, every now n then.',
-      content: `👇🏾`,
+      content: ``,
     }
   }
 }
