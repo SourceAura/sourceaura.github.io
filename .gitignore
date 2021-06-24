@@ -96,3 +96,5 @@ sw.*
 karngyan-com.md
 
 /pages/resume*
+# Local Netlify folder
+.netlify

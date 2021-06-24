@@ -13,7 +13,7 @@ category: template
 author:
   name: Is
   twitter: sourceaura
-  image: (/uploads/peach-avi.png)
+  image: /uploads/peach-avi.png
 ---
 
 Lorem markdownum facinus tollensque aethera acutae ripa arbor duorum, **vae**.
