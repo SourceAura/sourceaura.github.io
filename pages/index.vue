@@ -1,6 +1,5 @@
 <template>
   <div>
-    <Particles />
     <HeroSection />
     <LazyRecentBlog v-if="$config.petals.enabled && posts" :posts="posts" />
     <!--  -->
@@ -9,10 +8,7 @@
 </template>
 
 <script>
-import Particles from '~/components/utilities/Particles.vue';
-
 export default {
-  components: { Particles },
   head() {
     return {
       title: `Home -- ${this.$config.name}`,

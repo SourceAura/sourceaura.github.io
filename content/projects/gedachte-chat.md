@@ -1,26 +1,25 @@
 ---
+id: 4
 date: 2019-10-21
-year: 2019
 title: Gedachte - RealTime Chat. 💭
-category: Projects
-thumbnail: "/uploads/tokei.png"
-categories:
-- PWA
-- Vue.js
-- Vuesax
-- Quasar.js
-project_bg_color: ''
-project_fg_color: ''
+description: Gedachte - msgs in a bottle. to be revisited soon. 💭
+tech: PWA VueJs Vuesax Quasar.js
+logo: ./uploads/miru.png
+# thumbnail: "/uploads/miru.jpg"
+website: https://github.com/sourceaura
+github: https://github.com/sourceaura
+twitter: sourceaura
 ---
 
 <!-- update thumbnail -->
-![...](/uploads/tokei.png)  
 
+![...](/uploads/gedachte.png)
 
 Gedachte - ...share the essence of imagination. 💭
 
 ---
-[Link to Repo](https://github.com/SourceAura/gedachte) 
+
+[Link to Repo](https://github.com/SourceAura/gedachte)
 
 [Link to Project](https://gedachte.netlify.com)
 

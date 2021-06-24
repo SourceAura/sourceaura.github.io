@@ -92,6 +92,7 @@ static/sw.*
 *.swp
 
 sw.*
-
+# misc
+karngyan-com.md
 
 /pages/resume*
