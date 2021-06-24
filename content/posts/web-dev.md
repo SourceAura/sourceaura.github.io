@@ -15,20 +15,15 @@ author:
   twitter: sourceaura
   image: /images/peach-avi.png
 ---
-Lorem markdownum facinus tollensque aethera acutae ripa arbor duorum, **vae**.
 
 <!--more-->
 
-```md
-![Big Head Karn](/images/bigheadkarngyan.png)
-```
-
 <!-- Destiny's Photo(s) -->
-Ode to...
+
 -
 
 This world is but one thing...
-Destiny...
+**Destiny...**
 Your are every:thing to me...
 
 <!-- \[est inquirit\]: http://nulloet.net/

@@ -2,7 +2,7 @@
 id: 1
 date: 2019-09-17
 title: Miru, a CryptoTracker
-description: a system design course website serving 5k+ users, content provided by youtuber gaurav sen. (freelance)
+description: A CryptoTracker. Built with VueJs and Pusher.
 tech: PWA VueJs Pusher CryptoCurrency
 logo: ./uploads/miru.png
 # thumbnail: "/uploads/miru.jpg"
