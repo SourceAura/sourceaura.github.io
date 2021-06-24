@@ -14,7 +14,7 @@ category: petal
 author:
   name: SourceAura
   twitter: sourceaura
-  image: /uploads/peach-avi.png
+  image: https://avatars.githubusercontent.com/u/13864703?v=4
 ---
 
 Today I built a basic calculator using Vue.js, Vuesax , & a little 💜.

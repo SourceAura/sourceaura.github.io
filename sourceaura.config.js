@@ -3,18 +3,18 @@
 export default {
   name: "@SourceAura",
   domain: "sourceaura.netlify.app", // add without https:// , used in meta tags and share urls
-  image: "/images/peach-avi.png",
+  image: "https://avatars.githubusercontent.com/u/13864703?v=4",
   email: "mail@sourceaura.com",
   googleAnalyticsV4: {
     enabled: false,
-    id: ""
+    id: "",
   },
   plausibleAnalytics: {
     enabled: false,
     domain: "sourceaura.netlify.app", // add without https:// , used in meta tags and share urls
     trackLocalhost: false,
     // leave it empty if plausible is not self hosted
-    apiHost: "https://analytics.lookatx.dev" // default: https://plausible.io
+    apiHost: "https://analytics.lookatx.dev", // default: https://plausible.io
   },
   // enable if you want comments and likes on posts
   // see how it looks on karngyan.com
@@ -27,17 +27,17 @@ export default {
     facebook: "sourceaura",
     twitter: "sourceaura",
     instagram: "sourceaura",
-    codestats: "sourceaura" // https://codestats.net make a profile if you dont already have one.
+    codestats: "sourceaura", // https://codestats.net make a profile if you dont already have one.
   },
   buyMeACoffee: {
     enabled: true,
-    url: "https://www.buymeacoffee.com/sourcaura.dev"
+    url: "https://www.buymeacoffee.com/sourcaura.dev",
   },
   petals: {
-    enabled: true
+    enabled: true,
   },
   projects: {
-    enabled: true
+    enabled: true,
   },
   // log: {
   //   enabled: true
@@ -55,9 +55,10 @@ export default {
       { title: "Monitor", value: "Retina Display 13.3-inch (2560 × 1600)" },
       {
         title: "Laptop",
-        value: "MacBook Pro (13.3-inch, 2019) • 1.4 GHz Quad-Core Intel Core i5"
-      }
-    ]
+        value:
+          "MacBook Pro (13.3-inch, 2019) • 1.4 GHz Quad-Core Intel Core i5",
+      },
+    ],
   },
   pulses: {
     enabled: true,
@@ -68,9 +69,10 @@ export default {
       { title: "Monitor", value: "Retina Display 13.3-inch (2560 × 1600)" },
       {
         title: "Laptop",
-        value: "MacBook Pro (13.3-inch, 2019) • 1.4 GHz Quad-Core Intel Core i5"
-      }
-    ]
+        value:
+          "MacBook Pro (13.3-inch, 2019) • 1.4 GHz Quad-Core Intel Core i5",
+      },
+    ],
   },
   theStack: {
     // add logos in static and at max add 3/4
@@ -79,20 +81,20 @@ export default {
       {
         name: "JavaScript",
         src: "/images/sendpost.png",
-        url: "https://sendpost.io"
+        url: "https://sendpost.io",
       },
       {
         name: "Nuxt/VueJs",
         src: "/images/amazon.png",
-        url: "https://amazon.in"
+        url: "https://amazon.in",
       },
       {
         name: "Laravel",
         src: "/images/interviewready-io.png",
-        url: "https://get.interviewready.io"
+        url: "https://get.interviewready.io",
       },
-      { name: "Firebase", src: "/images/crio.png", url: "https://crio.do" }
-    ]
+      { name: "Firebase", src: "/images/crio.png", url: "https://crio.do" },
+    ],
   },
   workedAt: {
     // add logos in static and at max add 3/4
@@ -101,19 +103,19 @@ export default {
       {
         name: "SendPost",
         src: "/images/sendpost.png",
-        url: "https://sendpost.io"
+        url: "https://sendpost.io",
       },
       { name: "Amazon", src: "/images/amazon.png", url: "https://amazon.in" },
       {
         name: "InterviewReady",
         src: "/images/interviewready-io.png",
-        url: "https://get.interviewready.io"
+        url: "https://get.interviewready.io",
       },
-      { name: "CrioDo", src: "/images/crio.png", url: "https://crio.do" }
-    ]
+      { name: "CrioDo", src: "/images/crio.png", url: "https://crio.do" },
+    ],
   },
   loadingIndicator: {
-    name: "pulse"
+    name: "nuxt",
     // https://tobiasahlin.com/spinkit/
     // circle
     // cube-grid
@@ -138,7 +140,7 @@ export default {
         // resume: "résumé",
         buyMeACoffee: "buy me a beer",
         signIn: "sign in",
-        signOut: "sign out"
+        signOut: "sign out",
       },
       // Author Info
       hero: {
@@ -152,47 +154,40 @@ export default {
           "designer",
           "caligraphist",
           "coder",
-          "eclectic. "
+          "eclectic. ",
         ],
-        aboutMe: "weird wiz 🧙🏾 || UI/UX Designer"
+        aboutMe: " UI || UX - Designer",
       },
       // GitHub Data
       gitData: {
         header: "contributions",
-        subtext: "github heatmap"
+        subtext: "github",
       },
       githubCalendar: {
         header: "contributions",
-        subtext: "github calendar heatmap"
+        subtext: "github calendar heatmap",
       },
       // Journal - Petals
       petals: {
         header: "petals",
         subtext:
-          "always been a poet at my purest. figured i'd share here sometimes. feel free to join in.."
+          "always been a poet at my purest. figured i'd share here sometimes. feel free to join in..",
       },
       recentPetal: {
         header: "recent petals",
-        subtext: "balance may all ways be the challenge."
+        subtext: "balance may all ways be the challenge.",
       },
       projects: {
         header: "projects",
-        subtext:
-          "this page lists some of my personal and work projects. every project has some story, click on the title to read"
+        subtext: "some personal and work projects",
       },
       // Journal - Log End
-     
+
       // pulses - real-time activity
       pulses: {
         header: "pulses",
-        subtext:
-          "a quick 👀 at what i use on a daily basis to code 💻. "
+        subtext: "a quick 👀 at what i use on a daily basis to code 💻. ",
       },
-      // uses: {
-      //   header: "uses",
-      //   subtext:
-      //     "a quick summary of what I use on a daily basis to code and some codestats.net flex"
-      // }
-    }
-  }
+    },
+  },
 };

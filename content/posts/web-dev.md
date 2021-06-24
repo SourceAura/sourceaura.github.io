@@ -13,7 +13,7 @@ category: journal
 author:
   name: Is
   twitter: sourceaura
-  image: /images/peach-avi.png
+  image: https://avatars.githubusercontent.com/u/13864703?v=4
 ---
 
 <!--more-->
