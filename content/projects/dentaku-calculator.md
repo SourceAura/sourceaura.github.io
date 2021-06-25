@@ -2,7 +2,7 @@
 id: 3
 date: 2019-10-14
 title: Dentaku - A Basic calculator.
-description: Dentaku: A Basic calculator, PWA. Built with Vue.js, Vuesax , & 💜.  
+description: Dentaku:\ A Basic calculator, PWA. Built with Vue.js, Vuesax , & 💜.  
 tech: PWA VueJs Vuesax VanillaJs
 logo: ./uploads/dentaku.png
 # thumbnail: "/uploads/dentaku.jpg"
