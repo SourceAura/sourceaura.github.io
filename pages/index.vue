@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="">
     <HeroSection />
     <LazyRecentBlog v-if="$config.petals.enabled && posts" :posts="posts" />
     <!--  -->

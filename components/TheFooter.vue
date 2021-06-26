@@ -1,11 +1,9 @@
 <template>
-  <footer class="bg-gray-800">
+  <footer class="bg-kingFish">
     <div
-      class="max-w-7xl border-l border-r border-dashed border-gray-700 mx-auto px-4"
+      class="max-w-7xl max-h-0 mx-auto px-4"
     >
       <div class="pt-5 pb-12 md:flex md:items-center md:justify-between">
-        
-        
         <!-- <div class="flex space-x-6 md:order-2">
           <a
             v-if="$config.social.facebook"
@@ -132,7 +130,9 @@
           </a>
         </div> -->
 
-        <p class="mt-8 text-sm content-center leading-6 text-gray-400 md:mt-0 md:order-1">
+        <p
+          class="mt-8 text-sm content-center leading-6 text-white md:mt-0 md:order-1"
+        >
           made with ♥️ by
 
           <creator-preview
@@ -143,7 +143,7 @@
             :mode="mode"
           />
           • based on
-          <span class="ceator-preview hover:text-hot-pink text-gray-300">
+          <span class="ceator-preview hover:text-royal text-white">
             <a
               class="hidden md:inline-block"
               rel="noreferrer"
@@ -156,8 +156,8 @@
                 :description="description"
                 :content="content"
                 :mode="mode"
-              />
-            </a>'s
+              /> </a
+            >'s
             <a
               class="inline-block md:hidden"
               target="_blank"
@@ -195,7 +195,7 @@ export default {
 
 <style scoped>
 >>> .CreatorPreview {
-  @apply bg-gray-900 shadow-lg !important;
+  @apply bg-black shadow-lg !important;
 }
 
 >>> .CreatorPreview--Avatar {

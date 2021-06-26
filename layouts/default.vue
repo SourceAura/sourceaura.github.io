@@ -12,17 +12,17 @@ export default {};
 
 <style>
 html {
-  @apply bg-black font-sans;
+  @apply bg-black text-white font-sans;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
 }
-
+/* ?? */
 ::-moz-selection {
-  @apply bg-hot-pink text-white;
+  @apply bg-transparent text-white;
 }
 ::selection {
-  @apply bg-hot-pink text-white;
+  @apply bg-transparent text-white;
 }
 
 /* Page-transition styles must be global */

@@ -52,7 +52,7 @@
                   <UserAvatar
                     :photoURL="post.author.image"
                     :name="post.author.name"
-                    class="w-12 h-12 border-2 border-indigo-600 hover:border-hot-pink -mt-5 bg-gray-900 rounded-full"
+                    class="w-12 h-12 border-2 border-indigo-600 hover:border-candyPink -mt-5 bg-gray-900 rounded-full"
                   />
                 </div>
               </a>
@@ -143,7 +143,7 @@
 
     <div
       @click="scrollToTop"
-      class="cursor-pointer fixed z-50 bottom-4 right-4 w-8 w-8 rounded-full bg-gray-900 text-white block text-indigo-600 hover:text-hot-pink"
+      class="cursor-pointer fixed z-50 bottom-4 right-4 w-8 w-8 rounded-full bg-gray-900 text-white block text-indigo-600 hover:text-candyPink"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -243,7 +243,7 @@ export default {
 
 <style scoped>
 >>> .icon {
-  @apply text-indigo-600 hover:text-hot-pink hidden;
+  @apply text-indigo-600 hover:text-candyPink hidden;
 }
 
 >>> .breaker {

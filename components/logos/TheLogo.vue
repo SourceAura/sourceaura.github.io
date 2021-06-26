@@ -1,5 +1,5 @@
 <template>
-<div class="font-extrabold hover:text-hot-pink text-3xl animation-logo tracking-tighter text-indigo-700">
+<div class="font-extrabold hover:text-laravel text-3xl animation-logo tracking-tighter text-kingFish">
   {{ $config.name[0].toLowerCase() }}
 </div>
 </template>

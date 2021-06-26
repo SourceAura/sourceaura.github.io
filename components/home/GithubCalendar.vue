@@ -1,45 +1,61 @@
 <template>
-  <div class="bg-gray-800 border-t border-b border-dashed border-gray-700">
-    <div data-aos="fade-up" class="max-w-7xl mx-auto border-l border-r border-dashed border-gray-700">
+  <div
+    class="bg-transparent"
+  >
+    <div
+      data-aos="fade-up"
+      class="max-w-7xl mx-auto"
+    >
       <div class="max-w-prose text-center mx-auto py-4">
-        <p class="text-xs leading-6 text-indigo-600 font-semibold tracking-wide lowercase">{{ $t('githubCalendar.subtext') }}</p>
-        <a :href="`https://github.com/${$config.social.github}`" target="_blank" rel="noreferrer" class="mt-2 text-3xl hover:text-hot-pink leading-8 font-extrabold tracking-tight text-gray-500">{{ $t('githubCalendar.header') }}</a>
+        <p
+          class="text-xs leading-6 text-kingFish font-semibold tracking-wide lowercase"
+        >
+          {{ $t("githubCalendar.subtext") }}
+        </p>
+        <a
+          :href="`https://github.com/${$config.social.github}`"
+          target="_blank"
+          rel="noreferrer"
+          class="mt-2 text-3xl hover:text-elfGreen leading-8 font-extrabold tracking-tight text-gray-500"
+          >{{ $t("githubCalendar.header") }}</a
+        >
       </div>
-      <div class="calendar max-w-6xl content-center lowercase">
-
-      </div>
+      <div class="calendar max-w-6xl content-center lowercase"></div>
     </div>
   </div>
 </template>
 
 <script>
-import GitHubCalendar from 'github-calendar'
+import GitHubCalendar from "github-calendar";
 
 export default {
   mounted() {
-    GitHubCalendar(".calendar", this.$config.social.github, { responsive: true, tooltips: true });
-  }
-}
+    GitHubCalendar(".calendar", this.$config.social.github, {
+      responsive: true,
+      tooltips: true,
+    });
+  },
+};
 </script>
 
 <style scoped>
->>> rect.ContributionCalendar-day[data-level='0'] {
+>>> rect.ContributionCalendar-day[data-level="0"] {
   @apply fill-current text-gray-900;
 }
 
->>> rect.ContributionCalendar-day[data-level='1'] {
+>>> rect.ContributionCalendar-day[data-level="1"] {
   fill: rgb(14, 68, 41);
 }
 
->>> rect.ContributionCalendar-day[data-level='2'] {
+>>> rect.ContributionCalendar-day[data-level="2"] {
   fill: rgb(0, 109, 50);
 }
 
->>> rect.ContributionCalendar-day[data-level='3'] {
+>>> rect.ContributionCalendar-day[data-level="3"] {
   fill: rgb(38, 166, 65);
 }
 
->>> rect.ContributionCalendar-day[data-level='4'] {
+>>> rect.ContributionCalendar-day[data-level="4"] {
   fill: rgb(57, 211, 83);
 }
 
@@ -58,7 +74,6 @@ export default {
 .calendar >>> .width-full > .float-right svg {
   @apply mx-0.5;
 }
-
 
 .calendar >>> .width-full > .float-left {
   @apply flex items-center justify-center;
@@ -90,5 +105,4 @@ export default {
 /*    padding-right: 3rem !important;*/
 /*  }*/
 /*}*/
-
 </style>
