@@ -1,6 +1,7 @@
 <template>
-<div class="font-extrabold hover:text-laravel text-3xl animation-logo tracking-tighter text-kingFish">
+<div class="font-light hover:text-laravel text-3xl animation-logo tracking-tighter text-kingFish">
   {{ $config.name[0].toLowerCase() }}
+  <!-- 🌹's -->
 </div>
 </template>
 

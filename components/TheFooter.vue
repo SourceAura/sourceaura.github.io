@@ -136,7 +136,7 @@
           made with ♥️ by
 
           <creator-preview
-            :avatar="avatar"
+            :avatar="avi"
             :name="name"
             :description="description"
             :content="content"
@@ -180,7 +180,7 @@ export default {
   },
   data() {
     return {
-      avatar: "https://avatars.githubusercontent.com/u/13864703?v=4",
+      avi: "https://avatars.githubusercontent.com/u/13864703?v=4",
       mentAvi: "https://github.com/karngyan/karngyan.com",
       name: "SourceAura",
       mentor: "Karngyan",

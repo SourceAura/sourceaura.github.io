@@ -10,27 +10,27 @@
           </nuxt-link>
           <div class="hidden lg:block lg:ml-6">
             <div class="flex items-center space-x-4.3">
-              <!-- <nuxt-link exact :to="localePath('/')" class="active text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.home')}}</nuxt-link> -->
+              <!-- <nuxt-link exact :to="localePath('/')" class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.home')}}</nuxt-link> -->
               <nuxt-link
                 v-show="$config.petals.enabled"
                 :to="localePath('/petals')"
-                class="active text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
+                class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
                 >{{ $t("nav.petals") }}</nuxt-link
               >
               <nuxt-link
                 v-show="$config.projects.enabled"
                 :to="localePath('/projects')"
-                class="active text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
+                class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
                 >{{ $t("nav.projects") }}</nuxt-link
               >
               <nuxt-link
                 v-show="$config.pulses.enabled"
                 :to="localePath('/pulses')"
-                class="active text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
+                class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
                 >{{ $t("nav.pulses") }}</nuxt-link
               >
-              <!-- <nuxt-link v-show="$config.resume.enabled" :to="localePath('/resume')" class="active text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.resume')}}</nuxt-link> -->
-              <!-- <a v-show="$config.buyMeACoffee.enabled" :href="$config.buyMeACoffee.url" target="_blank" rel="noreferrer" class="active text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.buyMeACoffee')}}</a> -->
+              <!-- <nuxt-link v-show="$config.resume.enabled" :to="localePath('/resume')" class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.resume')}}</nuxt-link> -->
+              <!-- <a v-show="$config.buyMeACoffee.enabled" :href="$config.buyMeACoffee.url" target="_blank" rel="noreferrer" class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.buyMeACoffee')}}</a> -->
             </div>
           </div>
         </div>
@@ -40,7 +40,7 @@
             <button
               @click="mobileMenuOpen = true"
               type="button"
-              class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out"
+              class="inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-gray-700 focus:outline-none focus:bg-gray-700 transition duration-150 ease-in-out"
               id="main-menu"
               aria-label="Main menu"
               aria-haspopup="true"
@@ -65,20 +65,21 @@
           <div
             v-if="!user"
             @click="signInUser"
-            class="active cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
+            class="active cursor-pointer text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
           >
             {{ $t("nav.signIn") }}
           </div>
           <div
             v-else
             @click="signOutUser"
-            class="active cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
+            class="active cursor-pointer text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
           >
             {{ $t("nav.signOut") }}
           </div>
         </div>
       </div>
     </div>
+    <!-- Mobile Below -->
     <transition
       enter-active-class="duration-150 ease-out"
       enter-class="opacity-0 scale-95"
@@ -91,9 +92,9 @@
         v-show="mobileMenuOpen"
         class=" absolute top-0 inset-x-0 p-2 transition transform origin-top-right md:hidden"
       >
-        <div class="rounded-lg bg-gray-800">
+        <div class="rounded-lg">
           <div
-            class="bg-gray-900 rounded-lg overflow-hidden"
+            class="bg-transparent rounded-lg overflow-hidden"
             role="menu"
             aria-orientation="vertical"
             aria-labelledby="main-menu"
@@ -108,7 +109,7 @@
                 <button
                   @click="mobileMenuOpen = false"
                   type="button"
-                  class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out"
+                  class="inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-graybg-gray-600 transition duration-150 ease-in-out"
                   aria-label="Close menu"
                 >
                   <svg
@@ -131,30 +132,30 @@
               @click="mobileMenuOpen = false"
               class="flex flex-col space-y-1 px-2 pt-2 pb-3"
             >
-              <!-- <nuxt-link exact :to="localePath('/')" class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-500 transition duration-150 ease-in-out" role="menuitem">{{ $t('nav.home')}}</nuxt-link> -->
+              <!-- <nuxt-link exact :to="localePath('/')" class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-600 transition duration-150 ease-in-out" role="menuitem">{{ $t('nav.home')}}</nuxt-link> -->
               <nuxt-link
                 v-show="$config.petals.enabled"
                 :to="localePath('/petals')"
-                class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-500 transition duration-150 ease-in-out"
+                class="flex px-3 py-2 rounded-md text-base font-medium text-gray-100 hover:text-white hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-600 transition duration-150 ease-in-out"
                 role="menuitem"
                 >{{ $t("nav.petals") }}</nuxt-link
               >
               <nuxt-link
                 v-show="$config.projects.enabled"
                 :to="localePath('/projects')"
-                class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-500 transition duration-150 ease-in-out"
+                class="flex px-3 py-2 rounded-md text-base font-medium text-gray-100 hover:text-white hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-600 transition duration-150 ease-in-out"
                 role="menuitem"
                 >{{ $t("nav.projects") }}</nuxt-link
               >
               <nuxt-link
                 v-show="$config.pulses.enabled"
                 :to="localePath('/pulses')"
-                class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-500 transition duration-150 ease-in-out"
+                class="flex px-3 py-2 rounded-md text-base font-medium text-gray-100 hover:text-white hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-600 transition duration-150 ease-in-out"
                 role="menuitem"
                 >{{ $t("nav.pulses") }}</nuxt-link
               >
-              <!-- <nuxt-link v-show="$config.resume.enabled" :to="localePath('/resume')" class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-500 transition duration-150 ease-in-out" role="menuitem">{{ $t('nav.resume')}}</nuxt-link> -->
-              <!-- <a v-show="$config.buyMeACoffee.enabled" :href="$config.buyMeACoffee.url" target="_blank" rel="noreferrer" class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-500 transition duration-150 ease-in-out" role="menuitem">{{ $t('nav.buyMeACoffee')}}</a> -->
+              <!-- <nuxt-link v-show="$config.resume.enabled" :to="localePath('/resume')" class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-600 transition duration-150 ease-in-out" role="menuitem">{{ $t('nav.resume')}}</nuxt-link> -->
+              <!-- <a v-show="$config.buyMeACoffee.enabled" :href="$config.buyMeACoffee.url" target="_blank" rel="noreferrer" class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-600 transition duration-150 ease-in-out" role="menuitem">{{ $t('nav.buyMeACoffee')}}</a> -->
             </div>
             <div v-if="$config.firebase.enabled">
               <div

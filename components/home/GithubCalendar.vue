@@ -16,7 +16,7 @@
           :href="`https://github.com/${$config.social.github}`"
           target="_blank"
           rel="noreferrer"
-          class="mt-2 text-3xl hover:text-elfGreen leading-8 font-extrabold tracking-tight text-gray-500"
+          class="mt-2 text-3xl hover:text-elfGreen leading-8 font-extrabold tracking-tight text-white"
           >{{ $t("githubCalendar.header") }}</a
         >
       </div>
@@ -40,7 +40,7 @@ export default {
 
 <style scoped>
 >>> rect.ContributionCalendar-day[data-level="0"] {
-  @apply fill-current text-gray-900;
+  @apply fill-current text-gray-600;
 }
 
 >>> rect.ContributionCalendar-day[data-level="1"] {
