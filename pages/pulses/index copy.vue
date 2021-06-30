@@ -34,25 +34,6 @@
               <dd
                 class="mt-1 flex justify-between items-baseline md:flex lg:flex"
               >
-                <!--  -->
-
-                <v-sparkline
-                  :value="value"
-                  :gradient="gradient"
-                  :smooth="radius || false"
-                  :padding="padding"
-                  :line-width="width"
-                  :stroke-linecap="lineCap"
-                  :gradient-direction="gradientDirection"
-                  :fill="fill"
-                  :type="type"
-                  :auto-line-width="autoLineWidth"
-                  auto-draw
-                ></v-sparkline>
-
-                <v-progress-linear 
-                :value="value"></v-progress-linear>
-
                 <div
                   class="flex items-baseline text-2xl leading-8 font-semibold text-kingFish"
                 >
@@ -89,6 +70,7 @@
         <dl>
           <div
             v-for="(item, index) in $config.pulses.meta"
+            :class="index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-900'"
             class="px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
           >
             <dt class="text-sm leading-5 font-medium text-white">
@@ -105,14 +87,6 @@
 </template>
 
 <script>
-const gradients = [
-  ["#222"],
-  ["#42b3f4"],
-  ["red", "orange", "yellow"],
-  ["purple", "violet"],
-  ["#00c6ff", "#F0F", "#FF0"],
-  ["#f72047", "#ffd200", "#1feaea"],
-];
 export default {
   head() {
     return {
@@ -124,18 +98,6 @@ export default {
       totalXP: 0,
       newXP: 0,
       level: 0,
-      //
-      width: 2,
-      radius: 10,
-      padding: 8,
-      lineCap: "round",
-      gradient: gradients[5],
-      value: [0, 2, 5, 9, 5, 10, 3, 5, 0, 0, 1, 8, 2, 9, 0],
-      gradientDirection: "top",
-      gradients,
-      fill: false,
-      type: "trend",
-      autoLineWidth: false,
     };
   },
   methods: {
