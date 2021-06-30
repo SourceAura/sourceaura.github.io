@@ -90,7 +90,7 @@
                 </template>
                 <template #text>
                   <p>
-                    Play on Playa ^_^
+                    ...
                   </p>
                 </template>
                 <template #interactions>
@@ -125,9 +125,14 @@
 </template>
 
 <script>
+import nowPlay from "../spotify/nowPlay.vue";
 export default {
   data() {
-    return {};
+    return {
+      components: {
+        nowPlay,
+      },
+    };
   },
   methods: {},
 };
