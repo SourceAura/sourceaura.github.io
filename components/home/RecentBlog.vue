@@ -1,12 +1,6 @@
 <template>
-  <div
-    v-if="$config.petals.enabled"
-    class="bg-transparent"
-  >
-    <div
-      data-aos="fade-up"
-      class="max-w-7xl pb-6 mx-auto"
-    >
+  <div v-if="$config.petals.enabled" class="bg-transparent">
+    <div data-aos="fade-up" class="max-w-7xl pb-6 mx-auto">
       <div class="max-w-prose text-center mx-auto py-4">
         <p
           class="text-xs leading-6 text-chileanFire font-semibold tracking-wide lowercase"

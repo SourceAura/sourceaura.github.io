@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col rounded-xl shadow-lg overflow-hidden">
     <div
-      class="flex-1 bg-transparent border-0 border-b border-l border-elfGreen p-5 flex flex-row justify-between"
+      class="flex-1 bg-transparent border-0 border-b border-elfGreen p-5 flex flex-row justify-between"
     >
       <div class="flex-1 flex flex-col justify-between">
         <div>
