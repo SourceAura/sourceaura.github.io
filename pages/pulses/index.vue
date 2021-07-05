@@ -50,8 +50,6 @@
                   auto-draw
                 ></v-sparkline>
 
-                <v-progress-linear 
-                :value="value"></v-progress-linear>
 
                 <div
                   class="flex items-baseline text-2xl leading-8 font-semibold text-kingFish"
@@ -124,6 +122,7 @@ export default {
       totalXP: 0,
       newXP: 0,
       level: 0,
+      progressLvl: 0,
       //
       width: 2,
       radius: 10,
@@ -143,6 +142,8 @@ export default {
       this.totalXP = total_xp;
       this.newXP = new_xp;
       this.level = Math.floor(0.025 * Math.sqrt(total_xp));
+
+      this.progessLvl = total_xp - new_xp;
     },
   },
   mounted() {
