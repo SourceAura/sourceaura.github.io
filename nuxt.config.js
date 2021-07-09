@@ -114,7 +114,8 @@ const nuxtConfig = {
     "nuxt-i18n",
     "@nuxtjs/pwa",
     "@nuxtjs/toast",
-    "@nuxtjs/sitemap"
+    "@nuxtjs/sitemap",
+    'nuxt-webfontloader'
   ],
   pwa: {
     icon: {
@@ -187,18 +188,21 @@ const nuxtConfig = {
   tailwindcss: {
     jit: true
   },
+// loading line
+  loading: {
+    color: "#fd2d78",
+    height: "1px",
+    throttle: 3
+  },
 
   loadingIndicator: {
     name: config.loadingIndicator.name || "chasing-dots",
     color: "#fd2d78",
-    background: "#212324"
+    duration: 16000,
+    background: "#fff"
   },
 
-  loading: {
-    color: "#fd2d78",
-    height: "1px",
-    throttle: 0
-  },
+
 
   hooks: {
     "content:file:beforeInsert": document => {

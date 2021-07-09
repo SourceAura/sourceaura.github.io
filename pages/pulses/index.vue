@@ -117,6 +117,9 @@ export default {
       title: `Pulses - ${this.$config.name}`,
     };
   },
+  loading: {
+    continuous: true
+  },
   data() {
     return {
       totalXP: 0,

@@ -21,7 +21,7 @@
       >
         <button
           @click="currentCategory = category"
-          :class="{ 'bg-gray-900 text-gray-300': category === currentCategory }"
+          :class="{ 'bg-kingFish text-white': category === currentCategory }"
           v-for="category in categories"
           :key="category"
           class="flex text-gray-300 focus:outline-none focus:ring-transparent focus:ring-offset-transparent hover:text-hot-pink px-3 py-2 font-medium text-sm rounded-xl"

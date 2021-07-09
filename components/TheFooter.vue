@@ -1,31 +1,11 @@
 <template>
-  <footer class="bg-kingFish">
-    <div
-      class="max-w-7xl max-h-0 mx-auto px-4"
-    >
+  <footer class="">
+    <div class="max-w-7xl max-h-0 mx-auto px-4 ">
       <div class="pt-5 pb-12 md:flex md:items-center md:justify-between">
-        <!-- <div class="flex space-x-6 md:order-2">
-          <a
-            v-if="$config.social.facebook"
-            target="_blank"
-            rel="noreferrer"
-            :href="`https://facebook.com/${$config.social.facebook}`"
-            class="text-gray-400 hover:text-gray-300"
-          >
-            <span class="sr-only">Facebook</span>
-            <svg
-              class="h-5 w-5"
-              aria-hidden="true"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </a>
+        <div class="flex space-x-6 md:order-2">
+          
+
+          <br>
           <a
             v-if="$config.social.instagram"
             target="_blank"
@@ -98,37 +78,8 @@
               />
             </svg>
           </a>
-          <a
-            v-if="$config.social.linkedin"
-            target="_blank"
-            rel="noreferrer"
-            :href="`https://linkedin.com/in/${$config.social.linkedin}`"
-            class="text-gray-400 hover:text-gray-300"
-          >
-            <span class="sr-only">LinkedIn</span>
-            <svg
-              class="h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              version="1.1"
-              xmlns:xlink="http://www.w3.org/1999/xlink"
-              xmlns:svgjs="http://svgjs.com/svgjs"
-              viewBox="0 0 16 16"
-            >
-              <g
-                transform="matrix(0.6666666666666666,0,0,0.6666666666666666,0,0)"
-              >
-                <path
-                  d="M2.5,8.5h4C6.776,8.5,7,8.724,7,9v13c0,0.276-0.224,0.5-0.5,0.5h-4C2.224,22.5,2,22.276,2,22V9C2,8.724,2.224,8.5,2.5,8.5z M4.48,1.5c1.37,0,2.48,1.119,2.48,2.5S5.85,6.5,4.48,6.5S2,5.381,2,4S3.11,1.5,4.48,1.5z M18.5,22.5h3c0.276,0,0.5-0.224,0.5-0.5 v-8.4C22,9.83,19.87,8,16.89,8c-1.189-0.043-2.34,0.418-3.17,1.27c-0.148,0.171-0.407,0.19-0.578,0.042C13.051,9.233,13,9.12,13,9 c0-0.276-0.224-0.5-0.5-0.5h-3C9.224,8.5,9,8.724,9,9v13c0,0.276,0.224,0.5,0.5,0.5h3c0.276,0,0.5-0.224,0.5-0.5v-7.5 c0-1.381,1.119-2.5,2.5-2.5s2.5,1.119,2.5,2.5V22C18,22.276,18.224,22.5,18.5,22.5z"
-                  stroke="none"
-                  fill="currentColor"
-                  stroke-width="0"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></path>
-              </g>
-            </svg>
-          </a>
-        </div> -->
+          
+        </div>
 
         <p
           class="mt-8 text-sm content-center leading-6 text-white md:mt-0 md:order-1"
@@ -142,7 +93,8 @@
             :content="content"
             :mode="mode"
           />
-          • based on
+          • 
+          <!-- based on -->
           <span class="ceator-preview hover:text-royal text-white">
             <a
               class="hidden md:inline-block"

@@ -39,13 +39,6 @@ export default {
   projects: {
     enabled: true,
   },
-  // log: {
-  //   enabled: true
-  // },
-  // resume: {
-  //   enabled: true,
-  //   pdfUrl: "/RESUME_.pdf" // add files in static folder
-  // },
   uses: {
     enabled: true,
     meta: [

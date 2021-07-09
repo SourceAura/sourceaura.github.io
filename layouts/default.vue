@@ -7,15 +7,23 @@
 </template>
 
 <script>
-export default {};
+export default {
+  webfontloader: {
+    google: {
+      families: ["Dosis:300,400"], //Loads Lato font with weights 400 and 700
+    },
+  },
+};
 </script>
 
 <style>
+body {}
 html {
   @apply bg-black text-white font-sans;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
+  /* font-family: "Dosis", sans-serif !important; */
 }
 /* ?? */
 ::-moz-selection {
@@ -108,6 +116,3 @@ html {
   transform: rotate(12deg);
 }
 </style>
-<script>
-export default {};
-</script>
