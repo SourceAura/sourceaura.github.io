@@ -129,15 +129,20 @@
                   />
                 </template>
                 <template #interactions>
-                  <vs-button color="#fff" transparent icon>
+                  <!-- <vs-button color="#fff" transparent icon>
                     <i class="bx bx-heart"></i>
-                  </vs-button>
-                  <vs-button class="btn-code-alt" shadow>
-                    <i class="bx bx-chat"></i>
-                    <span class="span">
-                      7
-                    </span>
-                  </vs-button>
+                  </vs-button> -->
+
+                  <!-- the stack -->
+                  <box-icon type="logo" name="vuejs"></box-icon>
+                  <box-icon name='firebase' type='logo' ></box-icon>
+                  <box-icon type="logo" name="nodejs"></box-icon>
+                  <box-icon type="logo" name="css3"></box-icon>
+                  <box-icon type="logo" name="javascript"></box-icon>
+                  <box-icon name="html5" type="logo"></box-icon>
+                  <box-icon name='python' type='logo' ></box-icon>
+                  <box-icon name='terminal'></box-icon>
+
                 </template>
               </vs-card>
             </div>
