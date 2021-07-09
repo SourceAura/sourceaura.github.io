@@ -118,20 +118,9 @@
                   </p> -->
                   <vs-avatar>
                     <img :src="$config.image" alt="" />
-                    <template #icons>
-                      <i class="bx bxl-facebook-square"></i>
-                      <i class="bx bxl-github"></i>
-                      <i class="bx bxl-twitter"></i>
-                    </template>
                   </vs-avatar>
-
-                  <!-- <vs-tooltip left transparent>
-                    ...
-                    <template #tooltip>
-                      This is a beautiful button
-                    </template>
-                  </vs-tooltip> -->
                 </template>
+
                 <!-- bg -->
                 <template #img>
                   <img
@@ -140,13 +129,13 @@
                   />
                 </template>
                 <template #interactions>
-                  <vs-button class="text-candyPink" icon>
+                  <vs-button color="#fff" transparent icon>
                     <i class="bx bx-heart"></i>
                   </vs-button>
-                  <vs-button class="btn-code-alt" shadow primary>
+                  <vs-button class="btn-code-alt" shadow>
                     <i class="bx bx-chat"></i>
                     <span class="span">
-                      54
+                      7
                     </span>
                   </vs-button>
                 </template>

@@ -8,32 +8,53 @@
           <nuxt-link :to="localePath('/')" class="flex-shrink-0">
             <TheLogo class="text-3xl w-auto" />
           </nuxt-link>
+          <!--  -->
           <div class="hidden lg:block lg:ml-6">
             <div class="flex items-center space-x-4.3">
               <!-- <nuxt-link exact :to="localePath('/')" class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.home')}}</nuxt-link> -->
+              <!-- petals -->
               <nuxt-link
                 v-show="$config.petals.enabled"
                 :to="localePath('/petals')"
-                class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
-                >{{ $t("nav.petals") }}</nuxt-link
+                class="active px-3 py-2 rounded-md text-sm font-bold"
               >
+                <!-- {{ $t("nav.petals") }} -->
+                <vs-button color="#fff" transparent>
+                  petals
+                  <template #animate> <i class="bx bx-notepad"></i> </template>
+                </vs-button>
+              </nuxt-link>
+              <!--  projects -->
               <nuxt-link
                 v-show="$config.projects.enabled"
                 :to="localePath('/projects')"
-                class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
-                >{{ $t("nav.projects") }}</nuxt-link
+                class="active px-3 py-2 rounded-md text-sm font-bold"
               >
+                <!-- {{ $t("nav.projects") }} -->
+                <vs-button color="#fff" transparent>
+                  projects
+                  <template #animate> <i class="bx bx-code"></i> </template>
+                </vs-button>
+              </nuxt-link>
+
+              <!-- pulses -->
               <nuxt-link
                 v-show="$config.pulses.enabled"
                 :to="localePath('/pulses')"
-                class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
-                >{{ $t("nav.pulses") }}</nuxt-link
+                class="active px-3 py-2 rounded-md text-sm font-bold"
               >
+                <!-- {{ $t("nav.pulses") }} -->
+                <vs-button color="#fff" transparent>
+                  pulses
+                  <template #animate> <i class="bx bx-pulse"></i> </template>
+                </vs-button>
+              </nuxt-link>
               <!-- <nuxt-link v-show="$config.resume.enabled" :to="localePath('/resume')" class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.resume')}}</nuxt-link> -->
               <!-- <a v-show="$config.buyMeACoffee.enabled" :href="$config.buyMeACoffee.url" target="_blank" rel="noreferrer" class="active text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold">{{ $t('nav.buyMeACoffee')}}</a> -->
             </div>
           </div>
         </div>
+
         <!-- mobile -->
         <div class="flex lg:hidden">
           <div class="mr-2 flex items-center md:hidden">
@@ -65,16 +86,30 @@
           <div
             v-if="!user"
             @click="signInUser"
-            class="active cursor-pointer text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
+            class="active cursor-pointer px-3 py-2 rounded-md text-sm font-bold"
           >
-            {{ $t("nav.signIn") }}
+            <!-- {{ $t("nav.signIn") }} -->
+
+            <vs-button color="#fff" flat animation-type="vertical">
+              sign in
+              <template #animate>
+                <box-icon name="log-in-circle"></box-icon>
+              </template>
+            </vs-button>
           </div>
           <div
             v-else
             @click="signOutUser"
-            class="active cursor-pointer text-white hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-bold"
+            class="active cursor-pointer px-3 py-2 rounded-md text-sm font-bold"
           >
-            {{ $t("nav.signOut") }}
+            <!-- {{ $t("nav.signOut") }} -->
+
+            <vs-button color="#fff" flat success animation-type="vertical">
+              sign out
+              <template #animate>
+                <box-icon name="log-out-circle"></box-icon>
+              </template>
+            </vs-button>
           </div>
         </div>
       </div>
