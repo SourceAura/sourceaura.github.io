@@ -196,10 +196,10 @@ const nuxtConfig = {
   },
 
   loadingIndicator: {
-    name: config.loadingIndicator.name || "chasing-dots",
-    color: "#fd2d78",
+    name: config.loadingIndicator.name || "wandering-cubes",
+    color: "#ff7400",
     duration: 16000,
-    background: "#fff"
+    background: "#000"
   },
 
 

@@ -104,24 +104,25 @@
             </div>
 
             <!-- Hero Card  -->
-            <div class="mt-8 px-5 sm:mt-16 lg:mt-0 lg:col-span-6">
-              <vs-card type="3">
+
+            <div class="mt-8 px-5 sm:mt-16 lg:mt-0 lg:col-span-6 ">
+              <vs-card type="2">
                 <template #title>
-                  <h3>Now Playing:</h3>
+                  <h3 class="text-white hover:text-kingFish ">{{ $config.name }}</h3>
                 </template>
                 <template #img>
-                  <!-- card left -->
                   <img :src="$config.image" alt="" />
                 </template>
                 <template #text>
-                  <!-- card right -->
+                  <p>
+                    🫀 • 🫁 • 🧠
+                  </p>
                 </template>
                 <template #interactions>
-                  <!-- Base Stack Icons -->
-                  <vs-button danger icon>
+                  <vs-button class="text-candyPink" icon>
                     <i class="bx bx-heart"></i>
                   </vs-button>
-                  <vs-button class="btn-chat" shadow primary>
+                  <vs-button class="btn-code-alt" shadow primary>
                     <i class="bx bx-chat"></i>
                     <span class="span">
                       54
@@ -129,9 +130,8 @@
                   </vs-button>
                 </template>
               </vs-card>
-
-              <!-- Hero Card End -->
             </div>
+            <!-- Hero Card End -->
           </div>
         </div>
       </main>
