@@ -17,6 +17,6 @@ author:
 
 I've decided to challenge myself. Life's been a bit hectic here lately.
 
-But with world's dusts settle slight per say I feel compelled to redouble both my aspirations and my efforts toward them. 
+But with the world's dusts settling slightly per say I feel compelled to redouble both my aspirations and my efforts toward them. 
 
 Code. Create. Repeat.
