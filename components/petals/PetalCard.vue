@@ -53,7 +53,7 @@
               {{ post.author.name }}
             </a>
           </p>
-          <div class="flex text-xs text-gray-300">
+          <div class="flex text-xs text-white">
             <time :datetime="post.createdAt">
               {{
                 new Date(post.createdAt).toLocaleDateString("en-US", {
