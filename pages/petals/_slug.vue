@@ -1,29 +1,27 @@
 <template>
-  <div
-    class="max-w-7xl mx-auto border-gray-700 border-dashed border-l border-r"
-  >
-    <div class="dark antialiased text-gray-200">
+  <div class="max-w-7xl mx-auto border-white border-dashed border-l border-r">
+    <div class="dark antialiased text-white">
       <div class="px-4 py-4 max-w-5xl mx-auto sm:px-6 lg:px-8">
         <article data-aos="fade-up">
           <div class="space-y-9">
             <div
-              class="py-0.5 border-t border-b border-dashed border-gray-700 flex items-center justify-between"
+              class="py-0.5 border-t border-b border-dashed border-gray-300 flex items-center justify-between"
             >
-              <div class="text-indigo-700 font-bold">
+              <div class="text-candyPink font-bold">
                 <nuxt-link
-                  class="hover:text-indigo-500"
+                  class="hover:text-kingFish"
                   :to="localePath('/petals')"
                   >{{ $t("petals.header") }}</nuxt-link
                 >
-                <span class="text-gray-700">/</span> {{ post.category }}
+                <span class="text-white">/</span> {{ post.category }}
               </div>
               <div>
                 <a
                   target="_blank"
                   rel="noreferrer"
                   :href="post.twitterShareUrl"
-                  class="inline-flex items-center py-2 px-3 space-x-2 rounded-md bg-gray-900 text-gray-300 text-xs font-medium hover:text-gray-200 transition ease-in-out duration-100"
-                  ><span>Share on Twitter</span
+                  class="inline-flex items-center py-2 px-3 space-x-2 rounded-md bg-transparent text-white text-xs font-medium hover:text-twitterBlue transition ease-in-out duration-100"
+                  ><span>-</span
                   ><svg
                     class="h-5 w-5"
                     xmlns="http://www.w3.org/2000/svg"
@@ -44,7 +42,7 @@
                 ></a>
               </div>
             </div>
-            <div class="px-4 sm:px-0 lg:px-4 pb-4 bg-gray-900 rounded-lg">
+            <div class="px-4 sm:px-0 lg:px-4 pb-4 bg-transparent rounded-lg">
               <a href="https://twitter.com/sourceaura">
                 <div
                   class="flex flex-items-center justify-center  rounded-full"
@@ -52,7 +50,7 @@
                   <UserAvatar
                     :photoURL="post.author.image"
                     :name="post.author.name"
-                    class="w-12 h-12 border-2 border-indigo-600 hover:border-candyPink -mt-5 bg-gray-900 rounded-full"
+                    class="w-12 h-12 border-2 border-kingFish hover:border-chileanFire -mt-5 bg-white rounded-full"
                   />
                 </div>
               </a>
@@ -60,7 +58,7 @@
                 <div class="space-y-1 text-center">
                   <div>
                     <h1
-                      class="text-2xl font-extrabold text-gray-100 tracking-tight"
+                      class="text-2xl font-extrabold text-candyPink tracking-tight"
                     >
                       {{ post.title }}
                     </h1>
@@ -69,29 +67,36 @@
                   <dl class="">
                     <div>
                       <dt class="sr-only">Published on</dt>
-                      <dd class="text-xs font-medium text-gray-500">
+                      <dd class="text-xs font-medium text-white">
                         <a
                           target="_blank"
                           rel="noreferrer"
                           :href="`https://twitter.com/${post.author.twitter}`"
-                          ><span
-                            class="text-indigo-600 hover:text-indigo-300"
-                            >{{ post.author.name }}</span
-                          ></a
-                        >
-                        <time :datetime="post.createdAt">{{
-                          " on " +
+                          ><span class="text-white hover:text-elfGreen">{{
+                            post.author.name
+                          }}</span>
+                        </a>
+                        <span class="mx-1">
+                          •
+                          <!-- &middot; -->
+                        </span>
+                        <time
+                          class="hover:text-laravel"
+                          :datetime="post.createdAt"
+                          >{{
                             new Date(post.createdAt).toLocaleDateString(
                               "en-US",
                               {
                                 year: "numeric",
                                 month: "short",
-                                day: "numeric"
+                                day: "numeric",
                               }
                             )
-                        }}</time>
+                          }}</time
+                        >
                         <span class="mx-1">
-                          &middot;
+                          •
+                          <!-- &middot; -->
                         </span>
                         {{ post.readingTime }}
                       </dd>
@@ -102,7 +107,7 @@
                     class="overflow-hidden flex flex-wrap items-center flex-row justify-center"
                   >
                     <div
-                      class="px-3 text-xs flex flex-shrink-0 py-1 mt-1 mr-2 bg-indigo-600 rounded-md hover:bg-indigo-700"
+                      class="px-3 text-xs flex flex-shrink-0 py-1 mt-1 mr-2 bg-kingFish rounded-md hover:bg-chileanFire"
                       v-for="(tag, index) in post.tags"
                       :key="`tag-${index}`"
                     >
@@ -112,9 +117,7 @@
                 </div>
               </header>
 
-              <div
-                class="prose dark:prose-dark break-words my-4 prose-sm max-w-4xl mx-auto"
-              >
+              <div class="break-words my-4 max-w-4xl mx-auto text-white">
                 <nuxt-content :document="post" />
               </div>
             </div>
@@ -125,7 +128,7 @@
             </div>
             <div
               id="comments"
-              class="border-t border-gray-700 border-dashed mt-6 py-5"
+              class="border-t border-gray-300 border-dashed mt-6 py-5"
             >
               <CommentInput :slug="post.slug" />
             </div>
@@ -143,7 +146,7 @@
 
     <div
       @click="scrollToTop"
-      class="cursor-pointer fixed z-50 bottom-4 right-4 w-8 w-8 rounded-full bg-gray-900 text-white block text-indigo-600 hover:text-candyPink"
+      class="cursor-pointer fixed z-50 bottom-4 right-4 w-8 rounded-full bg-black block text-kingFish hover:text-chileanFire"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -166,7 +169,7 @@ export default {
     const post = await $content("posts", params.slug).fetch();
     post.twitterShareUrl = `https://twitter.com/intent/tweet?text=${post.title} by @${post.author.twitter}&url=https://${$config.domain}${route.fullPath}`;
     return {
-      post
+      post,
     };
   },
   computed: {
@@ -174,14 +177,14 @@ export default {
       const comments = [
         ...(this.$store.state.comments[this.post.slug]
           ? this.$store.state.comments[this.post.slug]
-          : [])
+          : []),
       ];
       return comments.sort(this.cmp);
-    }
+    },
   },
   data() {
     return {
-      toastOptions: { duration: 2000, theme: "bubble" }
+      toastOptions: { duration: 2000, theme: "bubble" },
     };
   },
   async fetch() {
@@ -202,48 +205,48 @@ export default {
         {
           hid: "description",
           name: "description",
-          content: this.post.description
+          content: this.post.description,
         },
         // Open Graph
         { hid: "og:title", property: "og:title", content: this.post.title },
         {
           hid: "og:description",
           property: "og:description",
-          content: this.post.description
+          content: this.post.description,
         },
         // Twitter Card
         {
           hid: "twitter:title",
           name: "twitter:title",
-          content: this.post.title
+          content: this.post.title,
         },
         {
           hid: "twitter:description",
           name: "twitter:description",
-          content: this.post.description
-        }
-      ]
+          content: this.post.description,
+        },
+      ],
     };
   },
   methods: {
     scrollToTop() {
       document.documentElement.scrollTo({
         top: 0,
-        behavior: "smooth"
+        behavior: "smooth",
       });
     },
     cmp(a, b) {
       if (a.created < b.created) return 1;
       if (a.created > b.created) return -1;
       return 0;
-    }
-  }
+    },
+  },
 };
 </script>
 
 <style scoped>
 >>> .icon {
-  @apply text-indigo-600 hover:text-candyPink hidden;
+  @apply text-kingFish hover:text-chileanFire hidden;
 }
 
 >>> .breaker {

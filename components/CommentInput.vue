@@ -21,7 +21,7 @@
       <button
         @click="reset"
         type="button"
-        class="bg-transparent py-2 px-4 rounded-md shadow-sm text-xs font-medium text-white hover:bg-caribGreen focus:outline-none focus:ring-2 focus:ring-offset-transparent focus:ring-indigo-900"
+        class="bg-transparent py-2 px-4 rounded-md shadow-sm text-xs font-medium text-white hover:bg-elfGreen focus:outline-none focus:ring-2 focus:ring-offset-transparent focus:ring-indigo-900"
       >
         reset
       </button>

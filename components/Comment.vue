@@ -5,8 +5,8 @@
   </div>
   <div class="w-full">
     <div class="text-xs flex justify-between flex-row">
-      <p class="font-medium text-elfGreen">{{ comment.name }}</p>
-      <span class="text-gray-500 font-medium">{{ posted }}</span>
+      <p class="font-medium text-caribGreen">{{ comment.name }}</p>
+      <span class="text-white font-medium">{{ posted }}</span>
     </div>
     <div class="mt-1 text-sm text-gray-300">
       <p>{{ comment.text }}</p>

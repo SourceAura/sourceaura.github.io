@@ -14,6 +14,7 @@ module.exports = {
         sunGlo: "#bf6854",
         chileanFire: "#ff7400",
         candyPink: "#d96c80",
+        twitterBlue: "#1ca1f1",
         // nuxt-green
         caribGreen: "#00c48e",
         elfGreen: "#108774",
