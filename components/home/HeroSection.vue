@@ -108,15 +108,36 @@
             <div class="mt-8 px-5 sm:mt-16 lg:mt-0 lg:col-span-6 ">
               <vs-card type="2">
                 <template #title>
-                  <h3 class="text-white hover:text-kingFish ">{{ $config.name }}</h3>
-                </template>
-                <template #img>
-                  <img :src="$config.image" alt="" />
+                  <h3 class="text-white hover:text-kingFish ">
+                    {{ $config.name }}
+                  </h3>
                 </template>
                 <template #text>
-                  <p>
+                  <!-- <p>
                     🫀 • 🫁 • 🧠
-                  </p>
+                  </p> -->
+                  <vs-avatar>
+                    <img :src="$config.image" alt="" />
+                    <template #icons>
+                      <i class="bx bxl-facebook-square"></i>
+                      <i class="bx bxl-github"></i>
+                      <i class="bx bxl-twitter"></i>
+                    </template>
+                  </vs-avatar>
+
+                  <!-- <vs-tooltip left transparent>
+                    ...
+                    <template #tooltip>
+                      This is a beautiful button
+                    </template>
+                  </vs-tooltip> -->
+                </template>
+                <!-- bg -->
+                <template #img>
+                  <img
+                    src="https://media1.tenor.com/images/fbd438a9f31f5d8022a8568128228f2d/tenor.gif?itemid=21007368"
+                    alt=""
+                  />
                 </template>
                 <template #interactions>
                   <vs-button class="text-candyPink" icon>
@@ -142,7 +163,9 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      activeTooltip1: false,
+    };
   },
   inject: {
     theme: {

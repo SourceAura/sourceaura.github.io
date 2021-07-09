@@ -182,7 +182,8 @@ const nuxtConfig = {
   build: {
     splitChunks: {
       layout: true
-    }
+    },
+    // cssSourceMap: false
   },
 
   tailwindcss: {
@@ -201,7 +202,6 @@ const nuxtConfig = {
     duration: 16000,
     background: "#000"
   },
-
 
 
   hooks: {
