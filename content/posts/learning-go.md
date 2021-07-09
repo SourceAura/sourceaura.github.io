@@ -6,10 +6,10 @@ createdAt: "2021-07-07 20:53:77"
 # you can skip it to keep the size of blog cards small
 image:
 tags:
-  - go
+  - golang
   - ui/ux 
   - learning
-category: ui/ux
+category: GoLang
 author:
   name: Is
   twitter: sourceaura
@@ -22,4 +22,6 @@ I was recently inspired to delve into GoLang a bit by a cute little package call
 Getting comfy first...then we'll truly test these waters. "Let's Gooo!!" 😆
 
 ---
+
+Tutorial Projects inbound.
 
