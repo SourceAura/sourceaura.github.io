@@ -108,7 +108,7 @@ export default {
     ],
   },
   loadingIndicator: {
-    name: "nuxt",
+    name: "three-bounce",
     // https://tobiasahlin.com/spinkit/
     // circle
     // cube-grid

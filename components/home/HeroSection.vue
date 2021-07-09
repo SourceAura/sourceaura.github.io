@@ -51,7 +51,29 @@
                 >
                   The Stack:
                 </p> -->
-                <div></div>
+                <br />
+                <br />
+                <div class="">
+                  <div>
+                    <img
+                      alt="Vue.js"
+                      src="https://img.shields.io/badge/Vue.js-4FC08D.svg?style=for-the-badge&logo=vue-dot-js&logoColor=white"
+                    />
+                  </div>
+                  <div>
+                    <img
+                      alt="Nuxt.js"
+                      src="https://img.shields.io/badge/Nuxt.js-00C58E.svg?style=for-the-badge&logo=nuxt-dot-js&logoColor=white"
+                    />
+                  </div>
+                  <div>
+                    <img
+                      alt="Tailwind.css"
+                      src="https://img.shields.io/badge/Tailwind%20CSS-38B2AC.svg?style=for-the-badge&logo=Tailwind-CSS&logoColor=white"
+                    />
+                  </div>
+                </div>
+
                 <!-- <div
                   v-if="$config.workedAt.enabled"
                   class="mt-5 w-full sm:mx-auto lg:ml-0"
@@ -80,6 +102,8 @@
                 </div> -->
               </div>
             </div>
+
+            <!-- Hero Card  -->
             <div class="mt-8 px-5 sm:mt-16 lg:mt-0 lg:col-span-6">
               <vs-card type="3">
                 <template #title>
@@ -88,12 +112,9 @@
                 <template #img>
                   <!-- card left -->
                   <img :src="$config.image" alt="" />
-
-                  
                 </template>
                 <template #text>
                   <!-- card right -->
-                  
                 </template>
                 <template #interactions>
                   <!-- Base Stack Icons -->
@@ -109,15 +130,7 @@
                 </template>
               </vs-card>
 
-              <!-- <div
-                class="flex-shrink-0 w-full sm:mx-auto flex flex-1 items-center justify-center rounded-lg sm:overflow-hidden"
-              >
-                <img
-                  class="rounded-md h-80"
-                  :src="$config.image"
-                  :alt="$config.name"
-                />
-              </div> -->
+              <!-- Hero Card End -->
             </div>
           </div>
         </div>
