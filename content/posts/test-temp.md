@@ -19,8 +19,8 @@ author:
 
 <!--more-->
 I am a Frontend Software Dev. 
-My mission is to make the both the internet and the IoT (Internet of Things) more accessible to everyday people. 
-Thus, as a I learn and grow I tried to focus/specialize in literal accessibly and user friendliness. 
+My mission is to make the both internet and the IoT (Internet of Things) more accessible to everyday people. 
+Thus, as a I learn and grow I tried to focus/specialize in literal accessibility and user friendliness. 
 -
 
 This world is but one thing...
