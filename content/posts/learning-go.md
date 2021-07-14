@@ -11,7 +11,7 @@ tags:
   - learning
 category: GoLang
 author:
-  name: Is
+  name: SourceAura
   twitter: sourceaura
   image: https://avatars.githubusercontent.com/u/13864703?v=4
 ---
