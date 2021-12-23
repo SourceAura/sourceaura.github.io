@@ -73,7 +73,7 @@
                     />
                   </div>
                 </div>
-
+                <!--  -->
                 <!-- <div
                   v-if="$config.workedAt.enabled"
                   class="mt-5 w-full sm:mx-auto lg:ml-0"
@@ -100,22 +100,22 @@
                     </div>
                   </div>
                 </div> -->
+                <!--  -->
               </div>
             </div>
 
             <!-- Hero Card  -->
-
             <div class="mt-8 px-5 sm:mt-16 lg:mt-0 lg:col-span-6 ">
               <vs-card type="2">
                 <template #title>
-                  <h3 class="text-white hover:text-kingFish ">
-                    {{ $config.name }}
-                  </h3>
+                  <h5 class="text-white hover:text-kingFish ">
+                    {{ $config.name }} ||
+                    <p>
+                      🫀 • 🫁 • 🧠
+                    </p>
+                  </h5>
                 </template>
                 <template #text>
-                  <!-- <p>
-                    🫀 • 🫁 • 🧠
-                  </p> -->
                   <vs-avatar>
                     <img :src="$config.image" alt="" />
                   </vs-avatar>
@@ -135,14 +135,13 @@
 
                   <!-- the stack -->
                   <box-icon type="logo" name="vuejs"></box-icon>
-                  <box-icon name='firebase' type='logo' ></box-icon>
+                  <box-icon name="firebase" type="logo"></box-icon>
                   <box-icon type="logo" name="nodejs"></box-icon>
                   <box-icon type="logo" name="css3"></box-icon>
                   <box-icon type="logo" name="javascript"></box-icon>
                   <box-icon name="html5" type="logo"></box-icon>
-                  <box-icon name='python' type='logo' ></box-icon>
-                  <box-icon name='terminal'></box-icon>
-
+                  <box-icon name="python" type="logo"></box-icon>
+                  <box-icon name="terminal"></box-icon>
                 </template>
               </vs-card>
             </div>
@@ -155,10 +154,14 @@
 </template>
 
 <script>
+import VueMatrixRaindrop from "vue-matrix-digit-rain";
 export default {
   data() {
     return {
       activeTooltip1: false,
+      components: {
+        VueMatrixRaindrop,
+      },
     };
   },
   inject: {
