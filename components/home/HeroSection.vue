@@ -134,14 +134,14 @@
                   </vs-button> -->
 
                   <!-- the stack -->
-                  <box-icon type="logo" name="vuejs"></box-icon>
+                  <!-- <box-icon type="logo" name="vuejs"></box-icon>
                   <box-icon name="firebase" type="logo"></box-icon>
                   <box-icon type="logo" name="nodejs"></box-icon>
                   <box-icon type="logo" name="css3"></box-icon>
                   <box-icon type="logo" name="javascript"></box-icon>
                   <box-icon name="html5" type="logo"></box-icon>
                   <box-icon name="python" type="logo"></box-icon>
-                  <box-icon name="terminal"></box-icon>
+                  <box-icon name="terminal"></box-icon> -->
                 </template>
               </vs-card>
             </div>
