@@ -9,7 +9,7 @@ tags:
   - life
   - healing
   - pain
-category: spotify
+category: venting
 author:
   name: SourceAura
   twitter: sourceaura
