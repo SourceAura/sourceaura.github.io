@@ -3,7 +3,7 @@
 export default {
   name: "@SourceAura",
   domain: "sourceaura.netlify.app", // add without https:// , used in meta tags and share urls
-  image: "https://avatars.githubusercontent.com/u/13864703?v=4",
+  img: "https://avatars.githubusercontent.com/u/13864703?v=4",
   email: "mail@sourceaura.com",
   googleAnalyticsV4: {
     enabled: false,
@@ -137,9 +137,10 @@ export default {
       },
       // Author Info
       hero: {
+        iAm: "an 'eclectic'",
         namaste: "namasté...",
         explore: "explore a bit",
-        iAm: "an 'eclectic'",
+      // 
         terms: [
           "poet",
           "programmer",
@@ -151,7 +152,7 @@ export default {
         ],
         aboutMe: " UI || UX - Designer",
       },
-      // GitHub Data
+      // GitHub 
       gitData: {
         header: "contributions",
         subtext: "github",

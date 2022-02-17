@@ -1,8 +1,9 @@
 <template>
-<div class="font-light hover:text-laravel text-3xl animation-logo tracking-tighter text-kingFish">
-  {{ $config.name[0].toLowerCase() }}
-  <!-- 🌹's -->
-</div>
+  <div class="font-light hover:text-laravel text-3xl animation-logo tracking-tighter text-kingFish">
+    {{ $config.name[0].toLowerCase() }}
+    <!-- 🌹's -->
+   
+  </div>
 </template>
 
 <script>
@@ -16,14 +17,14 @@ export default {
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(-5%);
-    animationTimingFunction: cubic-bezier(0.4, 0, 1, 1);
+    animationtimingfunction: cubic-bezier(0.4, 0, 1, 1);
   }
   50% {
     transform: translateY(0);
-    animationTimingFunction: cubic-bezier(0, 0, 0.2, 1);
+    animationtimingfunction: cubic-bezier(0, 0, 0.2, 1);
   }
 }
-
 </style>

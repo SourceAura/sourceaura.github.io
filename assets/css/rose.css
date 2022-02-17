@@ -1,0 +1,143 @@
+body {
+  background: #191922;
+}
+.rose {
+  width: 200px;
+  margin: 150px auto;
+}
+
+.st0 {
+
+}
+
+.st0#A  {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  animation: grow8 2s forwards;
+  transform-origin: center center;
+}
+.st0#B  {
+  animation: grow7 2s forwards;
+  transform-origin: center center;
+}
+.st0#C  {
+  animation: grow6 2s forwards;
+  transform-origin: center center;
+}
+.st0#D  {
+  animation: grow5 2s forwards;
+  transform-origin: center center;
+}
+.st0#E  {
+  animation: grow4 2s forwards;
+  transform-origin: center center;
+}
+.st0#F  {
+  animation: grow3 2s forwards;
+  transform-origin: center center;
+}
+.st0#G  {
+  animation: grow2 2s forwards;
+  transform-origin: center center;
+}
+.st0#H  {
+  animation: grow1 2s forwards;
+  transform-origin: center center;
+}
+
+
+/**** animation ****/
+
+@keyframes grow1 {
+  0% {
+    transform: scale(.4);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow2 {
+  0% {
+    transform: scale(0);
+  }
+  5% {
+    transform: scale(0);
+  }
+  80% {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow3 {
+  0% {
+    transform: scale(0);
+  }
+  20% {
+    transform: scale(0);
+  }
+  90% {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow4 {
+  0% {
+    transform: scale(0);
+  }
+  30% {
+    transform: scale(0);
+  }
+  90% {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow5 {
+  0% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(0);
+  }
+  90% {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow6 {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(0);
+  }
+  90% {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow7 {
+  0% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(0);
+  }
+  90% {
+    transform: scale(1);
+  }
+}
+
+@keyframes grow8 {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(0);
+  }
+  90% {
+    transform: scale(1);
+  }
+}

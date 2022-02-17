@@ -1,6 +1,6 @@
 <template>
   <footer class>
-    <div class="max-w-7xl max-h-0 mx-auto px-4">
+    <div class="max-w-7xl max-h-0 mx-auto px-4 backdrop-filter backdrop-blur sticky">
       <div class="pt-5 pb-12 md:flex md:items-center md:justify-between">
         <div class="flex space-x-6 md:order-2">
           <!-- Social Icons -->
