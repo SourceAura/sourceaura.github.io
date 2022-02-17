@@ -188,9 +188,7 @@
               <!-- <a v-show="$config.buyMeACoffee.enabled" :href="$config.buyMeACoffee.url" target="_blank" rel="noreferrer" class="flex px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-gray-100 hover:bg-gray-600 focus:outline-none focus:text-gray-100 focus:bg-gray-600 transition duration-150 ease-in-out" role="menuitem">{{ $t('nav.buyMeACoffee')}}</a> -->
             </div>
             <!-- Time Stamp -->
-            <div class="flex text-gray-100 hover:text-white">
-              {{timestamp}}
-            </div>
+           
             <div v-if="$config.firebase.enabled">
               <div
                 v-if="!user"
@@ -227,14 +225,24 @@ export default {
     };
   },
   methods: {
+    getNow: function () {
+      const today = new Date();
+      const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+      const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      const dateTime = date + ' ' + time;
+      this.timestamp = dateTime;
+    },
     async signInUser() {
       this.mobileMenuOpen = false;
       try {
         const user = await this.$store.dispatch("signInUserWithGoogle");
       //  vuesax alert -
-       this.$toast.success(
-          `welcome ${user.displayName.toLowerCase()} 🙌`,
-          this.toastOptions
+       this.$vs.notification({
+         title: 'notification',
+         text: `welcome ${user.displayName.toLowerCase()} 🙌`
+       }
+          // ,
+          // this.toastOptions
         );
       } catch (e) {
         console.error(e);
@@ -250,25 +258,8 @@ export default {
 };
 </script>
 
-<script>
-export default {
-  data: {
-    timestamp: ""
-  },
-  created() {
-    setInterval(this.getNow, 1000);
-  },
-  methods: {
-    getNow: function () {
-      const today = new Date();
-      const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-      const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-      const dateTime = date + ' ' + time;
-      this.timestamp = dateTime;
-    }
-  }
-}
-</script>
+
+
 
 <style scoped>
 .backdrop-filter {

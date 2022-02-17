@@ -29,7 +29,7 @@ export default {
     try {
       const posts = await this.$content("posts")
         .without(["body", "toc", "dir", "extension", "path", "tags"])
-        .limit(3)
+        .limit(4)
         .skip(0)
         .sortBy("createdAt", "desc")
         .fetch();

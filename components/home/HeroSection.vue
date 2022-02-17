@@ -74,32 +74,7 @@
                   </div>
                 </div>
                 <!--  -->
-                <!-- <div
-                  v-if="$config.workedAt.enabled"
-                  class="mt-5 w-full sm:mx-auto lg:ml-0"
-                >
-                  <div
-                    class="flex flex-wrap space-x-1 items-start items-center space-x-4 md:space-x-10"
-                  >
-                    <div
-                      v-for="(firm, index) in $config.workedAt.meta"
-                      :key="index"
-                    >
-                      <a
-                        :href="firm.url"
-                        target="_blank"
-                        rel="noreferrer"
-                        class="flex items-center justify-center"
-                      >
-                        <img
-                          :src="firm.src"
-                          class="h-8 rounded-sm sm:h-9"
-                          :alt="firm.name"
-                        />
-                      </a>
-                    </div>
-                  </div>
-                </div> -->
+               
                 <!--  -->
               </div>
             </div>
@@ -109,10 +84,7 @@
               <vs-card type="2">
                 <template #title>
                   <h5 class="text-white hover:text-kingFish ">
-                    {{ $config.name }} ||
-                    <p>
-                      🫀 • 🫁 • 🧠
-                    </p>
+                   ...
                   </h5>
                 </template>
                 <template #text>
@@ -154,13 +126,11 @@
 </template>
 
 <script>
-import VueMatrixRaindrop from "vue-matrix-digit-rain";
 export default {
   data() {
     return {
       activeTooltip1: false,
       components: {
-        VueMatrixRaindrop,
       },
     };
   },
