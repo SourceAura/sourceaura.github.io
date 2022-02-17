@@ -17,7 +17,7 @@ export default {
 </script>
 
 <style>
-body {}
+/* body {} */
 html {
   @apply bg-black text-white font-sans;
   -moz-osx-font-smoothing: grayscale;

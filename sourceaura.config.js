@@ -108,7 +108,7 @@ export default {
     ],
   },
   loadingIndicator: {
-    name: "wandering-cubes",
+    name: "fading-circle",
     // https://tobiasahlin.com/spinkit/
     // circle
     // cube-grid
