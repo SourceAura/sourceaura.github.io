@@ -16,7 +16,7 @@ export default {
     // leave it empty if plausible is not self hosted
     apiHost: "https://analytics.lookatx.dev", // default: https://plausible.io
   },
-  // enable if you want comments and likes on posts
+  // enable if you want comments and likes
   // see how it looks on karngyan.com
   firebase: {
     enabled: true,

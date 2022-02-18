@@ -12,7 +12,8 @@
           >{{ $t("recentPetal.header") }}</nuxt-link>
         </div>
         <div data-aos="zoom-in" class="gap-4 mx-4 grid max-w-7xl grid-flow-row sm:grid-flow-col">
-          <PetalCard v-for="post in posts" :key="post.slug" :post="post" />
+          <!-- <PetalCard v-for="post in posts" :key="post.slug" :post="post" /> -->
+          <PetalCard v-for="petal in petals" :key="petal.slug" :petal="petal" />
         </div>
       </div>
     </vs-card-group>
@@ -21,8 +22,11 @@
 
 <script>
 export default {
+  data: {
+    cardColor: "black",
+  },
   props: {
-    posts: {
+    petals: {
       type: Array,
     },
   },

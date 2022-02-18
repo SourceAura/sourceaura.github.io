@@ -13,13 +13,13 @@
                   :to="localePath('/petals')"
                   >{{ $t("petals.header") }}</nuxt-link
                 >
-                <span class="text-white">/</span> {{ post.category }}
+                <span class="text-white">/</span> {{ petal.category }}
               </div>
               <div>
                 <a
                   target="_blank"
                   rel="noreferrer"
-                  :href="post.twitterShareUrl"
+                  :href="petal.twitterShareUrl"
                   class="inline-flex items-center py-2 px-3 space-x-2 rounded-md bg-transparent text-white text-xs font-medium hover:text-twitterBlue transition ease-in-out duration-100"
                   ><span>-</span
                   ><svg
@@ -48,8 +48,8 @@
                   class="flex flex-items-center justify-center  rounded-full"
                 >
                   <UserAvatar
-                    :photoURL="post.author.image"
-                    :name="post.author.name"
+                    :photoURL="petal.author.image"
+                    :name="petal.author.name"
                     class="w-12 h-12 border-2 border-kingFish hover:border-chileanFire -mt-5 bg-white rounded-full"
                   />
                 </div>
@@ -60,7 +60,7 @@
                     <h1
                       class="text-2xl font-extrabold text-candyPink tracking-tight"
                     >
-                      {{ post.title }}
+                      {{ petal.title }}
                     </h1>
                   </div>
 
@@ -71,9 +71,9 @@
                         <a
                           target="_blank"
                           rel="noreferrer"
-                          :href="`https://twitter.com/${post.author.twitter}`"
+                          :href="`https://twitter.com/${petal.author.twitter}`"
                           ><span class="text-white hover:text-elfGreen">{{
-                            post.author.name
+                            petal.author.name
                           }}</span>
                         </a>
                         <span class="mx-1">
@@ -82,9 +82,9 @@
                         </span>
                         <time
                           class="hover:text-laravel"
-                          :datetime="post.createdAt"
+                          :datetime="petal.createdAt"
                           >{{
-                            new Date(post.createdAt).toLocaleDateString(
+                            new Date(petal.createdAt).toLocaleDateString(
                               "en-US",
                               {
                                 year: "numeric",
@@ -98,7 +98,7 @@
                           •
                           <!-- &middot; -->
                         </span>
-                        {{ post.readingTime }}
+                        {{ petal.readingTime }}
                       </dd>
                     </div>
                   </dl>
@@ -108,7 +108,7 @@
                   >
                     <div
                       class="px-3 text-xs flex flex-shrink-0 py-1 mt-1 mr-2 bg-kingFish rounded-md hover:bg-chileanFire"
-                      v-for="(tag, index) in post.tags"
+                      v-for="(tag, index) in petal.tags"
                       :key="`tag-${index}`"
                     >
                       {{ tag }}
@@ -118,19 +118,19 @@
               </header>
 
               <div class="break-words my-4 max-w-4xl mx-auto text-white">
-                <nuxt-content :document="post" />
+                <nuxt-content :document="petal" />
               </div>
             </div>
           </div>
           <div v-if="$config.firebase.enabled">
             <div class="my-6">
-              <Like :slug="post.slug" />
+              <Like :slug="petal.slug" />
             </div>
             <div
               id="comments"
               class="border-t border-gray-300 border-dashed mt-6 py-5"
             >
-              <CommentInput :slug="post.slug" />
+              <CommentInput :slug="petal.slug" />
             </div>
             <div class="space-y-4 max-w-7xl">
               <Comment
@@ -166,17 +166,17 @@
 <script>
 export default {
   async asyncData({ $content, params, route, $config }) {
-    const post = await $content("posts", params.slug).fetch();
-    post.twitterShareUrl = `https://twitter.com/intent/tweet?text=${post.title} by @${post.author.twitter}&url=https://${$config.domain}${route.fullPath}`;
+    const petal = await $content("petals", params.slug).fetch();
+    petal.twitterShareUrl = `https://twitter.com/intent/tweet?text=${petal.title} by @${petal.author.twitter}&url=https://${$config.domain}${route.fullPath}`;
     return {
-      post,
+      petal,
     };
   },
   computed: {
     comments() {
       const comments = [
-        ...(this.$store.state.comments[this.post.slug]
-          ? this.$store.state.comments[this.post.slug]
+        ...(this.$store.state.comments[this.petal.slug]
+          ? this.$store.state.comments[this.petal.slug]
           : []),
       ];
       return comments.sort(this.cmp);
@@ -192,7 +192,7 @@ export default {
       return;
     }
     try {
-      await this.$store.dispatch("fetchComments", { slug: this.post.slug });
+      await this.$store.dispatch("fetchComments", { slug: this.petal.slug });
     } catch (e) {
       this.$toast.error(e.toString(), this.toastOptions);
       console.error(e);
@@ -200,30 +200,30 @@ export default {
   },
   head() {
     return {
-      title: this.post.title + ` -- petals -- ${this.$config.name}`,
+      title: this.petal.title + ` -- petals -- ${this.$config.name}`,
       meta: [
         {
           hid: "description",
           name: "description",
-          content: this.post.description,
+          content: this.petal.description,
         },
         // Open Graph
-        { hid: "og:title", property: "og:title", content: this.post.title },
+        { hid: "og:title", property: "og:title", content: this.petal.title },
         {
           hid: "og:description",
           property: "og:description",
-          content: this.post.description,
+          content: this.petal.description,
         },
         // Twitter Card
         {
           hid: "twitter:title",
           name: "twitter:title",
-          content: this.post.title,
+          content: this.petal.title,
         },
         {
           hid: "twitter:description",
           name: "twitter:description",
-          content: this.post.description,
+          content: this.petal.description,
         },
       ],
     };

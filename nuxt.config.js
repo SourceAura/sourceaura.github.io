@@ -3,7 +3,7 @@ import config from "./sourceaura.config";
 const createSitemapRoutes = async () => {
   let routes = [];
   const { $content } = require("@nuxt/content");
-  const articles = await $content("posts").fetch();
+  const articles = await $content("petals").fetch();
 
   if (config.petals.enabled) {
     for (const article of articles) {

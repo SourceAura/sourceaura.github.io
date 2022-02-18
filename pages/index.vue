@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <HeroSection />
-    <LazyRecentBlog v-if="$config.petals.enabled && posts" :posts="posts" />
+    <LazyRecentBlog v-if="$config.petals.enabled && petals" :petals="petals" />
     <!--  -->
     <GithubCalendar v-if="$config.social.github" />
   </div>
@@ -20,20 +20,20 @@ export default {
   // },
   data() {
     return {
-      posts: null,
+      petals: null
     };
   },
   async created() {
-    const fetchDocsLabel = "fetchAllPosts";
+    const fetchDocsLabel = "fetchAllPetals";
     console.time(fetchDocsLabel);
     try {
-      const posts = await this.$content("posts")
+      const petals = await this.$content("petals")
         .without(["body", "toc", "dir", "extension", "path", "tags"])
-        .limit(4)
+        .limit(3)
         .skip(0)
         .sortBy("createdAt", "desc")
         .fetch();
-      this.posts = posts;
+      this.petals = petals;
     } catch (e) {
       console.error(e);
     } finally {

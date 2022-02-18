@@ -36,9 +36,9 @@
       class="mt-5 gap-4 mx-4 grid max-w-none lg:grid-cols-3"
     >
       <PetalCard
-        v-for="post in postsByCategories"
-        :key="post.slug"
-        :post="post"
+        v-for="petal in petalsByCategory"
+        :key="petal.slug"
+        :petal="petal"
       />
     </div>
   </div>
@@ -50,12 +50,12 @@ const ALL = "all";
 export default {
   computed: {
     categories() {
-      return [ALL, ...new Set(this.posts.map((post) => post.category))];
+      return [ALL, ...new Set(this.petals.map((petal) => petal.category))];
     },
-    postsByCategories() {
-      if (this.currentCategory === ALL) return this.posts;
-      return this.posts.filter(
-        (post) => post.category === this.currentCategory
+    petalsByCategory() {
+      if (this.currentCategory === ALL) return this.petals;
+      return this.petals.filter(
+        (petal) => petal.category === this.currentCategory
       );
     },
   },
@@ -71,14 +71,14 @@ export default {
     };
   },
   async asyncData({ $content }) {
-    const fetchDocsLabel = "fetchAllPosts";
+    const fetchDocsLabel = "fetchAllPetals";
     console.time(fetchDocsLabel);
-    const posts = await $content("posts")
+    const petals = await $content("petals")
       .without(["body", "toc", "dir", "extension", "path", "tags"])
       .sortBy("createdAt", "desc")
       .fetch();
     console.timeEnd(fetchDocsLabel);
-    return { posts };
+    return { petals };
   },
 };
 </script>
