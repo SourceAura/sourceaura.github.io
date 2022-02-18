@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <HeroSection />
-    <LazyRecentBlog v-if="$config.petals.enabled && petals" :petals="petals" />
+    <LazyRecentPetals v-if="$config.petals.enabled && petals" :petals="petals" />
     <!--  -->
     <GithubCalendar v-if="$config.social.github" />
   </div>
@@ -29,7 +29,7 @@ export default {
     try {
       const petals = await this.$content("petals")
         .without(["body", "toc", "dir", "extension", "path", "tags"])
-        .limit(3)
+        .limit(4)
         .skip(0)
         .sortBy("createdAt", "desc")
         .fetch();
