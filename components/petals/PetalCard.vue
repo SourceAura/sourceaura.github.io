@@ -3,7 +3,7 @@
     :to="localePath(`/petals/${petal.slug}`)"
     class="flex transition duration-700 ease-in-out transform hover:translate-y-0.5 hover:scale-105 flex-col rounded-xl shadow-lg overflow-hidden"
   >
-    <v-card class="mx-auto" max-width="344" color="#000" outlined>
+    <v-card class="" max-width="344" color="#000" outlined>
       <v-list-item three-line>
         <v-list-item-content>
           <div class="text-overline mb-4 text-white">{{ petal.title }}</div>
