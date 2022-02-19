@@ -5,8 +5,8 @@
     <!--  -->
     <GithubCalendar v-if="$config.social.github" />
   </div>
+  <!--  -->
 </template>
-
 
 <script>
 export default {
