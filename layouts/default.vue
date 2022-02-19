@@ -2,21 +2,32 @@
   <div>
     <TheNavBar />
     <Nuxt />
+    <Zenyatta />
     <TheFooter />
   </div>
 </template>
 
 <script>
+import Zenyatta from "~/components/Zenyatta.vue";
+
 export default {
+  data: function () {
+    return {
+      message: 'Hola mundo'
+    }
+  },
   webfontloader: {
     google: {
       families: ["Dosis:300,400"], //Loads Lato font with weights 400 and 700
     },
   },
+  components: { Zenyatta }
 };
 </script>
 
 <style>
+@import url(https://fonts.googleapis.com/css?family=Orbitron);
+
 /* body {} */
 html {
   @apply bg-black text-white font-sans;
@@ -116,3 +127,90 @@ html {
   transform: rotate(12deg);
 }
 </style>
+
+
+<style scoped>
+/*====COLOR Codes====*/
+.gradient,
+.gradient:after {
+    display: block;
+    content: "";
+    width: 400px;
+    height: 80px;
+    background: #bd328f;
+    background: -moz-linear-gradient(
+        -45deg,
+        #bd328f 0%,
+        #bd328f 18%,
+        #2976ab 42%,
+        #292f75 62%,
+        #bd328f 82%,
+        #bd328f 100%
+    );
+    background: -webkit-gradient(
+        linear,
+        left top,
+        right bottom,
+        color-stop(0%, #bd328f),
+        color-stop(18%, #bd328f),
+        color-stop(42%, #2976ab),
+        color-stop(62%, #292f75),
+        color-stop(82%, #bd328f),
+        color-stop(100%, #bd328f)
+    );
+    background: -webkit-linear-gradient(
+        -45deg,
+        #bd328f 0%,
+        #bd328f 18%,
+        #2976ab 42%,
+        #292f75 62%,
+        #bd328f 82%,
+        #bd328f 100%
+    );
+    background: -o-linear-gradient(
+        -45deg,
+        #bd328f 0%,
+        #bd328f 18%,
+        #2976ab 42%,
+        #292f75 62%,
+        #bd328f 82%,
+        #bd328f 100%
+    );
+    background: -ms-linear-gradient(
+        -45deg,
+        #bd328f 0%,
+        #bd328f 18%,
+        #2976ab 42%,
+        #292f75 62%,
+        #bd328f 82%,
+        #bd328f 100%
+    );
+    background: linear-gradient(
+        135deg,
+        #bd328f 0%,
+        #bd328f 18%,
+        #2976ab 42%,
+        #292f75 62%,
+        #bd328f 82%,
+        #bd328f 100%
+    );
+}
+
+.gradient {
+    animation: 8s anim linear infinite;
+}
+
+.gradient:after {
+    transform: translateX(400px);
+}
+
+@keyframes anim {
+    0% {
+        transform: translateX(0px);
+    }
+    100% {
+        transform: translateX(-400px);
+    }
+}
+
+

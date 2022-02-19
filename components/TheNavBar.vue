@@ -7,6 +7,7 @@
         <div class="flex items-center px-2 lg:px-0">
           <nuxt-link :to="localePath('/')" class="flex-shrink-0">
             <TheLogo class="text-3xl w-auto" />
+          
           </nuxt-link>
           <!--  -->
           <div class="hidden lg:block lg:ml-6">
@@ -210,8 +211,10 @@
 
 <script>
 import TheLogo from "~/components/logos/TheLogo";
+// Zen imported here because i haven't figured out what im doing wrong in default.vue :shrug:
+import Zenyatta from "./Zenyatta.vue";
 export default {
-  components: { TheLogo },
+  components: { TheLogo, Zenyatta },
   computed: {
     user() {
       return this.$store.state.user;
