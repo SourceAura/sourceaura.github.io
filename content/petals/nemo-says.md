@@ -25,6 +25,7 @@ The ideal is that if i just keep coding. reading. learning. I'll inevitably prog
 
 <br>
 <br>
+
 <br>
 
 ![...](/uploads/dentaku.png)
