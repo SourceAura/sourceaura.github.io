@@ -211,10 +211,10 @@
 
 <script>
 import TheLogo from "~/components/logos/TheLogo";
-// Zen imported here because i haven't figured out what im doing wrong in default.vue :shrug:
-import Zenyatta from "./Zenyatta.vue";
+// Zen imported here because i haven't figured out what im doing wrong in dau
+// import Zenyatta from "./Zenyatta.vue";
 export default {
-  components: { TheLogo, Zenyatta },
+  components: { TheLogo },
   computed: {
     user() {
       return this.$store.state.user;

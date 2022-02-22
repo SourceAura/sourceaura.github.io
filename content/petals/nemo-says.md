@@ -16,13 +16,16 @@ author:
   twitter: sourceaura
   image: https://avatars.githubusercontent.com/u/13864703?v=4
 ---
-
+<h1 align="center">
 Today I built a basic calculator using Vue.js, Vuesax , & a little 💜.
 It is i think the 2nd in a series of practice projects.
 
 The ideal is that if i just keep coding. reading. learning. I'll inevitably progress.
+<h1>
 
----
+<br>
+<br>
+<br>
 
 ![...](/uploads/dentaku.png)
 
