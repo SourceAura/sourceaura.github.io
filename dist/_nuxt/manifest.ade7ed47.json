@@ -1,0 +1,9 @@
+{
+  "name": "sourceaura.netlify.app",
+  "short_name": "@SourceAura",
+  "icons": [],
+  "start_url": "/?standalone=true",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "lang": "en"
+}
