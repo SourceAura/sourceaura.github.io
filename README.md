@@ -37,3 +37,6 @@
 
 -------
 - 02172022 :: Finding Flow - with Cadence.
+
+-------
+- 2222022 :: Research. Code. Repeat -- :shrug:

@@ -1,5 +1,5 @@
 ---
-id: 2
+id: 6
 title: "..."
 createdAt: "2020-07-07 17:50:00"
 # image field is not mandatory
@@ -19,6 +19,6 @@ I've decided to challenge myself. Life's been a bit hectic here lately.
 
 But with the world's dusts settling slightly per say I feel compelled to redouble both my aspirations and my efforts toward them. 
 
-Code. Create. Repeat.
+Code. Create. Repeat. ^_^
 
 <h1>

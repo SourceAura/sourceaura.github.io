@@ -12,7 +12,7 @@
                   class="mt-4 text-3xl tracking-tight font-extrabold text-white sm:mt-5 sm:leading-none lg:mt-6 lg:text-3xl xl:text-3xl"
                 >
                   <span class="md:block">{{ $t("hero.iAm") }}</span>
-                  <box-icon type="solid" name="cat"></box-icon>
+                  <!-- <box-icon type="solid" name="cat"></box-icon> -->
                   <vue-typer :text="$t('hero.terms')"></vue-typer>
                 </h1>
                 <p class="mt-3 text-base text-white sm:mt-5">{{ $t("hero.aboutMe") }}</p>
