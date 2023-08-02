@@ -42,9 +42,10 @@ export default {
   uses: {
     enabled: true,
     meta: [
-      { title: "OS", value: "macOS Big Sur - Version 11.1" },
+      { title: "OS", value: "MacOS Ventura - Version 13.4.1" },
       { title: "Memory", value: "8 GB 2133 MHz LPDDR3" },
       { title: "Mouse", value: "Logitech M570 x MX Ergo" },
+      { title: "Graphics", value: "Intel Iris Plus Graphics 645 1536 MB" },
       { title: "Monitor", value: "Retina Display 13.3-inch (2560 × 1600)" },
       {
         title: "Laptop",

@@ -19,8 +19,6 @@ Soon to be a multi-menu.
     </div>
 </template>
 
-
-
  <script>
 export default {
     data: () => ({
@@ -28,10 +26,6 @@ export default {
     })
 }
 </script>
-
-
-
-
 
 <style lang="css">
 #nav {
