@@ -1,11 +1,44 @@
-# Introducing [Astro Micro 🔬](https://astro-micro.vercel.app/)
+ 
+# SourceAura's SandBox 👾 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/cc44f316-985e-4e60-80c6-7241981a4fea/deploy-status)](https://app.netlify.com/sites/sourceaura/deploys)
+*
+- Exploring poetry and programming, through my imagination.
+  - ...either that or it's the other way around...
+  - Who cares. 😌
 
-Astro Micro is an accessible theme for Astro. It's a fork of [Mark Horn's](https://github.com/markhorn-dev) popular theme [Astro Nano](https://astro-nano-demo.vercel.app/). Like Nano, Micro comes with zero frameworks installed.
 
-Micro adds features like [Pagefind](https://pagefind.app) for search, [Giscus](https://giscus.app) for comments, and more. For a full list of changes, see this [blog post](https://astro-micro.vercel.app/blog/00-micro-changelog).
+- 01112016 :: ...we liquidate, the gate.
+  * astral:actual frame...
 
-Micro still comes with everything great about Nano — full type safety, a sitemap, an RSS feed, and Markdown + MDX support. Styled with TailwindCSS and preconfigured with system, light, and dark themes.
+- 05172016 :: ...blooming, soon.
 
----
+- 06132016 :: ...reconstruction underway.
 
-![astro-micro-image](https://github.com/trevortylerlee/astro-micro/assets/49603972/ec5bc96a-3e96-4af1-a182-7711b54c5ef6)
+- 06132016 :: ...frame. solid. shall we...
+
+- 07252016 :: ...note it.
+
+- 09212016 :: ...the winds came...
+
+-------
+
+- 07112017 :: ...the sun...is rising.
+
+-------
+
+- 08202018 :: ...it's all but alive. 
+- 09122018 :: ...target practicing. 🏹🏹🏹
+
+-------
+- 10022018 :: ...found vue... ( was so gonna use the term. but yea. )
+
+-------
+- 06222021 :: Nuxt ftw. Building a castle...same sands. 
+
+-------
+- 02172022 :: Finding Flow - with Cadence.
+
+-------
+- 2222022 :: Research. Code. Repeat -- :shrug:
+
+- 04022024 :: Updating the Portfolio -- Begin Again. 🪷
