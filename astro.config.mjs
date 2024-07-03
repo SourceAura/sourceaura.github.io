@@ -17,5 +17,7 @@ export default defineConfig({
     shikiConfig: {
       theme: "css-variables"
     }
-  }
+  },
+  site: 'https://sourceaura.github.io',
+  base: 'sourceaura.github.io',
 });
