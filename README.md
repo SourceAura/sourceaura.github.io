@@ -52,4 +52,4 @@
 
 -------
 
-![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io)
+![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io?style=plastic)
