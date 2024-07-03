@@ -1,8 +1,0 @@
-#Inspire By 
-
-
-- Karn -
-
-& 
-
-- Eggys - 
