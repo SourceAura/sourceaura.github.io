@@ -1,0 +1,143 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import { HOME } from "@consts";
+
+---
+<Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
+  <Container> 
+
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>404 - Lost in Web App</title>
+        <style scoped>
+          body {
+            font-family: 'Times New Roman', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #2b2b2b;
+            color: #f0f0f0;
+            flex-direction: column;
+            text-align: center;
+          }
+          .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+          }
+          .resources {
+            margin: 20px 0;
+          }
+          .resource {
+            margin: 5px 0;
+          }
+          .actions button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #444;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+          }
+          .actions button:hover {
+            background: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="game-container">
+          <h1>You are lost in the web app!</h1>
+          <div class="resources">
+            <div class="resource">Mana: <span id="mana">0</span></div>
+            <div class="resource">Herbs: <span id="herbs">0</span></div>
+            <div class="resource">Potions: <span id="potions">0</span></div>
+            <div class="resource">Tarot Cards: <span id="tarotCards">0</span></div>
+            <div class="resource">Euthymia: <span id="euthymia">0</span></div>
+          </div>
+          <div class="actions">
+            <button id="meditate">Meditate</button>
+            <button id="gatherHerbs">Gather Herbs</button>
+            <button id="brewPotion">Brew Potion</button>
+            <button id="drawTarot">Draw Tarot Card</button>
+            <button id="usePotion">Use Potion</button>
+          </div>
+          <p>Maintain your euthymia through meditation and use of resources.</p>
+        </div>
+    
+        <script>
+          let mana = 0;
+          let herbs = 0;
+          let potions = 0;
+          let tarotCards = 0;
+          let euthymia = 0;
+
+          const manaDisplay = document.getElementById('mana');
+          const herbsDisplay = document.getElementById('herbs');
+          const potionsDisplay = document.getElementById('potions');
+          const tarotCardsDisplay = document.getElementById('tarotCards');
+          const euthymiaDisplay = document.getElementById('euthymia');
+
+          const meditateButton = document.getElementById('meditate');
+          const gatherHerbsButton = document.getElementById('gatherHerbs');
+          const brewPotionButton = document.getElementById('brewPotion');
+          const drawTarotButton = document.getElementById('drawTarot');
+          const usePotionButton = document.getElementById('usePotion');
+
+          meditateButton.addEventListener('click', () => {
+            mana += 1;
+            euthymia += 1;
+            manaDisplay.textContent = mana;
+            euthymiaDisplay.textContent = euthymia;
+          });
+
+          gatherHerbsButton.addEventListener('click', () => {
+            herbs += 1;
+            herbsDisplay.textContent = herbs;
+          });
+
+          brewPotionButton.addEventListener('click', () => {
+            if (herbs >= 3 && mana >= 2) {
+              herbs -= 3;
+              mana -= 2;
+              potions += 1;
+              herbsDisplay.textContent = herbs;
+              manaDisplay.textContent = mana;
+              potionsDisplay.textContent = potions;
+            } else {
+              alert('Not enough resources to brew a potion.');
+            }
+          });
+
+          drawTarotButton.addEventListener('click', () => {
+            if (mana >= 1) {
+              mana -= 1;
+              tarotCards += 1;
+              manaDisplay.textContent = mana;
+              tarotCardsDisplay.textContent = tarotCards;
+            } else {
+              alert('Not enough mana to draw a tarot card.');
+            }
+          });
+
+          usePotionButton.addEventListener('click', () => {
+            if (potions >= 1) {
+              potions -= 1;
+              euthymia += 5;
+              potionsDisplay.textContent = potions;
+              euthymiaDisplay.textContent = euthymia;
+            } else {
+              alert('Not enough potions to use.');
+            }
+          });
+        </script>
+      </body>
+    </html>
+
+  </Container>
+</Layout>

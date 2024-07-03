@@ -1,0 +1,35 @@
+html {
+    overflow-y: auto;
+    color-scheme: light;
+    scroll-padding-top: 100px;
+  }
+  
+  html.dark {
+    color-scheme: dark;
+    background-color: #241b2f; /* Initial purple color */
+    animation: pulse 7s infinite;
+  }
+  
+  #quasar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+
+/* ANIMATIONS */
+@keyframes pulse {
+    0% {
+      /* background-color: #241b2f; */
+    }
+    50% {
+      /* background-color: #262335; */
+    }
+    100% {
+      /* background-color: #241b2f; */
+    }
+  }
+
+  

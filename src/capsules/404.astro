@@ -1,0 +1,159 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import { HOME } from "@consts";
+---
+
+<Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
+  <Container> 
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>404 - Lost in Web App</title>
+        <style scoped>
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            /* background: #121212;
+            color: #E0E0E0; */
+            flex-direction: column;
+            text-align: left;
+          }
+          .game-container {
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+          }
+          .log {
+            height: 300px;
+            overflow-y:hidden;
+            /* background: #1F1F1F; */
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+          }
+          .hud {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            /* background: #1F1F1F; */
+            border-radius: 8px;
+            border: 1px solid #333;
+          }
+          .hud-stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+          }
+          .hud-item {
+            margin: 0 10px;
+          }
+          .actions {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+          }
+          .actions button {
+            margin: 5px;
+            padding: 10px 20px;
+            /* background: #444; */
+            border: none;
+            /* color: #fff; */
+            cursor: pointer;
+            border-radius: 4px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="game-container">
+          <!-- <h1>Lost in the Path to Euthymia</h1> -->
+          <div id="log" class="log">
+            <!-- Adventure log will be dynamically inserted here -->
+          </div>
+          <div id="hud" class="hud">
+            <div class="hud-stats">
+              <div class="hud-item">Mana: <span id="mana">0</span></div>
+              <div class="hud-item">Materia: <span id="materia">0</span></div>
+              <div class="hud-item">Potions: <span id="potions">0</span></div>
+              <div class="hud-item">Tarot Cards: <span id="tarotCards">0</span></div>
+            </div>
+            <div class="actions">
+              <button id="contemplate">Contemplate</button>
+              <button id="horticulture">Horticulture</button>
+              <button id="toggleInventory">Inventory</button>
+            </div>
+          </div>
+          <!-- <p>Embark on a journey to find euthymia through contemplation, horticulture, and exploration.</p> -->
+        </div>
+    
+        <script>
+          let mana = 0;
+          let materia = 0;
+          let potions = 0;
+          let tarotCards = 0;
+
+          const log = document.getElementById('log');
+          const manaDisplay = document.getElementById('mana');
+          const materiaDisplay = document.getElementById('materia');
+          const potionsDisplay = document.getElementById('potions');
+          const tarotCardsDisplay = document.getElementById('tarotCards');
+          const contemplateButton = document.getElementById('contemplate');
+          const horticultureButton = document.getElementById('horticulture');
+          const toggleInventoryButton = document.getElementById('toggleInventory');
+
+          function logMessage(message) {
+            const entry = document.createElement('div');
+            entry.textContent = message;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+          }
+
+          function updateHUD() {
+            manaDisplay.textContent = mana;
+            materiaDisplay.textContent = materia;
+            potionsDisplay.textContent = potions;
+            tarotCardsDisplay.textContent = tarotCards;
+          }
+
+          contemplateButton.addEventListener('click', () => {
+            mana += 10;
+            logMessage(`You meditate and gather your thoughts. Mana increased to ${mana}.`);
+            
+            const randomEvent = Math.random();
+            if (randomEvent < 0.33) {
+              potions += 1;
+              logMessage('You find an ancient potion. Potions increased by 1.');
+            } else if (randomEvent < 0.66) {
+              tarotCards += 1;
+              logMessage('You discover a mysterious tarot card. Tarot cards increased by 1.');
+            } else {
+              logMessage('Your contemplation yields no tangible rewards, but your spirit is enriched.');
+            }
+            updateHUD();
+          });
+
+          horticultureButton.addEventListener('click', () => {
+            materia += 5;
+            logMessage(`You tend to your garden and gather rare materia. Materia increased to ${materia}.`);
+            updateHUD();
+          });
+
+          toggleInventoryButton.addEventListener('click', () => {
+            alert(`Inventory:\n\nMana: ${mana}\nMateria: ${materia}\nPotions: ${potions}\nTarot Cards: ${tarotCards}`);
+          });
+
+          // Initialize game log
+          logMessage('You find yourself lost in the pursuit of euthymia...');
+        </script>
+      </body>
+    </html>
+  </Container>
+</Layout>
