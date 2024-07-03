@@ -1,9 +1,7 @@
  
 # SourceAura's SandBox 👾 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/cc44f316-985e-4e60-80c6-7241981a4fea/deploy-status)](https://app.netlify.com/sites/sourceaura/deploys)
+<!-- [![Netlify Status](https://api.netlify.com/api/v1/badges/cc44f316-985e-4e60-80c6-7241981a4fea/deploy-status)](https://app.netlify.com/sites/sourceaura/deploys) -->
 *
-
-![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io)
 
 - Exploring poetry and programming, through my imagination.
   - ...either that or it's the other way around...
@@ -49,3 +47,9 @@
 -------
 
 - 07032024 :: Migrating to Astro 🚀
+
+
+
+-------
+
+![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io)
