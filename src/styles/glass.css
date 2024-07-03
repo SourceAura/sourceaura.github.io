@@ -1,0 +1,19 @@
+.giscus {
+    --color-primary: #ff5733;
+    --color-secondary: #333;
+    --background-color: #f9f9f9;
+    --border-color: #e0e0e0;
+}
+
+.giscus .gsc-comment {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: var(--background-color);
+}
+
+.giscus .gsc-comment-author {
+    font-weight: bold;
+    color: var(--color-primary);
+}
