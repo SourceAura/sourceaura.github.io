@@ -6,8 +6,8 @@ import Link from "@components/Link.astro";
 ---
 
 <footer class="animate">
-  <Container>
-    <div class="relative">
+  <Container class="footer-container">
+    <div class="footer-content relative">
       <div class="absolute -top-12 right-0">
         <!-- back to the top bugging on intial page load -->
         <BackToTop />
@@ -18,12 +18,11 @@ import Link from "@components/Link.astro";
         {SITE.TITLE} | 🫀 • 🫁 • 🧠 | &copy; {new Date().getFullYear()}
       </div>
       <!-- connect -->
-      <section class="animate space-y-4">
+      <section class="footer-links animate space-y-4">
         <!-- <h2 class="font-semibold text-black dark:text-white">let's link</h2> -->
         <article>
           <!-- <p>link</p> -->
         </article>
-        <!-- make this is own component call it link.astro -->
         <ul class="not-prose flex flex-wrap gap-2">
           <li class="line-clamp-1"></li>
 
@@ -140,7 +139,7 @@ import Link from "@components/Link.astro";
       </section>
       <!-- connect end -->
       <!-- theme buttons -->
-      <div class="flex flex-wrap items-center gap-1.5">
+      <div class="theme-buttons flex flex-wrap items-center gap-1.5">
         <button
           id="light-theme-button"
           aria-label="Light theme"
@@ -419,3 +418,52 @@ import Link from "@components/Link.astro";
     </div>
   </Container>
 </footer>
+
+
+<style scoped>
+  .footer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 0;
+  }
+  
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .theme-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    /* gap: 1.5rem; */
+  }
+  
+  @media (min-width: 768px) {
+    .footer-container {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    
+    .footer-content {
+      flex-direction: row;
+      text-align: left;
+    }
+    
+    .theme-buttons {
+      /* gap: 1.5rem; */
+    }
+  }
+</style>
