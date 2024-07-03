@@ -2,7 +2,7 @@
 import Container from "@components/Container.astro";
 import { SITE, HERO } from "@consts";
 import BackToTop from "@components/BackToTop.astro";
-import Link from "@components/Link.astro";
+// import Link from "@components/Link.astro"
 ---
 
 <footer class="animate">
@@ -17,127 +17,11 @@ import Link from "@components/Link.astro";
       <div>
         {SITE.TITLE} | 🫀 • 🫁 • 🧠 | &copy; {new Date().getFullYear()}
       </div>
-      <!-- connect -->
-      <section class="footer-links animate space-y-4">
-        <!-- <h2 class="font-semibold text-black dark:text-white">let's link</h2> -->
-        <article>
-          <!-- <p>link</p> -->
-        </article>
-        <ul class="not-prose flex flex-wrap gap-2">
-          <li class="line-clamp-1"></li>
 
-          <li class="line-clamp-1">
-            <Link href={HERO.GITHUB}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1.3em"
-                height="1.3em"
-                viewBox="0 0 24 24"
-                ><mask id="lineMdGithubLoop0" width="24" height="24" x="0" y="0"
-                  ><g fill="#fff"
-                    ><ellipse cx="9.5" cy="9" rx="1.5" ry="1"></ellipse><ellipse
-                      cx="14.5"
-                      cy="9"
-                      rx="1.5"
-                      ry="1"></ellipse></g
-                  ></mask
-                ><g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  ><path
-                    stroke-dasharray="30"
-                    stroke-dashoffset="30"
-                    d="M12 4C13.6683 4 14.6122 4.39991 15 4.5C15.5255 4.07463 16.9375 3 18.5 3C18.8438 4 18.7863 5.21921 18.5 6C19.25 7 19.5 8 19.5 9.5C19.5 11.6875 19.017 13.0822 18 14C16.983 14.9178 15.8887 15.3749 14.5 15.5C15.1506 16.038 15 17.3743 15 18C15 18.7256 15 21 15 21M12 4C10.3317 4 9.38784 4.39991 9 4.5C8.47455 4.07463 7.0625 3 5.5 3C5.15625 4 5.21371 5.21921 5.5 6C4.75 7 4.5 8 4.5 9.5C4.5 11.6875 4.98301 13.0822 6 14C7.01699 14.9178 8.1113 15.3749 9.5 15.5C8.84944 16.038 9 17.3743 9 18C9 18.7256 9 21 9 21"
-                    ><animate
-                      fill="freeze"
-                      attributeName="stroke-dashoffset"
-                      dur="0.6s"
-                      values="30;0"></animate></path
-                  ><path stroke-dasharray="10" stroke-dashoffset="10" d="M9 19"
-                    ><animate
-                      fill="freeze"
-                      attributeName="stroke-dashoffset"
-                      begin="0.7s"
-                      dur="0.2s"
-                      values="10;0"></animate><animate
-                      attributeName="d"
-                      dur="3s"
-                      repeatCount="indefinite"
-                      values="M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5;M9 19c-1.406 0-3-.5-4-.5-.532 0-1 0-2-.5;M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5"
-                    ></animate></path
-                  ></g
-                ><rect
-                  width="8"
-                  height="4"
-                  x="8"
-                  y="11"
-                  fill="currentColor"
-                  mask="url(#lineMdGithubLoop0)"
-                  ><animate
-                    attributeName="y"
-                    dur="10s"
-                    keyTimes="0;0.45;0.46;0.54;0.55;1"
-                    repeatCount="indefinite"
-                    values="11;11;7;7;11;11"></animate></rect
-                ></svg
-              >
-            </Link>
-            {"/"}
-            <Link href={HERO.MASTODON}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1.3em"
-                height="1.3em"
-                viewBox="0 0 24 24"
-                ><path
-                  fill="currentColor"
-                  d="M7 2v2h10V2zm10 2v2h2V4zm2 2v8h2V6zm0 8h-8v2h8zm-8 2H9v2h2zm0 2v2h2v-2zm0 2H7v2h4zm-4 0v-2H5v2zm-2-2V6H3v12zM5 6h2V4H5zm4 0v2h2V6zm2 2v2h2V8zm2 0h2V6h-2zm2 0v4h2V8zM9 8H7v4h2z"
-                ></path></svg
-              >
-            </Link>
-            {"/"}
-            <Link href={HERO.TWITTER}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1.3em"
-                height="1.3em"
-                viewBox="0 0 24 24"
-                ><path
-                  fill="currentColor"
-                  d="M8.5 2h2.5L11 2h-2.5zM13 2h2.5L15.5 2h-2.5zM10.5 2h5v0h-5zM8.5 2h5v0h-5zM10 2h3.5L13.5 2h-3.5z"
-                  ><animate
-                    fill="freeze"
-                    attributeName="d"
-                    dur="0.8s"
-                    keyTimes="0;0.3;0.5;1"
-                    values="M8.5 2h2.5L11 2h-2.5zM13 2h2.5L15.5 2h-2.5zM10.5 2h5v0h-5zM8.5 2h5v0h-5zM10 2h3.5L13.5 2h-3.5z;M8.5 2h2.5L11 22h-2.5zM13 2h2.5L15.5 22h-2.5zM10.5 2h5v2h-5zM8.5 20h5v2h-5zM10 2h3.5L13.5 22h-3.5z;M8.5 2h2.5L11 22h-2.5zM13 2h2.5L15.5 22h-2.5zM10.5 2h5v2h-5zM8.5 20h5v2h-5zM10 2h3.5L13.5 22h-3.5z;M1 2h2.5L18.5 22h-2.5zM5.5 2h2.5L23 22h-2.5zM3 2h5v2h-5zM16 20h5v2h-5zM18.5 2h3.5L5 22h-3.5z"
-                  ></animate></path
-                ></svg
-              >
-            </Link>
-            {"/"}
-            <Link
-              href={`mailto:${SITE.EMAIL}`}
-              aria-label={`Email ${SITE.TITLE}`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1.3em"
-                height="1.3em"
-                viewBox="0 0 22 22"
-                ><path
-                  fill="currentColor"
-                  d="M1 5h1V4h18v1h1v13h-1v1H2v-1H1zm2 12h16V9h-1v1h-2v1h-2v1h-2v1h-2v-1H8v-1H6v-1H4V9H3zM19 6H3v1h2v1h2v1h2v1h4V9h2V8h2V7h2z"
-                ></path></svg
-              >
-            </Link>
-          </li>
-        </ul>
-      </section>
-      <!-- connect end -->
+
+
+
+      <!--  -->
       <!-- theme buttons -->
       <div class="theme-buttons flex flex-wrap items-center gap-1.5">
         <button
@@ -198,7 +82,7 @@ import Link from "@components/Link.astro";
             ></svg
           >
         </button>
-
+<!--  -->
         <!-- dark theme -->
         <button
           id="dark-theme-button"
@@ -311,7 +195,9 @@ import Link from "@components/Link.astro";
                 path="M0 0v-22"></animateMotion></path
             ></svg
           >
-        </button>
+        </button> 
+        <!--  -->
+        <!-- make this a singluar button hybrid  -->
         <!-- system theme -->
         <button
           id="system-theme-button"
@@ -419,51 +305,3 @@ import Link from "@components/Link.astro";
   </Container>
 </footer>
 
-
-<style scoped>
-  .footer-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem 0;
-  }
-  
-  .footer-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-    text-align: center;
-  }
-  
-  .footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .theme-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    /* gap: 1.5rem; */
-  }
-  
-  @media (min-width: 768px) {
-    .footer-container {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    
-    .footer-content {
-      flex-direction: row;
-      text-align: left;
-    }
-    
-    .theme-buttons {
-      /* gap: 1.5rem; */
-    }
-  }
-</style>
