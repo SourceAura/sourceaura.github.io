@@ -5,7 +5,7 @@ dist/
 # saves 
 z.txt
 z404
-src/capsules/
+capsules/
 # 404 
 404.astro
 
