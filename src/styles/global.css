@@ -136,13 +136,3 @@ pre {
   z-index: -1;
 }
 
-.root {
-  display: flex;
-  text-align: center;
-  justify-content: center; /* Horizontally centers the child */
-  position: absolute;/* Vertically centers the child */
-  width: 100%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}

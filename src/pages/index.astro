@@ -1,12 +1,13 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import Container from "@components/Container.astro";
 import { SITE, HOME } from "@consts";
 import Qi from "@components/Qi.astro";
+import Layout from "@layouts/Layout.astro";
+import Connect from "@components/Connect.astro";
+import Container from "@components/Container.astro";
+
 import { getCollection } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 // import Quasar from "@components/Quasar.astro";
-
 
 // const blog = (await getCollection("blog"))
 //   .filter((post) => !post.data.draft)
@@ -19,7 +20,6 @@ import type { CollectionEntry } from "astro:content";
 //   .filter((project) => !project.data.draft)
 //   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
 //   .slice(0, SITE.NUM_PROJECTS_ON_HOMEPAGE);
-
 ---
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
@@ -29,7 +29,6 @@ import type { CollectionEntry } from "astro:content";
       <section>
         <article class="seed space-y-4">
           <span class="animate">
-            
             <Qi href="/404" />
             <!-- <br /> -->
             <h1
@@ -43,15 +42,14 @@ import type { CollectionEntry } from "astro:content";
             <br />
             <span class="md:block">{SITE.DEFINITION}</span>
           </span>
+          <!--  -->
         </article>
-      </section>
+        <br />
+         
       <!-- connect -->
+        <Connect class="connect"/>
+      </section>
+
     </div>
   </Container>
 </Layout>
-
-<style scoped>
-  html { 
-    color: #fffae7 !important;
-  }
-</style>

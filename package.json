@@ -24,6 +24,7 @@
     "astro": "^4.10.1",
     "astro-icon": "^1.1.0",
     "astro-pagefind": "^1.5.0",
+    "astro-tooltips": "^0.6.2",
     "clsx": "^2.1.1",
     "framer-motion": "^11.2.12",
     "nprogress": "^0.2.0",

@@ -1,8 +1,10 @@
 ---
-import Container from "@components/Container.astro";
 import { SITE, HERO } from "@consts";
-import BackToTop from "@components/BackToTop.astro";
+import Connect from "@components/Connect.astro";
+import { Tooltips } from "astro-tooltips";
 // import Link from "@components/Link.astro"
+import Container from "@components/Container.astro";
+import BackToTop from "@components/BackToTop.astro";
 ---
 
 <footer class="animate">
@@ -14,13 +16,11 @@ import BackToTop from "@components/BackToTop.astro";
       </div>
     </div>
     <div class="flex items-center justify-between">
-      <div>
-        {SITE.TITLE} | 🫀 • 🫁 • 🧠 | &copy; {new Date().getFullYear()}
-      </div>
-
-
-
-
+      <a href="#" title="{{<Connect />}}" data-tooltip-placement="top">
+        <div>
+          {SITE.TITLE} | 🫀 • 🫁 • 🧠 | &copy; {new Date().getFullYear()}
+        </div>
+      </a>
       <!--  -->
       <!-- theme buttons -->
       <div class="theme-buttons flex flex-wrap items-center gap-1.5">
@@ -82,7 +82,7 @@ import BackToTop from "@components/BackToTop.astro";
             ></svg
           >
         </button>
-<!--  -->
+        <!--  -->
         <!-- dark theme -->
         <button
           id="dark-theme-button"
@@ -195,7 +195,7 @@ import BackToTop from "@components/BackToTop.astro";
                 path="M0 0v-22"></animateMotion></path
             ></svg
           >
-        </button> 
+        </button>
         <!--  -->
         <!-- make this a singluar button hybrid  -->
         <!-- system theme -->
@@ -304,4 +304,3 @@ import BackToTop from "@components/BackToTop.astro";
     </div>
   </Container>
 </footer>
-
