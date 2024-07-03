@@ -12,9 +12,9 @@ import spotlightjs from "@spotlightjs/astro";
 
 // https://astro.build/config
 export default defineConfig({
-  output: 'server',
-  adapter: vercel(),
-  site: "https://sourceaura.vercel.app",
+  // output: 'server',
+  // adapter: vercel(),
+  // site: "https://sourceaura.vercel.app",
   integrations: [tailwind(), icon(), sitemap(), mdx(), pagefind(), vue(), sentry(), spotlightjs()],
   markdown: {
     shikiConfig: {
@@ -22,6 +22,5 @@ export default defineConfig({
     }
   },
   
-  // site: 'https://sourceaura.github.io',
-  // base: 'sourceaura.github.io',
+  site: 'https://sourceaura.github.io',
 });
