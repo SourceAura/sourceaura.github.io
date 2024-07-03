@@ -5,6 +5,7 @@ import sitemap from "@astrojs/sitemap";
 import pagefind from "astro-pagefind";
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
+import vercel from '@astrojs/vercel/serverless';
 
 import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
@@ -18,6 +19,8 @@ export default defineConfig({
       theme: "css-variables"
     }
   },
+  output: 'server',
+  adapter: vercel(),
   site: 'https://sourceaura.github.io',
   base: 'sourceaura.github.io',
 });
