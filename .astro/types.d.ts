@@ -178,9 +178,16 @@ declare module 'astro:content' {
   collection: "blog";
   data: InferEntrySchema<"blog">
 } & { render(): Render[".mdx"] };
-"06-draft-example/index.md": {
-	id: "06-draft-example/index.md";
-  slug: "06-draft-example";
+"06-learning-astro-lua/index.md": {
+	id: "06-learning-astro-lua/index.md";
+  slug: "06-learning-astro-lua";
+  body: string;
+  collection: "blog";
+  data: InferEntrySchema<"blog">
+} & { render(): Render[".md"] };
+"draft-project/index.md": {
+	id: "draft-project/index.md";
+  slug: "draft-project";
   body: string;
   collection: "blog";
   data: InferEntrySchema<"blog">
