@@ -1,96 +1,3 @@
----
-type Props = {
-    href: string;
-};
-
-const { href } = Astro.props;
----
-<!-- Wrap the link in a container div for better styling control -->
-<div class="link-container">
-    <a href={href} class="text">
-        <button>
-            <span class="text">
-
-                <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="2.1em"
-            height="2.1em"
-            viewBox="0 0 24 24"
-        >
-            <defs>
-                <clipPath id="lineMdWatchLoop0">
-                    <rect width="24" height="12"></rect>
-                </clipPath>
-                <symbol id="lineMdWatchLoop1">
-                    <path
-                        fill="none"
-                        stroke="#fff"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M23 16.5C23 10.4249 18.0751 5.5 12 5.5C5.92487 5.5 1 10.4249 1 16.5z"
-                        clip-path="url(#lineMdWatchLoop0)"
-                    >
-                        <animate
-                            attributeName="d"
-                            dur="3.78s"
-                            keyTimes="0;0.07;0.93;1"
-                            repeatCount="indefinite"
-                            values="M23 16.5C23 11.5 18.0751 12 12 12C5.92487 12 1 11.5 1 16.5z;M23 16.5C23 10.4249 18.0751 5.5 12 5.5C5.92487 5.5 1 10.4249 1 16.5z;M23 16.5C23 10.4249 18.0751 5.5 12 5.5C5.92487 5.5 1 10.4249 1 16.5z;M23 16.5C23 11.5 18.0751 12 12 12C5.92487 12 1 11.5 1 16.5z"
-                        >
-                        </animate>
-                    </path>
-                </symbol>
-                <mask id="lineMdWatchLoop2">
-                    <use href="#lineMdWatchLoop1"></use>
-                    <use href="#lineMdWatchLoop1" transform="rotate(180 12 12)"></use>
-                    <circle cx="12" cy="12" r="0" fill="#fff">
-                        <animate
-                            attributeName="r"
-                            dur="3.78s"
-                            keyTimes="0;0.03;0.97;1"
-                            repeatCount="indefinite"
-                            values="0;3;3;0"
-                        >
-                        </animate>
-                    </circle>
-                </mask>
-            </defs>
-            <rect
-                width="24"
-                height="24"
-                fill="currentColor"
-                mask="url(#lineMdWatchLoop2)"
-            >
-            </rect>
-        </svg>
-
-            </span>
-            <span class="shimmer"></span>
-        </button>
-
-            
-        
-    </a>
-</div>
-
-<style>
-.link-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* Adjust the following properties as needed for your layout */
-    width: 100%;
-    height: 100%;
-}
-
-.seed {
-    display: inline-block;
-}
-</style>
-
-<style>
-
 :root {
     --glow-hue: 222deg;
     --shadow-hue: 180deg;
@@ -101,7 +8,7 @@ const { href } = Astro.props;
     0.946 44.1%, 0.95 46.5%, 0.998 57.2%, 1.007, 1.011 63.3%, 1.012 68.3%,
     0.998 84%, 1
   );
-    --spring-duration: 2.1s;
+    --spring-duration: 1.33s;
 }
 @property --shimmer {
     syntax: "<angle>";
@@ -144,17 +51,18 @@ const { href } = Astro.props;
 button {
     color: var(--bg);
     font-weight: 600;
-    /* background-image: linear-gradient(
+    /*     background-image: linear-gradient(90deg, #fcecfe, #fbf6e7, #e6fcf5); */
+    background-image: linear-gradient(
         315deg,
         #ffc4ec -10%,
-        #030303 50%,
+        #efdbfd 50%,
         #ffedd6 110%
-    ); */
+    );
     padding: .8em 1.4em;
     position: relative;
     isolation: isolate;
-    /* box-shadow: 0 2px 3px 1px hsl(var(--glow-hue) 50% 20% / 50%), inset 0 -10px 20px -10px hsla(var(--shadow-hue),10%,90%,95%); */
-    border-radius: 0.77em;
+    box-shadow: 0 2px 3px 1px hsl(var(--glow-hue) 50% 20% / 50%), inset 0 -10px 20px -10px hsla(var(--shadow-hue),10%,90%,95%);
+    border-radius: 0.66em;
     scale: 1;
     transition: all var(--spring-duration) var(--spring-easing);
 }
@@ -224,7 +132,7 @@ button.active .shimmer::after {
 }
 
 button .text {
-    /* color: transparent; */
+    color: transparent;
     background-clip: text;
     background-color: var(--bg);
     background-image: linear-gradient(120deg, transparent, hsla(var(--glow-hue),100%,80%,0.66) 40%, hsla(var(--glow-hue),100%,90%,.9) 50%, transparent 52%);
@@ -239,4 +147,15 @@ button.active .text {
 }
 
 
-</style>
+
+/* // inspired by Aaron Iker
+// https://codepen.io/aaroniker/pen/PoOvoaY
+// and Adam Argyle
+// https://codepen.io/argyleink/details/abPvZJo
+
+https://codepen.io/simeydotme/pen/gOqNxRa
+*/
+
+
+
+

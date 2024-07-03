@@ -5,6 +5,7 @@ import { SITE, HOME } from "@consts";
 import Qi from "@components/Qi.astro";
 import { getCollection } from "astro:content";
 import type { CollectionEntry } from "astro:content";
+import Quasar from "@components/Quasar.astro";
 
 
 const blog = (await getCollection("blog"))
@@ -18,12 +19,12 @@ const projects: CollectionEntry<"projects">[] = (
   .filter((project) => !project.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, SITE.NUM_PROJECTS_ON_HOMEPAGE);
-// import Quasar from "@components/Quasar.astro";
+
 ---
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
   <Container>
-    <!-- <Quasar /> -->
+    <Quasar />
     <div class="root space-y-16">
       <section>
         <article class="seed space-y-4">
