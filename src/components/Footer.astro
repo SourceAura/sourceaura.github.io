@@ -1,6 +1,7 @@
 ---
 import { SITE, HERO } from "@consts";
 import Connect from "@components/Connect.astro";
+import SysInfo from "@components/SysInfo.astro";
 import { Tooltips } from "astro-tooltips";
 // import Link from "@components/Link.astro"
 import Container from "@components/Container.astro";
@@ -22,6 +23,14 @@ import BackToTop from "@components/BackToTop.astro";
         </div>
       </a>
       <!--  -->
+      <div > 
+
+        <SysInfo id="ase"/>
+
+
+      </div>
+
+          <!--  -->
       <!-- theme buttons -->
       <div class="theme-buttons flex flex-wrap items-center gap-1.5">
         <button
@@ -300,7 +309,12 @@ import BackToTop from "@components/BackToTop.astro";
             ></svg
           >
         </button>
+       
+  
+    
       </div>
+ 
     </div>
+
   </Container>
 </footer>

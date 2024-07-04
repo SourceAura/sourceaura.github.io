@@ -3,24 +3,24 @@ import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
 import { Icon } from "astro-icon/components";
+import SysInfo from "@components/SysInfo.astro";
 ---
 
 <header transition:persist>
   <Container>
     <div class="flex flex-wrap justify-between gap-y-2">
-      <Link href="/" underline={false}>
+    
           <button
             id="ase"
             aria-label="ase"
             class="font-semibold flex items-center rounded border border-black/15 bg-transparent px-2 py-1 text-xs transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:bg-neutral-900 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
           >
             &nbsp;
-            {SITE.TITLE}
+            {SITE.ALIAS}
             &nbsp;
           </button>
-      </Link>
       <!-- center -->
-    <!--  -->
+<SysInfo />
       <!-- nav -->
       <nav class="flex items-center gap-1 text-sm">
         <!-- <Link href="/blog">blog</Link> -->
