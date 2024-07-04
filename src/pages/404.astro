@@ -1,20 +1,372 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
-import BackToPrevious from "@components/BackToPrevious.astro";
-import { SITE } from "@consts";
-import Quasar from "@components/Quasar.astro";
+import styles from "./src/styles/404.css";
 ---
 
-<Layout title="404" description={SITE.DESCRIPTION}>
+<Layout title={'euthymia'} description={"awakened to a dream"}>
   <Container>
-    <Quasar />
-    <div class="root mt-16 grid place-items-center gap-3">
-      <div>
-        <span class="animate font-semibold">
-          <BackToPrevious href="/"> 404: Error </BackToPrevious>
-        </span>
-      </div>
-    </div>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Euthymia - Awakened to a Dream</title>
+        <link rel="stylesheet" href={styles} /> {/* Linking to external CSS */}
+      </head>
+      <body>
+        <div class="game-container">
+          <!-- <h1>...awakened to a Dream...</h1> -->
+          <div id="log" class="log">
+            <!-- game log will be dynamically inserted here -->
+          </div>
+          <div id="hud" class="hud">
+            <div class="hud-stats">
+              <div class="hud-item">euthymia: <span id="euthymiaLevel">1</span></div>
+              <div class="hud-item">focus: <span id="focus">100</span></div>
+              <div class="hud-item">Qi: <span id="qi">100</span></div>
+              <div class="hud-item">xp: <span id="experience">0</span></div>
+            </div>
+            <div class="actions">
+              <button id="meditate">meditate</button> 
+              <button id="cultivate">cultivate</button> 
+              <button id="explore">explore</button>
+              <button id="craft">craft</button>
+              <button id="toggleBag">bag</button> 
+            </div>
+          </div>
+        </div>
+
+        <!-- Bag Modal -->
+        <div id="bagModal" class="modal"> 
+          <div class="modal-content">
+            <span class="close" id="closeBagModal">&times;</span>
+            <h2>bag:</h2>
+            <br /> 
+            <div class="bag">
+              <div id="bagHerbs" class="bag-item"></div> 
+              <div id="bagPapyrus" class="bag-item"></div> 
+              <div id="bagCrystals" class="bag-item"></div> 
+              <div id="bagMateria" class="bag-item"></div> 
+              <div id="bagWands" class="bag-item"></div> 
+              <div id="bagTomes" class="bag-item"></div>
+              <div id="bagTea" class="bag-item"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crafting Modal -->
+        <div id="craftingModal" class="modal">
+          <div class="modal-content">
+            <span class="close" id="closeCraftingModal">&times;</span>
+            <h2>craft:</h2>
+            <br />
+            <div class="crafting-list">
+              <!-- Crafting items will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Explore Modal -->
+        <div id="exploreModal" class="modal">
+          <div class="modal-content">
+            <span class="close" id="closeExploreModal">&times;</span>
+            <h2>explore locales:</h2>
+            <br />
+            <div class="locales">
+              <button id="einSof" class="locale">Ein Sof</button>
+              <button id="locale1" class="locale" style="display: none;">Locale I: Tiphereth</button>
+              <button id="locale2" class="locale" style="display: none;">Locale II: Binah</button>
+              <button id="locale3" class="locale" style="display: none;">Locale III: Kether</button>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          // Player Stats
+          let focus = 100;
+          let experience = 0;
+          let euthymiaLevel = 1;
+          let qi = 100; // Initialize Qi at 100
+
+          // Gatherable Items with rarity
+          let herbs = { amount: 0, rarity: 'common' };
+          let papyrus = { amount: 0, rarity: 'common' };
+          let crystals = { amount: 0, rarity: 'common' };
+          let materia = { amount: 0, rarity: 'common' }; 
+
+          // Craftable Items with rarity
+          let bag = {
+            wand: { amount: 0, rarity: 'common' }, 
+            tome: { amount: 0, rarity: 'common' },
+            tea: { amount: 0, rarity: 'common' } 
+          };
+
+          // Craft Recipes with item requirements and rarity
+          const craftRecipes = {
+            wand: { herbs: 3, papyrus: 2, crystals: 1, rarity: 'common' },
+            tome: { herbs: 2, papyrus: 3, crystals: 1, rarity: 'common' },
+            tea: { herbs: 1, papyrus: 1, materia: 1, rarity: 'common' } 
+          };
+
+          // Available locales
+          const locales = {
+            einSof: { name: 'Ein Sof', unlocked: true },
+            locale1: { name: 'Locale I: Tiphereth', unlocked: false },
+            locale2: { name: 'Locale II: Binah', unlocked: false },
+            locale3: { name: 'Locale III: Kether', unlocked: false }
+          };
+
+          const log = document.getElementById('log');
+          const focusDisplay = document.getElementById('focus');
+          const experienceDisplay = document.getElementById('experience');
+          const euthymiaLevelDisplay = document.getElementById('euthymiaLevel');
+          const qiDisplay = document.getElementById('qi'); // Changed from manaDisplay to qiDisplay
+          const meditateButton = document.getElementById('meditate'); 
+          const cultivateButton = document.getElementById('cultivate'); 
+          const exploreButton = document.getElementById('explore'); 
+          const craftButton = document.getElementById('craft');
+          const toggleBagButton = document.getElementById('toggleBag');
+          const bagModal = document.getElementById('bagModal'); 
+          const craftingModal = document.getElementById('craftingModal');
+          const exploreModal = document.getElementById('exploreModal');
+          const closeBagModal = document.getElementById('closeBagModal'); 
+          const closeCraftingModal = document.getElementById('closeCraftingModal');
+          const closeExploreModal = document.getElementById('closeExploreModal');
+
+          let initialLog = true;
+
+          // Function to update HUD
+          function updateHUD() {
+            focusDisplay.textContent = focus;
+            experienceDisplay.textContent = experience;
+            euthymiaLevelDisplay.textContent = euthymiaLevel;
+            qiDisplay.textContent = qi; // Updated to qiDisplay for Qi
+          }
+
+          // Function to log messages
+          function logMessage(message) {
+            if (initialLog) {
+              log.innerHTML = ''; // Clear the initial log
+              initialLog = false;
+            }
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = message;
+            log.insertBefore(entry, log.firstChild); // Insert new messages at the top
+
+            // Remove excess log entries
+            const entries = Array.from(log.children);
+            if (entries.length > 3) {
+              entries.slice(3).forEach(e => e.classList.add('fade-out'));
+              setTimeout(() => {
+                entries.slice(3).forEach(e => {
+                  if (e.parentElement === log) {
+                    log.removeChild(e);
+                  }
+                });
+              }, 5000); // Adjust duration to match transition time
+            }
+          }
+
+          // Event listener for Meditate button
+          meditateButton.addEventListener('click', () => { 
+            // Increase focus based on current euthymia level
+            const focusIncrease = euthymiaLevel * 5;
+            focus += focusIncrease;
+            logMessage(`You meditate and gather your thoughts. Focus increased to ${focus}.`);
+
+            // Calculate Qi cost based on current euthymia level
+            const qiCost = Math.ceil(qi * (euthymiaLevel * 0.1));
+            qi -= qiCost;
+            logMessage(`Meditation costs ${qiCost} Qi. Qi decreased to ${qi}.`);
+
+            // Randomly discover and gather materia
+            const rarityRoll = Math.random();
+            let discoveredItem = '';
+            if (rarityRoll < 0.5) {
+              discoveredItem = 'herbs';
+              herbs.amount += 1;
+            } else if (rarityRoll < 0.3) {
+              discoveredItem = 'papyrus';
+              papyrus.amount += 1;
+            } else if (rarityRoll < 0.6) {
+              discoveredItem = 'crystals';
+              crystals.amount += 1;
+            } else {
+              discoveredItem = 'materia';
+              materia.amount += 1;
+            }
+            logMessage(`You discovered ${discoveredItem} (${rarityRoll < 0.5 ? herbs.rarity : (rarityRoll < 0.3 ? papyrus.rarity : (rarityRoll < 0.6 ? crystals.rarity : materia.rarity))}).`);
+
+            // Gain experience in proportion to current euthymia level
+            const experienceIncrease = euthymiaLevel * 0.5;
+            experience += experienceIncrease;
+            logMessage(`You gained ${experienceIncrease} experience.`);
+            
+            updateHUD();
+          });
+
+          // Event listener for Cultivate button
+          cultivateButton.addEventListener('click', () => { 
+            // Increase Qi based on current euthymia level
+            const qiIncrease = euthymiaLevel * 2;
+            qi += qiIncrease;
+            logMessage(`You cultivate your energy. Qi increased to ${qi}.`);
+
+            // Calculate focus cost based on current euthymia level
+            const focusCost = Math.ceil(focus * (euthymiaLevel * 0.1));
+            focus -= focusCost;
+            logMessage(`Cultivation costs ${focusCost} focus. Focus decreased to ${focus}.`);
+
+            // Randomly discover and gather herbs and crystals
+            const herbRoll = Math.random();
+            if (herbRoll < 0.5) {
+              herbs.amount += 1;
+              logMessage(`You discovered herbs (${herbs.rarity}).`);
+            }
+            
+            const crystalRoll = Math.random();
+            if (crystalRoll < 0.5) {
+              crystals.amount += 1;
+              logMessage(`You discovered crystals (${crystals.rarity}).`);
+            }
+
+            // Gain experience in proportion to current euthymia level
+            const experienceIncrease = euthymiaLevel * 0.5;
+            experience += experienceIncrease;
+            logMessage(`You gained ${experienceIncrease} experience.`);
+            
+            updateHUD();
+          });
+
+          // Event listener for Explore button
+          exploreButton.addEventListener('click', () => {
+            // Show the Explore modal
+            exploreModal.style.display = 'block';
+          });
+
+          // Event listener for Craft button
+          craftButton.addEventListener('click', () => { 
+            // Cost a percentage of Qi based on current euthymia level
+            const qiCost = Math.ceil(qi * (euthymiaLevel * 0.1));
+            qi -= qiCost;
+            logMessage(`Crafting costs ${qiCost} Qi. Qi decreased to ${qi}.`);
+
+            // Gain experience in proportion to current euthymia level
+            const experienceIncrease = euthymiaLevel * 0.5;
+            experience += experienceIncrease;
+            logMessage(`You gained ${experienceIncrease} experience.`);
+            
+            // Open crafting modal
+            craftingModal.style.display = 'block';
+            // Clear previous crafting items
+            const craftingList = document.querySelector('.crafting-list');
+            craftingList.innerHTML = '';
+
+            // Dynamically populate crafting items based on available resources
+            Object.keys(craftRecipes).forEach(item => {
+              const recipe = craftRecipes[item];
+              if (herbs.amount >= recipe.herbs && papyrus.amount >= recipe.papyrus && (recipe.materia ? materia.amount >= recipe.materia : true)) {
+                const craftItem = document.createElement('div');
+                craftItem.className = 'craft-item';
+                craftItem.textContent = `${item} (${recipe.rarity})`;
+                craftItem.addEventListener('click', () => {
+                  herbs.amount -= recipe.herbs;
+                  papyrus.amount -= recipe.papyrus;
+                  if (recipe.materia) materia.amount -= recipe.materia; // Deduct materia if required
+                  bag[item].amount += 1; 
+                  logMessage(`You crafted a ${item} (${recipe.rarity}).`);
+                  updateHUD();
+                  updateBag(); // Update bag display
+                  craftingModal.style.display = 'none'; // Close crafting modal after crafting
+                });
+                craftingList.appendChild(craftItem);
+              }
+            });
+          });
+
+          // Function to update bag display
+          function updateBag() {
+            document.getElementById('bagHerbs').textContent = herbs.amount > 0 ? `herbs (${herbs.rarity}): ${herbs.amount}` : '';
+            document.getElementById('bagPapyrus').textContent = papyrus.amount > 0 ? `papyrus (${papyrus.rarity}): ${papyrus.amount}` : '';
+            document.getElementById('bagCrystals').textContent = crystals.amount > 0 ? `crystals (${crystals.rarity}): ${crystals.amount}` : '';
+            document.getElementById('bagMateria').textContent = materia.amount > 0 ? `materia (${materia.rarity}): ${materia.amount}` : '';
+            document.getElementById('bagWands').textContent = bag.wand.amount > 0 ? `wands (${bag.wand.rarity}): ${bag.wand.amount}` : '';
+            document.getElementById('bagTomes').textContent = bag.tome.amount > 0 ? `tomes (${bag.tome.rarity}): ${bag.tome.amount}` : '';
+            document.getElementById('bagTea').textContent = bag.tea.amount > 0 ? `tea (${bag.tea.rarity}): ${bag.tea.amount}` : ''; // Added display for tea
+          }
+
+          // Event listener to open Bag modal
+          toggleBagButton.addEventListener('click', () => { 
+            bagModal.style.display = 'block';
+            updateBag(); // Update bag display when opening
+          });
+
+          // Event listener to close Bag modal
+          closeBagModal.addEventListener('click', () => { 
+            bagModal.style.display = 'none';
+          });
+
+          // Event listener to close Crafting modal
+          closeCraftingModal.addEventListener('click', () => { 
+            craftingModal.style.display = 'none';
+          });
+
+          // Event listener to close Explore modal
+          closeExploreModal.addEventListener('click', () => { 
+            exploreModal.style.display = 'none';
+          });
+
+          // Initialize game log
+          logMessage('...you find yourself, lost in the pursuit of euthymia...');
+
+          // Function to check and unlock locales based on euthymia level
+          function unlockLocales() {
+            Object.keys(locales).forEach(level => {
+              const locale = locales[level];
+              if (euthymiaLevel >= parseInt(level.substring(6)) * 3) {
+                locale.unlocked = true;
+              }
+            });
+          }
+
+          // Function to handle exploration of locales
+          function exploreLocale(localeName) {
+            logMessage(`You astral project to ${localeName}.`);
+            // Implement functionality specific to each locale
+            // This is placeholder functionality; you can expand on this as needed
+          }
+
+          // Function to check for level up based on experience
+          function checkLevelUp() {
+            if (experience >= 100) {
+              euthymiaLevel += 1;
+              experience = 0; // Reset experience after leveling up
+              logMessage(`Congratulations! You've reached Euthymia Level ${euthymiaLevel}.`);
+            }
+          }
+
+          // Update HUD and unlock locales initially
+          updateHUD();
+          unlockLocales();
+
+          // Event listeners for exploring each unlocked locale
+          Object.keys(locales).forEach(level => {
+            const localeButton = document.getElementById(level);
+            if (localeButton) {
+              if (locales[level].unlocked) {
+                localeButton.style.display = 'inline-block';
+                localeButton.addEventListener('click', () => {
+                  exploreLocale(locales[level].name);
+                  exploreModal.style.display = 'none'; // Close explore modal after exploration
+                });
+              } else {
+                localeButton.style.display = 'none';
+              }
+            }
+          });
+        </script>
+      </body>
+    </html>
   </Container>
 </Layout>
