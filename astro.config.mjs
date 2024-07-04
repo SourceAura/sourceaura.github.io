@@ -10,15 +10,17 @@ import icon from "astro-icon";
 import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
 
+import react from "@astrojs/react";
+
 // https://astro.build/config
 export default defineConfig({
   // output: 'server',
   // adapter: vercel(),
   site: "https://sourceaura.vercel.app",
-  integrations: [tailwind(), icon(), sitemap(), mdx(), pagefind(), vue(), sentry(), spotlightjs()],
+  integrations: [tailwind(), icon(), sitemap(), mdx(), pagefind(), vue(), sentry(), spotlightjs(), react()],
   markdown: {
     shikiConfig: {
       theme: "css-variables"
     }
-  },
-  });
+  }
+});
