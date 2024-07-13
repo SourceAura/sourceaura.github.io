@@ -48,7 +48,11 @@
 
 - 07032024 :: Migrating to Astro 🚀
 
+-------
 
+- 07132024 :: Endeavor OS - Linux FTW!!
+
+    * Frying Rice 🥢
 
 -------
 
