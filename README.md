@@ -1,5 +1,5 @@
- 
-# SourceAura's SandBox 👾 
+
+# SourceAura's SandBox 👾
 <!-- [![Netlify Status](https://api.netlify.com/api/v1/badges/cc44f316-985e-4e60-80c6-7241981a4fea/deploy-status)](https://app.netlify.com/sites/sourceaura/deploys) -->
 *
 
@@ -27,14 +27,14 @@
 
 -------
 
-- 08202018 :: ...it's all but alive. 
+- 08202018 :: ...it's all but alive.
 - 09122018 :: ...target practicing. 🏹🏹🏹
 
 -------
 - 10022018 :: ...found vue... ( was so gonna use the term. but yea. )
 
 -------
-- 06222021 :: Nuxt ftw. Building a castle...same sands. 
+- 06222021 :: Nuxt ftw. Building a castle...same sands.
 
 -------
 - 02172022 :: Finding Flow - with Cadence.
@@ -55,5 +55,7 @@
     * Frying Rice 🥢
 
 -------
+
+- 07302024 :: CachyOs => AthenOs // NixOs && NeoVim
 
 ![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io?style=plastic)
