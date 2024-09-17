@@ -1,8 +1,6 @@
 ---
-import { SITE, HERO } from "@consts";
-import Connect from "@components/Connect.astro";
-import { Tooltips } from "astro-tooltips";
-// import Link from "@components/Link.astro"
+import { SITE } from "@consts";
+// import Connect from "@components/Connect.astro";
 import Container from "@components/Container.astro";
 import BackToTop from "@components/BackToTop.astro";
 ---
@@ -11,17 +9,14 @@ import BackToTop from "@components/BackToTop.astro";
   <Container class="footer-container">
     <div class="footer-content relative">
       <div class="absolute -top-12 right-0">
-        <!-- back to the top bugging on intial page load -->
         <BackToTop />
       </div>
     </div>
     <div class="flex items-center justify-between">
-      <a href="#" title="{{<Connect />}}" data-tooltip-placement="top">
-        <div>
-          {SITE.TITLE} | 🫀 • 🫁 • 🧠 | &copy; {new Date().getFullYear()}
-        </div>
-      </a>
-      <!--  -->
+      <!-- <Connect /> -->
+      <div>
+        {SITE.TITLE} | 🫀 • 🫁 • 🧠 | &copy; {new Date().getFullYear()}
+      </div>
       <!-- theme buttons -->
       <div class="theme-buttons flex flex-wrap items-center gap-1.5">
         <button
