@@ -4,7 +4,7 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import PageFind from "@components/PageFind.astro";
 import { SITE } from "@consts";
-// import Quasar from "@components/Quasar.astro"
+import Quasar from "@components/Quasar.astro"
 
 type Props = {
   title: string;
@@ -20,12 +20,24 @@ const { title, description } = Astro.props;
     <Head title={`${title} | ${SITE.TITLE}`} description={description} />
   </head>
   <body>
-    <!-- <Quasar /> -->
-    <Header />
-    <main>
-      <slot />
-    </main>
-    <Footer />
+    <Quasar />
+   
+      <Header />
+      <main>
+        <slot />
+      </main>
+      <Footer />
+    
     <PageFind />
-  </body><!-- CSS -->
+  </body>
 </html>
+
+<style>
+  body {
+    position: relative;
+  }
+  .content-wrapper {
+    position: relative;
+    z-index: 1;
+  }
+</style>

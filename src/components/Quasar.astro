@@ -1,6 +1,4 @@
-<div id="quasar" class="absolute inset-0">
-  <canvas id="quasar-canvas"></canvas>
-</div>
+<quasar-background></quasar-background>
 
 <script>
   import invariant from "tiny-invariant";
@@ -23,12 +21,12 @@
       this.yPrev = y;
     }
 
-    update(width: number, height: number, speed: number) {
+    update(width: number, height: number, speed: number, deltaTime: number) {
       this.xPrev = this.x;
       this.yPrev = this.y;
-      this.z += speed * 0.0675;
-      this.x += this.x * (speed * 0.0225) * this.z;
-      this.y += this.y * (speed * 0.0225) * this.z;
+      this.z += speed * 0.0675 * deltaTime;
+      this.x += this.x * (speed * 0.0225) * this.z * deltaTime;
+      this.y += this.y * (speed * 0.0225) * this.z * deltaTime;
       if (
         this.x > width / 2 ||
         this.x < -width / 2 ||
@@ -44,7 +42,9 @@
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-      ctx.lineWidth = this.z;
+      const alpha = Math.min(this.z, 1);
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.lineWidth = Math.min(this.z * 0.5, 2);
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
       ctx.lineTo(this.xPrev, this.yPrev);
@@ -52,52 +52,81 @@
     }
   }
 
-  const stars = Array.from({ length: COUNT }, () => new Star(0, 0, 0));
-  let rafId = 0;
+  class QuasarBackground extends HTMLElement {
+    private canvas: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D | null;
+    private stars: Star[];
+    private rafId: number;
+    private lastTime: number;
 
-  const canvas = document.querySelector("#quasar-canvas") as HTMLCanvasElement;
-  invariant(canvas, "canvas should not be null");
-  const ctx = canvas.getContext("2d");
-
-  const container = document.querySelector("#quasar") as HTMLElement;
-  invariant(container, "container should not be null");
-  const resizeObserver = new ResizeObserver(setup);
-  resizeObserver.observe(container);
-
-  function setup() {
-    invariant(ctx, "canvas context should not be null");
-    rafId > 0 && cancelAnimationFrame(rafId);
-
-    const { clientWidth: width, clientHeight: height } = container;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    ctx.scale(dpr, dpr);
-
-    for (const star of stars) {
-      star.x = Math.random() * width - width / 2;
-      star.y = Math.random() * height - height / 2;
-      star.z = 0;
+    constructor() {
+      super();
+      this.canvas = document.createElement('canvas');
+      this.ctx = this.canvas.getContext('2d');
+      this.stars = Array.from({ length: COUNT }, () => new Star(0, 0, 0));
+      this.rafId = 0;
+      this.lastTime = 0;
     }
 
-    ctx.translate(width / 2, height / 2);
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-    ctx.strokeStyle = "white";
-    rafId = requestAnimationFrame(frame);
-  }
+    connectedCallback() {
+      this.style.position = 'fixed';
+      this.style.inset = '0';
+      this.style.zIndex = '-1';
+      this.appendChild(this.canvas);
 
-  function frame() {
-    invariant(ctx, "canvas context should not be null");
-    const { clientWidth: width, clientHeight: height } = container;
+      const resizeObserver = new ResizeObserver(() => this.setup());
+      resizeObserver.observe(this);
 
-    for (const star of stars) {
-      star.update(width, height, SPEED);
-      star.draw(ctx);
+      this.setup();
     }
 
-    ctx.fillRect(-width / 2, -height / 2, width, height);
-    rafId = requestAnimationFrame(frame);
+    disconnectedCallback() {
+      cancelAnimationFrame(this.rafId);
+    }
+
+    setup() {
+      invariant(this.ctx, "canvas context should not be null");
+      this.rafId > 0 && cancelAnimationFrame(this.rafId);
+
+      const { clientWidth: width, clientHeight: height } = this;
+      const dpr = window.devicePixelRatio || 1;
+      this.canvas.width = width * dpr;
+      this.canvas.height = height * dpr;
+      this.canvas.style.width = `${width}px`;
+      this.canvas.style.height = `${height}px`;
+      this.ctx.scale(dpr, dpr);
+
+      for (const star of this.stars) {
+        star.x = Math.random() * width - width / 2;
+        star.y = Math.random() * height - height / 2;
+        star.z = 0;
+      }
+
+      this.ctx.translate(width / 2, height / 2);
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      // Remove this.ctx.strokeStyle = "white"; as it's set per star now
+
+      this.lastTime = performance.now();
+      this.rafId = requestAnimationFrame((time) => this.frame(time));
+    }
+
+    frame(currentTime: number) {
+      invariant(this.ctx, "canvas context should not be null");
+      const { clientWidth: width, clientHeight: height } = this;
+
+      const deltaTime = (currentTime - this.lastTime) / 16.67; // Normalize to 60 FPS
+      this.lastTime = currentTime;
+
+      for (const star of this.stars) {
+        star.update(width, height, SPEED, deltaTime);
+        star.draw(this.ctx);
+      }
+
+      this.ctx.fillRect(-width / 2, -height / 2, width, height);
+      this.rafId = requestAnimationFrame((time) => this.frame(time));
+    }
   }
+
+  // Define the custom element
+  customElements.define('quasar-background', QuasarBackground);
 </script>
