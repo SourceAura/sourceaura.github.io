@@ -1,27 +1,71 @@
 ---
 import Container from "@components/Container.astro";
+
+let indicatorState = 0;
+// will indicate my online/offline status
+// based on whether im currently coding or not 
+// Function to get current time
+function getCurrentTime() {
+  const now = new Date();
+  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 ---
 
 <Container>
+  <!-- test sys-info button -->
   <button
     id="sys-info-btn"
     aria-label="System information"
     class="group flex items-center justify-start rounded-lg border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5 w-32 px-4 relative"
   >
+    <!-- Display current time -->
     <span id="current-time" class="text-sm text-ghost-600 ml-2"></span>
-    <div class="flex-1"></div>
+
+    <div class="flex-1"></div> <!-- Spacer to push other content to the right -->
+
     <span id="online-indicator" class="glow-ring h-2 w-2 rounded-full bg-red-500" title="Offline"></span>
   </button>
 
+  <script context="module">
+    let indicatorState = 0;
+
+    // Function to update indicator state and glow effect
+    function updateIndicatorState() {
+      const indicator = document.getElementById('online-indicator');
+      const glowRing = document.querySelector('.glow-ring');
+
+      if (indicatorState === 0) {
+        indicator.className = 'glow-ring h-2 w-2 rounded-full bg-red-500';
+        indicator.setAttribute('title', 'Offline');
+        glowRing.style.boxShadow = 'none'; // Remove glow effect
+      } else if (indicatorState === 1) {
+        indicator.className = 'glow-ring h-2 w-2 rounded-full bg-yellow-500';
+        indicator.setAttribute('title', 'Away');
+        glowRing.style.boxShadow = '0 0 10px yellow, 0 0 20px orange'; // Yellow-orange glow effect
+      } else if (indicatorState === 2) {
+        indicator.className = 'glow-ring h-2 w-2 rounded-full bg-green-500';
+        indicator.setAttribute('title', 'Online');
+        glowRing.style.boxShadow = '0 0 10px green, 0 0 20px lime'; // Green-lime glow effect
+      }
+    }
+
+    // Function to handle indicator click event
+    function toggleOnlineIndicator() {
+      indicatorState = (indicatorState + 1) % 3;
+      updateIndicatorState();
+    }
+
+    // Initial setup
+    updateIndicatorState();
+  </script>
+
   <style>
     .glow-ring {
-      --glow-color: none;
       position: relative;
       border: 2px solid transparent;
       border-radius: 50%;
-      animation: pulsate 2s infinite;
-      margin-left: 8px;
-      box-shadow: var(--glow-color);
+      animation: pulsate 2s infinite; /* Animation for pulsating effect */
+      margin-left: 8px; /* Adjust margin for positioning */
     }
 
     @keyframes pulsate {
@@ -41,33 +85,13 @@ import Container from "@components/Container.astro";
   </style>
 
   <script>
-    let indicatorState = 0;
-
-    function updateIndicatorState() {
-      const indicator = document.getElementById('online-indicator');
-      if (!indicator) return;
-
-      const states = [
-        { class: 'bg-red-500', title: 'Offline', glow: 'none' },
-        { class: 'bg-yellow-500', title: 'Away', glow: '0 0 10px yellow, 0 0 20px orange' },
-        { class: 'bg-green-500', title: 'Online', glow: '0 0 10px green, 0 0 20px lime' }
-      ];
-
-      const { class: className, title, glow } = states[indicatorState];
-      indicator.className = `glow-ring h-2 w-2 rounded-full ${className}`;
-      indicator.setAttribute('title', title);
-      indicator.style.setProperty('--glow-color', glow);
-    }
-
-    function toggleOnlineIndicator() {
-      indicatorState = (indicatorState + 1) % 3;
-      updateIndicatorState();
-    }
-
+    // Function to get current time
     function getCurrentTime() {
-      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    // Function to update current time
     function updateCurrentTime() {
       const currentTimeElement = document.getElementById('current-time');
       if (currentTimeElement) {
@@ -75,14 +99,12 @@ import Container from "@components/Container.astro";
       }
     }
 
-    // Initial setup
-    updateIndicatorState();
-    updateCurrentTime();
-
     // Update current time every second
-    setInterval(updateCurrentTime, 1000);
+    setInterval(() => {
+      updateCurrentTime();
+    }, 1000);
 
     // Event listener for indicator click
-    document.getElementById('sys-info-btn')?.addEventListener('click', toggleOnlineIndicator);
+    document.getElementById('sys-info-btn').addEventListener('click', toggleOnlineIndicator);
   </script>
 </Container>

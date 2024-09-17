@@ -8,7 +8,6 @@ import { SITE } from "@consts";
 
 <header transition:persist>
   <Container>
-    <!-- left side -->
     <div class="flex flex-wrap justify-between gap-y-2">
           <a
             href="/"
@@ -22,16 +21,15 @@ import { SITE } from "@consts";
           </a>
     
       <!-- center -->
-   
-      <!-- right side -->
+    <SysInfo />
+      <!-- nav -->
       <nav class="flex items-center gap-1 text-sm">
-        <SysInfo />
         <!-- <Link href="/blog">blog</Link> -->
-        <!-- <Link href="/blog">petals</Link>
+        <Link href="/blog">petals</Link>
         <span>{`/`}</span>
         <Link href="/projects">projects</Link>
         <span>{`/`}</span>
-        <Link href="/pulses">pulses</Link> -->
+        <Link href="/pulses">pulses</Link>
         <!-- nav end  -->
       </nav>
     </div>
