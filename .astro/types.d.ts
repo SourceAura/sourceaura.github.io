@@ -135,106 +135,104 @@ declare module 'astro:content' {
 	>;
 
 	type ContentEntryMap = {
-		"blog": {
+		"petals": {
 "00-remember-nemo/index.mdx": {
 	id: "00-remember-nemo/index.mdx";
   slug: "00-remember-nemo";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".mdx"] };
 "01-spot-eye-see/index.md": {
 	id: "01-spot-eye-see/index.md";
   slug: "01-spot-eye-see";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".md"] };
 "02-golang/index.md": {
 	id: "02-golang/index.md";
   slug: "02-golang";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".md"] };
 "03-supremacy/index.md": {
 	id: "03-supremacy/index.md";
   slug: "03-supremacy";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".md"] };
 "04-dream-vs-reality/index.mdx": {
 	id: "04-dream-vs-reality/index.mdx";
   slug: "04-dream-vs-reality";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".mdx"] };
 "05-web-dev/index.mdx": {
 	id: "05-web-dev/index.mdx";
   slug: "05-web-dev";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".mdx"] };
 "06-learning-astro-lua/index.md": {
 	id: "06-learning-astro-lua/index.md";
   slug: "06-learning-astro-lua";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".md"] };
 "07-axols/index.md": {
 	id: "07-axols/index.md";
   slug: "07-axols";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
+} & { render(): Render[".md"] };
+"08-project-1/index.md": {
+	id: "08-project-1/index.md";
+  slug: "08-project-1";
+  body: string;
+  collection: "petals";
+  data: InferEntrySchema<"petals">
+} & { render(): Render[".md"] };
+"09-project-2/index.md": {
+	id: "09-project-2/index.md";
+  slug: "09-project-2";
+  body: string;
+  collection: "petals";
+  data: InferEntrySchema<"petals">
+} & { render(): Render[".md"] };
+"10-project-3/index.md": {
+	id: "10-project-3/index.md";
+  slug: "10-project-3";
+  body: string;
+  collection: "petals";
+  data: InferEntrySchema<"petals">
+} & { render(): Render[".md"] };
+"11-project-4/index.md": {
+	id: "11-project-4/index.md";
+  slug: "11-project-4";
+  body: string;
+  collection: "petals";
+  data: InferEntrySchema<"petals">
+} & { render(): Render[".md"] };
+"12-project-5/index.md": {
+	id: "12-project-5/index.md";
+  slug: "12-project-5";
+  body: string;
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".md"] };
 "draft-project/index.md": {
 	id: "draft-project/index.md";
   slug: "draft-project";
   body: string;
-  collection: "blog";
-  data: InferEntrySchema<"blog">
-} & { render(): Render[".md"] };
-};
-"projects": {
-"project-1/index.md": {
-	id: "project-1/index.md";
-  slug: "project-1";
-  body: string;
-  collection: "projects";
-  data: InferEntrySchema<"projects">
-} & { render(): Render[".md"] };
-"project-2/index.md": {
-	id: "project-2/index.md";
-  slug: "project-2";
-  body: string;
-  collection: "projects";
-  data: InferEntrySchema<"projects">
-} & { render(): Render[".md"] };
-"project-3/index.md": {
-	id: "project-3/index.md";
-  slug: "project-3";
-  body: string;
-  collection: "projects";
-  data: InferEntrySchema<"projects">
-} & { render(): Render[".md"] };
-"project-4/index.md": {
-	id: "project-4/index.md";
-  slug: "project-4";
-  body: string;
-  collection: "projects";
-  data: InferEntrySchema<"projects">
-} & { render(): Render[".md"] };
-"project-5/index.md": {
-	id: "project-5/index.md";
-  slug: "project-5";
-  body: string;
-  collection: "projects";
-  data: InferEntrySchema<"projects">
+  collection: "petals";
+  data: InferEntrySchema<"petals">
 } & { render(): Render[".md"] };
 };
 

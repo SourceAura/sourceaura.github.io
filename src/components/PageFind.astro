@@ -39,6 +39,12 @@ const navigationPages = [
 
 <script define:vars={{ navigationPages }}>
   const ase = document.getElementById("ase");
+  if (ase) {
+    ase.addEventListener("click", () => {
+      openPagefind();
+    });
+  }
+
   const backdrop = document.getElementById("backdrop");
 
   function openPagefind() {
@@ -99,18 +105,19 @@ const navigationPages = [
       page.title.toLowerCase().includes(lowercaseQuery)
     );
 
-    if (matchingPages.length > 0) {
-      const searchResults = document.querySelector('.pagefind-ui__results');
+    const searchResults = document.querySelector('.pagefind-ui__results');
+    
+    matchingPages.forEach(page => {
       const navigationResult = document.createElement('div');
       navigationResult.className = 'pagefind-ui__result';
       navigationResult.innerHTML = `
         <h3 class="pagefind-ui__result-title">
-          <a href="${matchingPages[0].url}">${matchingPages[0].title}</a>
+          <a href="${page.url}">${page.title}</a>
         </h3>
-        <p class="pagefind-ui__result-excerpt">Navigate to ${matchingPages[0].title} page</p>
+        <p class="pagefind-ui__result-excerpt">Navigate to ${page.title} page</p>
       `;
       searchResults.insertBefore(navigationResult, searchResults.firstChild);
-    }
+    });
   }
 
   // Override the default search behavior

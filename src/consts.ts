@@ -1,4 +1,4 @@
-import type { Site, Socials } from "@types";
+import type { Socials } from "@types";
 
 // export type Metadata = {
 //   TITLE: string;
@@ -43,26 +43,10 @@ export const HOME: Metadata = {
   MASTODON: "mastodon.social/@SourceAura",
 };
 
-export const BLOG: Metadata = {
-  TITLE: "blog",
-  DESCRIPTION: "A collection of articles on topics I am passionate about.",
-  GITHUB: "github.com/sourceaura",
-  TWITTER: "twitter.com/sourceaura",
-  MASTODON: "mastodon.social/@SourceAura",
-};
 export const PETALS: Metadata = {
   TITLE: "petals",
   // TIMESTAMP: "2022-12-01",
   DESCRIPTION: "A collection of particles I am passionate about.",
-  GITHUB: "github.com/sourceaura",
-  TWITTER: "twitter.com/sourceaura",
-  MASTODON: "mastodon.social/@SourceAura",
-};
-
-export const PROJECTS: Metadata = {
-  TITLE: "projects",
-  DESCRIPTION:
-    "A collection of my projects with links to repositories and live demos.",
   GITHUB: "github.com/sourceaura",
   TWITTER: "twitter.com/sourceaura",
   MASTODON: "mastodon.social/@SourceAura",
