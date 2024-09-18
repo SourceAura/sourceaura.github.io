@@ -136,9 +136,9 @@ declare module 'astro:content' {
 
 	type ContentEntryMap = {
 		"petals": {
-"00-remember-nemo/index.mdx": {
-	id: "00-remember-nemo/index.mdx";
-  slug: "00-remember-nemo";
+"00-nemo/index.mdx": {
+	id: "00-nemo/index.mdx";
+  slug: "00-nemo";
   body: string;
   collection: "petals";
   data: InferEntrySchema<"petals">
@@ -227,9 +227,16 @@ declare module 'astro:content' {
   collection: "petals";
   data: InferEntrySchema<"petals">
 } & { render(): Render[".md"] };
-"draft-project/index.md": {
-	id: "draft-project/index.md";
-  slug: "draft-project";
+"77-whoami/index.md": {
+	id: "77-whoami/index.md";
+  slug: "77-whoami";
+  body: string;
+  collection: "petals";
+  data: InferEntrySchema<"petals">
+} & { render(): Render[".md"] };
+"99-draft/index.md": {
+	id: "99-draft/index.md";
+  slug: "99-draft";
   body: string;
   collection: "petals";
   data: InferEntrySchema<"petals">
