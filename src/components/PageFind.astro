@@ -1,10 +1,11 @@
 ---
 import Search from "astro-pagefind/components/Search";
-
+import Connect from "@components/Connect.astro";
 // Define your navigation pages
 const navigationPages = [
-  { title: "Home", url
-  : "/" },
+  { title: "Home", url: "/" },
+  { title: "Petals", url: "/petals" },
+  { title: "Bento", url: "/bento" },
   { title: "About", url: "/about" },
   { title: "Back", url: "javascript:history.back()" },
   // Add more pages as needed
@@ -29,10 +30,15 @@ const navigationPages = [
         resetStyles: false, 
       }}
     />
-    <div class="mr-2 pb-1 pt-4 text-right text-xs dark:prose-invert">
-      Press <span class="prose text-xs dark:prose-invert"
-        ><kbd class="">Esc</kbd></span
-      > or click anywhere to close
+  
+    <div class="flex justify-between items-start mt-2">
+      <Connect />
+      <div class="flex-grow"></div>
+      <div class="text-right text-xs dark:prose-invert">
+        Press <span class="prose text-xs dark:prose-invert"
+          ><kbd class="">Esc</kbd></span
+        > or click anywhere to close
+      </div>
     </div>
   </div>
 </div>
