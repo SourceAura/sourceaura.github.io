@@ -7,15 +7,14 @@
 /* HTML */
 html {
   overflow-y: auto;
-  color-scheme: light;
-  background-color: #f5f5f5;
+  color-scheme: dark; /* Change this to always use dark color scheme */
+  background-color: black; /* Set the default background color to black */
   scroll-padding-top: 100px;
 }
 
-html.dark {
-  color-scheme: dark;
-  background-color: black !important; /* Initial purple color */
-
+html.light { /* Add a new class for light mode */
+  color-scheme: light;
+  background-color: #f5f5f5 !important;
 }
 
 html,
@@ -26,8 +25,8 @@ body {
 body {
   @apply font-sans antialiased;
   @apply flex flex-col;
-  @apply bg-transparent dark:bg-transparent;
-  @apply text-black dark:text-white;
+  @apply bg-transparent;
+  @apply text-white; /* Change default text color to white */
 }
 header {
   @apply fixed left-0 right-0 top-0 z-50 py-6;
@@ -82,20 +81,7 @@ pre {
 }
 
 :root {
-  --astro-code-color-text: #09090b;
-  --astro-code-color-background: #fafafa;
-  --astro-code-token-comment: #a19595;
-  --astro-code-token-keyword: #f47067;
-  --astro-code-token-string: #00a99a;
-  --astro-code-token-function: #429996;
-  --astro-code-token-constant: #2b70c5;
-  --astro-code-token-parameter: #4e8fdf;
-  --astro-code-token-string-expression: #ae42a0;
-  --astro-code-token-punctuation: #8996a3;
-  --astro-code-token-link: #8d85ff;
-}
-
-.dark {
+  /* Move dark mode variables here to make them default */
   --astro-code-color-text: #fafafa;
   --astro-code-color-background: #09090b;
   --astro-code-token-comment: #a19595;
@@ -105,6 +91,21 @@ pre {
   --astro-code-token-constant: #b3cceb;
   --astro-code-token-parameter: #4e8fdf;
   --astro-code-token-string-expression: #bf7db6;
+  --astro-code-token-punctuation: #8996a3;
+  --astro-code-token-link: #8d85ff;
+}
+
+.light { /* Change .dark to .light */
+  /* Move light mode variables here */
+  --astro-code-color-text: #09090b;
+  --astro-code-color-background: #fafafa;
+  --astro-code-token-comment: #a19595;
+  --astro-code-token-keyword: #f47067;
+  --astro-code-token-string: #00a99a;
+  --astro-code-token-function: #429996;
+  --astro-code-token-constant: #2b70c5;
+  --astro-code-token-parameter: #4e8fdf;
+  --astro-code-token-string-expression: #ae42a0;
   --astro-code-token-punctuation: #8996a3;
   --astro-code-token-link: #8d85ff;
 }

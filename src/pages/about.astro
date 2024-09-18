@@ -1,0 +1,24 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+// import Link from "@components/Link.astro";
+import Connect from "@components/Connect.astro";
+import BackToPrevious from "@components/BackToPrevious.astro";
+import { SITE } from "@consts";
+---
+
+<Layout title="404" description={SITE.DESCRIPTION}>
+  <Container>
+    <div class="mt-16 grid place-items-center gap-3">
+      <h4 class="animate text-2xl font-semibold text-black dark:text-white">
+  Lorem ipsum dolor sit amet consectetur adipisicing elit. Deleniti dolores aperiam pariatur fuga eos rem quasi earum odit iure quidem, perspiciatis praesentium iusto eligendi totam dolorem ratione ipsum! Porro, enim.
+        <div class=" bottom-2 left-2">
+            <Connect />
+          </div>
+    </h4>
+      <span class="animate">
+        <BackToPrevious href="/">Home</BackToPrevious>
+      </span>
+    </div>
+  </Container>
+</Layout>

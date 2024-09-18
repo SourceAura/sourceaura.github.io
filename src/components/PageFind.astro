@@ -1,14 +1,11 @@
 ---
 import Search from "astro-pagefind/components/Search";
-import Connect from "@components/Connect.astro";
 // Define your navigation pages
 const navigationPages = [
   { title: "Home", url: "/" },
-  { title: "Petals", url: "/petals" },
-  { title: "Bento", url: "/bento" },
   { title: "About", url: "/about" },
-  { title: "Back", url: "javascript:history.back()" },
-  // Add more pages as needed
+  { title: "404", url: "/404" },
+  // Add any other main pages you want to include in the search
 ];
 ---
 
@@ -30,10 +27,7 @@ const navigationPages = [
         resetStyles: false, 
       }}
     />
-  
-    <div class="absolute bottom-2 left-2">
-      <Connect />
-    </div>
+
 
     <div class="text-right text-xs dark:prose-invert mt-2">
       Press <span class="prose text-xs dark:prose-invert"
@@ -104,6 +98,18 @@ const navigationPages = [
   });
 
   // Custom search function
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
   function customSearch(query) {
     const lowercaseQuery = query.toLowerCase();
     const matchingPages = navigationPages.filter(page => 
@@ -111,10 +117,16 @@ const navigationPages = [
     );
 
     const searchResults = document.querySelector('.pagefind-ui__results');
+    if (!searchResults) return; // Ensure the element exists
     
+    // Clear existing navigation results
+    const existingNavigationResults = searchResults.querySelectorAll('.navigation-result');
+    existingNavigationResults.forEach(result => result.remove());
+
+    // Add matching navigation pages to the top of the results
     matchingPages.forEach(page => {
       const navigationResult = document.createElement('div');
-      navigationResult.className = 'pagefind-ui__result';
+      navigationResult.className = 'pagefind-ui__result navigation-result';
       navigationResult.innerHTML = `
         <h3 class="pagefind-ui__result-title">
           <a href="${page.url}">${page.title}</a>
@@ -124,6 +136,17 @@ const navigationPages = [
       searchResults.insertBefore(navigationResult, searchResults.firstChild);
     });
   }
+
+  // Ensure PageFind is initialized before adding event listeners
+  window.addEventListener('load', () => {
+    const searchInput = document.querySelector('.pagefind-ui__search-input');
+    if (searchInput) {
+      const debouncedCustomSearch = debounce(customSearch, 300);
+      searchInput.addEventListener('input', (e) => {
+        debouncedCustomSearch(e.target.value);
+      });
+    }
+  });
 
   // Override the default search behavior
   const searchInput = document.querySelector('.pagefind-ui__search-input');
