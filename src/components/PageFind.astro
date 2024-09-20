@@ -199,4 +199,17 @@ const navigationPages = [
     background: transparent;
   }
 
+  /* Update these styles for the highlight */
+  #search .pagefind-ui__result-excerpt mark {
+    background-color: transparent;
+    outline: 1px solid currentColor;
+    outline-offset: 1px;
+    border-radius: 2px;
+    color: inherit;
+    mix-blend-mode: difference;
+  }
+
+  .dark #search .pagefind-ui__result-excerpt mark {
+    /* Remove this rule as it's no longer needed */
+  }
 </style>

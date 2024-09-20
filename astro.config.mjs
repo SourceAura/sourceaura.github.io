@@ -22,5 +22,10 @@ export default defineConfig({
     shikiConfig: {
       theme: "css-variables"
     }
+  },
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp'
+    }
   }
 });

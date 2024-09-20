@@ -6,7 +6,8 @@
     "paths": {
       "@*": [
         "./src/*"
-      ]
+      ],
+      "@utils/*": ["src/utils/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "react"

@@ -20,3 +20,15 @@ export function readingTime(html: string) {
   return `${readingTimeMinutes} min read`;
 }
 
+export function getRandomSize(): string {
+  const sizes = ['small', 'medium', 'large'];
+  const weights = [0.5, 0.3, 0.2]; // Adjust these to change the frequency of each size
+  const random = Math.random();
+  let sum = 0;
+  for (let i = 0; i < weights.length; i++) {
+    sum += weights[i];
+    if (random < sum) return sizes[i];
+  }
+  return sizes[0];
+}
+

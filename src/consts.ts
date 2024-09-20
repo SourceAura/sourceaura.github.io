@@ -12,9 +12,9 @@ import type { Socials } from "@types";
 interface Metadata {
   TITLE: string;
   DESCRIPTION: string;
-  GITHUB: string; // Add the GITHUB property with an optional modifier
-  TWITTER: string;
-  MASTODON: string;
+  GITHUB?: string; // Make GITHUB optional
+  TWITTER?: string; // Make TWITTER optional
+  MASTODON?: string; // Make MASTODON optional
 }
 
 export const SITE = {
@@ -22,8 +22,8 @@ export const SITE = {
   ALIAS: "nagerboshi",
   DESCRIPTION: "euthymia [ eu·​thy·​mia] (noun): ",
   DEFINITION: "a normal, tranquil mental state or mood.",
-  NUM_POSTS_ON_HOMEPAGE: 3,
-  NUM_PROJECTS_ON_HOMEPAGE: 3,
+  NUM_POSTS_ON_HOMEPAGE: 7,
+  NUM_PROJECTS_ON_HOMEPAGE: 7,
   EMAIL: "sourceaura@proton.me",
 };
 
