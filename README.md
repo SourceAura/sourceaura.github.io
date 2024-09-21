@@ -62,4 +62,6 @@
 
 - 09132024 :: Finishing things, we once began. Beggining again.
 
+-------
+
 ![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io?style=plastic)
