@@ -94,18 +94,27 @@ import "../styles/404.css";
     </div>
 
     <script is:inline>
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         let qi = 100;
         let focus = 100;
         let experience = 0;
         let euthymiaLevel = 1;
-        let currentLocale = 'einSof';
+        let currentLocale = "einSof";
 
         // collectable items
-        let herbs = { amount: 0, variations: { rosemary: 0, thyme: 0, sage: 0, basil: 0 } };
-        let materia = { amount: 0, variations: { earth: 0, fire: 0, wind: 0, water: 0 } };
+        let herbs = {
+          amount: 0,
+          variations: { rosemary: 0, thyme: 0, sage: 0, basil: 0 },
+        };
+        let materia = {
+          amount: 0,
+          variations: { earth: 0, fire: 0, wind: 0, water: 0 },
+        };
         let papyrus = { amount: 0, variations: { old: 0, new: 0 } };
-        let crystals = { amount: 0, variations: { amethyst: 0, opal: 0, citrine: 0, quartz: 0 } };
+        let crystals = {
+          amount: 0,
+          variations: { amethyst: 0, opal: 0, citrine: 0, quartz: 0 },
+        };
 
         // the adept/user's bag of items: inventory
         let innovate = {
@@ -117,8 +126,20 @@ import "../styles/404.css";
         // craftable items
         const craftRecipes = {
           tea: { herbs: 1, papyrus: 1, materia: 1, rarity: "common" },
-          wand: { herbs: 3, papyrus: 2, crystals: 1, materia: 1, rarity: "common" },
-          tome: { herbs: 2, papyrus: 3, crystals: 1, materia: 1, rarity: "common" },
+          wand: {
+            herbs: 3,
+            papyrus: 2,
+            crystals: 1,
+            materia: 1,
+            rarity: "common",
+          },
+          tome: {
+            herbs: 2,
+            papyrus: 3,
+            crystals: 1,
+            materia: 1,
+            rarity: "common",
+          },
         };
 
         // available locales the adept/user can astral project to
@@ -143,8 +164,11 @@ import "../styles/404.css";
         const toggleInnovateButton = document.getElementById("toggleInnovate");
         const innovateModal = document.getElementById("innovateModal");
         const cultivateModal = document.getElementById("cultivateModal");
-        const closeInnovateModal = document.getElementById("closeInnovateModal");
-        const closeCultivateModal = document.getElementById("closeCultivateModal");
+        const closeInnovateModal =
+          document.getElementById("closeInnovateModal");
+        const closeCultivateModal = document.getElementById(
+          "closeCultivateModal",
+        );
         const performGardenButton = document.getElementById("performGarden");
         const performMineButton = document.getElementById("performMine");
         const toggleCraftingButton = document.getElementById("toggleCrafting");
@@ -189,19 +213,27 @@ import "../styles/404.css";
 
         function updateCraftingInterface() {
           // Update crafting items in innovate modal
-          document.getElementById("innovateHerbs").innerHTML = `Herbs: ${herbs.amount}`;
-          document.getElementById("innovatePapyrus").innerHTML = `Papyrus: ${papyrus.amount}`;
-          document.getElementById("innovateCrystals").innerHTML = `Crystals: ${crystals.amount}`;
-          document.getElementById("innovateMateria").innerHTML = `Materia: ${materia.amount}`;
+          document.getElementById("innovateHerbs").innerHTML =
+            `Herbs: ${herbs.amount}`;
+          document.getElementById("innovatePapyrus").innerHTML =
+            `Papyrus: ${papyrus.amount}`;
+          document.getElementById("innovateCrystals").innerHTML =
+            `Crystals: ${crystals.amount}`;
+          document.getElementById("innovateMateria").innerHTML =
+            `Materia: ${materia.amount}`;
 
           // Clear crafting container
-          craftingContainer.innerHTML = '';
+          craftingContainer.innerHTML = "";
 
           Object.keys(craftRecipes).forEach((item) => {
             const recipe = craftRecipes[item];
-            const canCraft = herbs.amount >= recipe.herbs && papyrus.amount >= recipe.papyrus && crystals.amount >= recipe.crystals && materia.amount >= recipe.materia;
+            const canCraft =
+              herbs.amount >= recipe.herbs &&
+              papyrus.amount >= recipe.papyrus &&
+              crystals.amount >= recipe.crystals &&
+              materia.amount >= recipe.materia;
             if (canCraft) {
-              const craftButton = document.createElement('button');
+              const craftButton = document.createElement("button");
               craftButton.textContent = `Craft ${item}`;
               craftButton.onclick = () => {
                 herbs.amount -= recipe.herbs;
@@ -224,29 +256,44 @@ import "../styles/404.css";
         });
 
         performGardenButton.addEventListener("click", () => {
-          if (updateResources('qi', 10) && updateResources('focus', -Math.floor(focus * 0.1))) {
+          if (
+            updateResources("qi", 10) &&
+            updateResources("focus", -Math.floor(focus * 0.1))
+          ) {
             herbs.amount += 1;
             experience += euthymiaLevel;
             herbs.variations[getRandomHerb()] += 1;
             updateHUD();
-            logMessage("You cultivated in the garden and found some herbs!", modalLogCultivate);
+            logMessage(
+              "You cultivated in the garden and found some herbs!",
+              modalLogCultivate,
+            );
             checkLevelUp();
           }
         });
 
         performMineButton.addEventListener("click", () => {
-          if (updateResources('qi', 10) && updateResources('focus', -Math.floor(focus * 0.1))) {
+          if (
+            updateResources("qi", 10) &&
+            updateResources("focus", -Math.floor(focus * 0.1))
+          ) {
             crystals.amount += 1;
             experience += euthymiaLevel;
             crystals.variations[getRandomCrystal()] += 1;
             updateHUD();
-            logMessage("You cultivated in the mine and found some crystals!", modalLogCultivate);
+            logMessage(
+              "You cultivated in the mine and found some crystals!",
+              modalLogCultivate,
+            );
             checkLevelUp();
           }
         });
 
         meditateBtn.addEventListener("click", () => {
-          if (updateResources('qi', -Math.floor(qi * 0.1)) && updateResources('focus', 10)) {
+          if (
+            updateResources("qi", -Math.floor(qi * 0.1)) &&
+            updateResources("focus", 10)
+          ) {
             materia.amount += 1;
             experience += euthymiaLevel;
             materia.variations[getRandomMateria()] += 1;
@@ -270,7 +317,8 @@ import "../styles/404.css";
         });
 
         toggleCraftingButton.addEventListener("click", () => {
-          craftingContainer.style.display = craftingContainer.style.display === "none" ? "block" : "none";
+          craftingContainer.style.display =
+            craftingContainer.style.display === "none" ? "block" : "none";
           updateCraftingInterface();
         });
 
@@ -284,7 +332,10 @@ import "../styles/404.css";
               localeButton.textContent = locale.name;
               localeButton.onclick = () => {
                 currentLocale = key;
-                logMessage(`You have traveled to ${locale.name}`, modalLogExplore);
+                logMessage(
+                  `You have traveled to ${locale.name}`,
+                  modalLogExplore,
+                );
                 exploreModal.style.display = "none";
               };
               exploreOptions.appendChild(localeButton);
@@ -312,11 +363,11 @@ import "../styles/404.css";
         }
 
         function updateResources(type, amount) {
-          if (type === 'qi' && qi + amount < 0) {
+          if (type === "qi" && qi + amount < 0) {
             logMessage("Not enough qi!");
             return false;
           }
-          if (type === 'focus' && focus + amount < 0) {
+          if (type === "focus" && focus + amount < 0) {
             logMessage("Not enough focus!");
             return false;
           }
@@ -332,12 +383,14 @@ import "../styles/404.css";
           const requiredXP = nextLevel * 100; // Simple formula, adjust as needed
           if (experience >= requiredXP) {
             euthymiaLevel++;
-            logMessage(`Congratulations! You've reached Euthymia level ${euthymiaLevel}!`);
+            logMessage(
+              `Congratulations! You've reached Euthymia level ${euthymiaLevel}!`,
+            );
             updateHUD();
           }
         }
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
           if (event.target == innovateModal) {
             innovateModal.style.display = "none";
           }
@@ -355,10 +408,10 @@ import "../styles/404.css";
     </script>
 
     <style>
-      .log, .modal-log {
+      .log,
+      .modal-log {
         text-align: center;
       }
     </style>
-
   </Container>
 </Layout>
