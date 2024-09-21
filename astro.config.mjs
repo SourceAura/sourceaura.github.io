@@ -27,5 +27,11 @@ export default defineConfig({
     service: {
       entrypoint: 'astro/assets/services/sharp'
     }
+  },
+  content: {
+    collections: [
+      'petals',
+      // other collections if any
+    ],
   }
 });
