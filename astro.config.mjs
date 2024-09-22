@@ -17,9 +17,28 @@ export default defineConfig({
   output: 'server', // Changed from 'static' to 'server'
   adapter: vercel({
     imageService: true,
+    imagesConfig: {
+      sizes: [640, 750, 828, 1080, 1200, 1920],
+      domains: [],
+      minimumCacheTTL: 60,
+    },
   }),
   site: "https://sourceaura.vercel.app",
-  integrations: [tailwind(), icon(), sitemap(), mdx(), pagefind(), vue(), sentry(), spotlightjs(), react()],
+  integrations: [
+    tailwind(),
+    icon(),
+    sitemap(),
+    mdx(),
+    pagefind({
+      indexing: {
+        verbose: true,
+      },
+    }),
+    vue(),
+    sentry(),
+    spotlightjs(),
+    react(),
+  ],
   markdown: {
     shikiConfig: {
       theme: "css-variables"
@@ -28,7 +47,8 @@ export default defineConfig({
   image: {
     service: {
       entrypoint: 'astro/assets/services/vercel'
-    }
+    },
+    remotePatterns: [{ protocol: "https" }],
   },
   content: {
     collections: [
