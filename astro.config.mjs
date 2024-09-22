@@ -14,7 +14,7 @@ import react from "@astrojs/react";
 
 // https://astro.build/config
 export default defineConfig({
-  output: 'server',
+  output: 'server', // Changed from 'static' to 'server'
   adapter: vercel({
     imageService: true,
   }),
