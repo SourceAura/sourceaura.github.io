@@ -16,17 +16,19 @@ const imageRegex = /!\[.*?\]\((.*?)\)/;
 const match = post.body.match(imageRegex);
 const firstImagePath = match ? match[1] : null;
 
-// Construct the full image path if an image is found
-const imageSrc = firstImagePath ? `/src/content/petals/${post.slug}/${firstImagePath}` : null;
+// Import the image dynamically
+const imageSrc = firstImagePath ? await import(`../content/petals/${post.slug}/${firstImagePath}`) : null;
 ---
 
 <div class="petal-card group relative overflow-hidden rounded-lg shadow-lg transition-all duration-300 h-full" data-petal-card>
   <a href={`/petals/${post.slug}`} class="block w-full h-full">
-    <div 
-      class="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110 group-active:scale-110" 
-      style={`background-image: ${imageSrc ? `url(${imageSrc})` : 'none'}; background-color: transparent;`}
-    >
-    </div>
+    {imageSrc && (
+      <Image
+        src={imageSrc.default}
+        alt={title}
+        class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 group-active:scale-110"
+      />
+    )}
     <div class="relative p-1 bg-black bg-opacity-50 text-white h-full flex flex-col justify-between transition-opacity duration-300 group-hover:bg-opacity-70 group-active:bg-opacity-70">
       <div>
         <h2 class="text-xs font-bold mb-0.5 line-clamp-1">{title}</h2>
