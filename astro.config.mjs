@@ -15,7 +15,9 @@ import react from "@astrojs/react";
 // https://astro.build/config
 export default defineConfig({
   // output: 'server',
-  // adapter: vercel(),
+  adapter: vercel({
+    imageService: true,
+  }),
   site: "https://sourceaura.vercel.app",
   integrations: [tailwind(), icon(), sitemap(), mdx(), pagefind(), vue(), sentry(), spotlightjs(), react()],
   markdown: {
