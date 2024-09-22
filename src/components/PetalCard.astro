@@ -12,7 +12,7 @@ const { post } = Astro.props;
 const { title, description, date, image } = post.data;
 
 // Priority 1: Use image from frontmatter
-let imageSrc = image?.src ? await import(`../assets/${image.src}`) : null;
+let imageSrc = post.data.image ? await import(`../assets/${post.data.image.src}`) : null;
 
 // Priority 2: Find the first image in the markdown content
 if (!imageSrc) {
@@ -26,15 +26,13 @@ if (!imageSrc) {
 ---
 
 <div class="petal-card group relative overflow-hidden rounded-lg shadow-lg transition-all duration-300 h-full" data-petal-card>
-  <a href={`/petals/${post.slug}`} class="block w-full h-full">
-    {imageSrc ? (
+  <a href={`/petals/${post.slug}/`} class="block w-full h-full">
+    {imageSrc && (
       <Image
         src={imageSrc.default}
         alt={image?.alt || title}
         class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 group-active:scale-110"
       />
-    ) : (
-      <div class="absolute inset-0 w-full h-full bg-transparent"></div>
     )}
     <div class="relative p-1 bg-black bg-opacity-50 text-white h-full flex flex-col justify-between transition-opacity duration-300 group-hover:bg-opacity-70 group-active:bg-opacity-70">
       <div>
