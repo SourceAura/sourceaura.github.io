@@ -6,6 +6,7 @@ import pagefind from "astro-pagefind";
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
 // import vercel from '@astrojs/vercel/serverless';
+import vercel from '@astrojs/vercel/serverless';
 
 import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
