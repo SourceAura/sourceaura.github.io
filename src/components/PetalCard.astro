@@ -19,7 +19,7 @@ if (!imageSrc) {
   const imageRegex = /!\[.*?\]\((.*?)\)/;
   const match = post.body.match(imageRegex);
   const firstImagePath = match ? match[1] : null;
-  imageSrc = firstImagePath ? await import(`../content/petals/${post.slug}/${firstImagePath}`) : null;
+  imageSrc = firstImagePath ? await import(`../content/petals/${post.slug}/${firstImagePath}.png`) : null;
 }
 
 // Priority 3: Default to transparent background (no image)

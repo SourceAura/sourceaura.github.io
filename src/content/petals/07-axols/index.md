@@ -9,7 +9,7 @@ draft: false
 
 
 // Local image stored in the the same folder
-![Let's Go Bro](go-bro.png)
+![Let's Go Bro](./go-bro.png)
 
 Have you ever wondered how life evolves over time? What if you could watch evolution happen right before your eyes? Enter Axols, a captivating evolution simulation that brings the process of natural selection to life on your computer screen.
 
