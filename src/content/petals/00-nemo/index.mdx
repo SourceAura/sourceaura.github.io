@@ -5,13 +5,20 @@ date: "2019-11-21"
 demoURL: "https://example.com/demo"
 repoURL: "https://github.com/example/repo"
 image:
-  src: "../../assets/go-bro.png"
+  src: "./go-bro.png"
   alt: "Let's Go Bro"
 draft: false
 ---
+import { getImage } from '../../../utils/imageUtils';
+
+export const frontmatter = {
+  // ... other frontmatter properties
+  image: getImage(frontmatter.image, content)
+};
+
 # My MDX Page
 
-// Local image stored in the the same folder
+// Local image stored in the same folder
 ![Let's Go Bro](./go-bro.png)
 
 // Local image stored in src/assets/

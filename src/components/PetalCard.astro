@@ -9,25 +9,32 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { title, description, date } = post.data;
+const { title, description, date, image } = post.data;
 
-// Find the first image in the markdown content
-const imageRegex = /!\[.*?\]\((.*?)\)/;
-const match = post.body.match(imageRegex);
-const firstImagePath = match ? match[1] : null;
+// Priority 1: Use image from frontmatter
+let imageSrc = image?.src ? await import(`../assets/${image.src}`) : null;
 
-// Import the image dynamically
-const imageSrc = firstImagePath ? await import(`../content/petals/${post.slug}/${firstImagePath}`) : null;
+// Priority 2: Find the first image in the markdown content
+if (!imageSrc) {
+  const imageRegex = /!\[.*?\]\((.*?)\)/;
+  const match = post.body.match(imageRegex);
+  const firstImagePath = match ? match[1] : null;
+  imageSrc = firstImagePath ? await import(`../content/petals/${post.slug}/${firstImagePath}`) : null;
+}
+
+// Priority 3: Default to transparent background (no image)
 ---
 
 <div class="petal-card group relative overflow-hidden rounded-lg shadow-lg transition-all duration-300 h-full" data-petal-card>
   <a href={`/petals/${post.slug}`} class="block w-full h-full">
-    {imageSrc && (
+    {imageSrc ? (
       <Image
         src={imageSrc.default}
-        alt={title}
+        alt={image?.alt || title}
         class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 group-active:scale-110"
       />
+    ) : (
+      <div class="absolute inset-0 w-full h-full bg-transparent"></div>
     )}
     <div class="relative p-1 bg-black bg-opacity-50 text-white h-full flex flex-col justify-between transition-opacity duration-300 group-hover:bg-opacity-70 group-active:bg-opacity-70">
       <div>
