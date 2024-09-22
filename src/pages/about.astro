@@ -16,6 +16,8 @@ const skills = ['JavaScript', 'Python', 'Go Lang', 'TypeScript', 'React', 'Next.
     overflow: hidden;
     white-space: nowrap;
     position: relative;
+    width: 100%;
+    max-width: 100vw;
   }
 
   .skills-ticker-content {
@@ -31,12 +33,13 @@ const skills = ['JavaScript', 'Python', 'Go Lang', 'TypeScript', 'React', 'Next.
   .skill-pill {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    margin: 0 0.5rem;
+    margin: 0.25rem;
     border-radius: 9999px;
     background-color: rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
     border: 1px solid #000;
+    font-size: 0.875rem;
   }
 
   .dark .skill-pill {
@@ -44,19 +47,28 @@ const skills = ['JavaScript', 'Python', 'Go Lang', 'TypeScript', 'React', 'Next.
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
     border-color: #fff;
   }
+
+  @media (max-width: 640px) {
+    .skill-pill {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
 </style>
 
 <Layout title="About Me" description={SITE.DESCRIPTION}>
   <Container>
-    <div class="mt-16 grid place-items-center gap-8">
-      <Image src={myPhoto} alt={SITE.TITLE} width={192} height={192} class="rounded-full object-cover" />
-      
-      <div class="text-center max-w-2xl">
-        <!-- <h1 class="text-3xl font-bold mb-4">no:body</h1> -->
-        <!-- <p class="text-xl mb-6">An ever-budding Software Designer with an eye for multi-user accessibility.</p> -->
+    <div class="flex flex-col items-center justify-center min-h-screen py-12 px-4">
+      <div class="w-full max-w-2xl mx-auto text-center">
+        <Image 
+          src={myPhoto} 
+          alt={SITE.TITLE} 
+          width={192} 
+          height={192} 
+          class="rounded-full object-cover mx-auto mb-8"
+        />
         
-        <!-- <h2 class="text-2xl font-semibold mb-3">Skills</h2> -->
-        <div class="skills-ticker w-full mb-6">
+        <div class="skills-ticker mb-8">
           <div class="skills-ticker-content">
             {skills.map((skill) => (
               <span class="skill-pill">{skill}</span>
@@ -64,12 +76,8 @@ const skills = ['JavaScript', 'Python', 'Go Lang', 'TypeScript', 'React', 'Next.
           </div>
         </div>
         
-        <!-- <p class="mb-6">
-          When I'm not exploring code and things, I'm usually writing poetry ✍️, painting 🎨, or practicing guitar 🎸.
-        </p> -->
-        
         <Connect />
-      <!-- <BackToPrevious href="/">Home</BackToPrevious> -->
+      </div>
     </div>
   </Container>
 </Layout>
