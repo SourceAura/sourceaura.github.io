@@ -13,7 +13,7 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
 
 <Layout title="Petals Gallery" description="A collection of my projects and experiments">
   <Container>
-    <h1 class="text-3xl font-bold mb-4">Gallery:</h1>
+    <!-- <h1 class="text-3xl font-bold mb-4">Gallery:</h1> -->
     <div class="petal-container">
       <div class="petal-grid">
         {posts.map((post: CollectionEntry<'petals'>) => (
@@ -32,6 +32,12 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
     overflow-y: hidden;
     padding: 0.25rem;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  }
+
+  .petal-container::-webkit-scrollbar {
+    display: none;  /* WebKit */
   }
 
   .petal-grid {
