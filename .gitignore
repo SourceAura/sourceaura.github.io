@@ -7,15 +7,14 @@ z.txt
 z404
 src/capsules/
 # 404 
-404.astro
+# 404.astro/
 
 # dependencies
 node_modules/
 
 
 # petals
-
-petals/
+# petals/
 
 # logs
 npm-debug.log*
