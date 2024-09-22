@@ -1,17 +1,15 @@
 # build output
 dist/
 # generated types
-.astro/
+# .astro/
 # saves 
-z.txt
-z404
+
 src/capsules/
 # 404 
 # 404.astro/
 
 # dependencies
 node_modules/
-
 
 # petals
 # petals/
