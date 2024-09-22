@@ -16,25 +16,29 @@ import react from "@astrojs/react";
 // https://astro.build/config
 export default defineConfig({
   // output: 'server',
-  adapter: vercel({
-    imageService: true,
-  }),
+  adapter: vercel(),
+
   site: "https://sourceaura.vercel.app",
   integrations: [tailwind(), icon(), sitemap(), mdx(), pagefind(), vue(), sentry(), spotlightjs(), react()],
+
   markdown: {
     shikiConfig: {
       theme: "css-variables"
     }
   },
+
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp'
     }
   },
+
   content: {
     collections: [
       'petals',
       // other collections if any
     ],
-  }
+  },
+
+  output: "server"
 });
