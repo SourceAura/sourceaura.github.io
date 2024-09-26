@@ -5,7 +5,6 @@ import sitemap from "@astrojs/sitemap";
 import pagefind from "astro-pagefind";
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
-import vercel from '@astrojs/vercel/serverless';
 
 import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
@@ -14,15 +13,8 @@ import react from "@astrojs/react";
 
 // https://astro.build/config
 export default defineConfig({
-  output: 'hybrid', // Changed from 'static' to 'server'
-  adapter: vercel({
-    imageService: true,
-    imagesConfig: {
-      sizes: [640, 750, 828, 1080, 1200, 1920],
-      domains: [],
-      minimumCacheTTL: 60,
-    },
-  }),
+  output: 'static',
+  // Removed Vercel adapter configuration
   site: "https://sourceaura.vercel.app",
   integrations: [
     tailwind(),
@@ -46,7 +38,7 @@ export default defineConfig({
   },
   image: {
     service: {
-      entrypoint: 'astro/assets/services/vercel'
+      entrypoint: 'astro/assets/services/sharp'
     },
     remotePatterns: [{ protocol: "https" }],
   },

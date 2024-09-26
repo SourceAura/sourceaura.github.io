@@ -4,12 +4,15 @@ description: "Exploring the fascinating world of digital evolution with Axols, a
 date: "2024-09-13"
 demoURL: "https://example.com/demo"
 repoURL: "https://github.com/example/repo"
+image:
+  src: "./axols.png"
+  alt: "Axols: An Evolution Simulation in Go"
 draft: false
 ---
 
-
 // Local image stored in the the same folder
-![Let's Go Bro](./go-bro.png)
+<!-- Use a relative file path or import alias -->
+![Axols](./axols.png)
 
 Have you ever wondered how life evolves over time? What if you could watch evolution happen right before your eyes? Enter Axols, a captivating evolution simulation that brings the process of natural selection to life on your computer screen.
 

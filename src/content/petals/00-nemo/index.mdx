@@ -5,19 +5,32 @@ date: "2019-11-21"
 demoURL: "https://example.com/demo"
 repoURL: "https://github.com/example/repo"
 image:
-  src: "./go-bro.png"
-  alt: "Let's Go Bro"
+  src: "./nemo.png"
+  alt: "Remember Nemo 🎣"
 draft: false
 ---
 
+import { Image } from 'astro:assets';
+import nemo from '../../../assets/nemo.png';
+
 # My MDX Page
 
-// Local image stored in the same folder
+// Local image stored in the the same folder
+![Nemo](nemo.png)
 
-{/* ![Let's Go Bro](./go-bro.png) */}
+
+
+![A starry night sky.](../../../assets/nemo.png)
+
+# Remember Nemo 🎣
+
+{/* // Local image stored in the same folder */}
+
+{/* // Local image stored in the the same folder */}
+{/* ![Nemo](nemo.png) */}
 
 {/* // Local image stored in src/assets/ */}
-<Image src={test.png} alt="A rocketship in space." />
+{/* <Image src={test.png} alt="A rocketship in space." /> */}
 {/* <img src={rocket.src} alt="A rocketship in space." /> */}
 {/* ![A rocketship in space](../../assets/go-bro.png) */}
 {/* ![A rocketship in space](./go-bro.png) */}
@@ -25,3 +38,15 @@ draft: false
 
 ## "Remember Not, To Forget"
 {/* stack icons  */}
+
+{imageSrc ? (
+  <Image
+    src={imageSrc}
+    alt={image?.alt || title}
+    width={300}
+    height={200}
+    class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 group-active:scale-110"
+  />
+) : (
+  <div class="absolute inset-0 w-full h-full bg-transparent"></div>
+)}

@@ -8,11 +8,8 @@ const petalsCollection = defineCollection({
     date: z.string(),
     demoURL: z.string().url(),
     repoURL: z.string().url(),
-    draft: z.boolean().optional(), // Add this line
-    image: z.object({
-      src: z.string(),
-      alt: z.string(),
-    }).optional(),
+    image: z.string(), // Change this to accept a string
+    draft: z.boolean(),
   }),
 });
 

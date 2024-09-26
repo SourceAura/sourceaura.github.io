@@ -4,10 +4,10 @@ description: "Setting draft flag to true to hide this post."
 date: "2022-12-31"
 demoURL: "https://example.com/demo"
 repoURL: "https://github.com/example/repo"
-draft: false
+draft: true
 image:
-  src: "/may-be.png"
-  alt: "Let's Go Bro"
+  src: "./draft.png"
+  alt: "Draft example"
 ---
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
