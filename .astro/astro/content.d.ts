@@ -158,13 +158,13 @@ declare module 'astro:content' {
   collection: "petals";
   data: InferEntrySchema<"petals">
 } & { render(): Render[".mdx"] };
-"01-spot-eye-see/index.md": {
-	id: "01-spot-eye-see/index.md";
+"01-spot-eye-see/index.mdx": {
+	id: "01-spot-eye-see/index.mdx";
   slug: "01-spot-eye-see";
   body: string;
   collection: "petals";
   data: InferEntrySchema<"petals">
-} & { render(): Render[".md"] };
+} & { render(): Render[".mdx"] };
 "05-web-dev/index.mdx": {
 	id: "05-web-dev/index.mdx";
   slug: "05-web-dev";
@@ -172,13 +172,13 @@ declare module 'astro:content' {
   collection: "petals";
   data: InferEntrySchema<"petals">
 } & { render(): Render[".mdx"] };
-"07-axols/index.md": {
-	id: "07-axols/index.md";
+"07-axols/index.mdx": {
+	id: "07-axols/index.mdx";
   slug: "07-axols";
   body: string;
   collection: "petals";
   data: InferEntrySchema<"petals">
-} & { render(): Render[".md"] };
+} & { render(): Render[".mdx"] };
 "08-project-1/index.md": {
 	id: "08-project-1/index.md";
   slug: "08-project-1";
