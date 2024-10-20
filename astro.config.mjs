@@ -14,8 +14,8 @@ import react from "@astrojs/react";
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
-  // Removed Vercel adapter configuration
-  site: "https://sourceaura.vercel.app",
+ adapter: vercel(),
+ site: "https://sourceaura.vercel.app",
   integrations: [
     tailwind(),
     icon(),
