@@ -1,7 +1,6 @@
 ---
-
 ---
-
+<!-- eye icon colors need to be fixed to change according to the current light or dark mode theme -->
 <quasar-background></quasar-background>
 
 <style>
@@ -69,23 +68,43 @@
 
   .shimmer::before {
     box-shadow:
-      0 0 3px 2px hsl(222deg 20% 95%),
-      0 0 7px 4px hsl(222deg 20% 80%),
-      0 0 13px 4px hsl(222deg 50% 70%),
-      0 0 25px 5px hsl(222deg 100% 70%);
+      0 0 3px 2px var(--shimmer-color-1),
+      0 0 7px 4px var(--shimmer-color-2),
+      0 0 13px 4px var(--shimmer-color-3),
+      0 0 25px 5px var(--shimmer-color-4);
     z-index: -1;
   }
 
   .shimmer::after {
     box-shadow:
-      inset 0 0 0 1px hsl(222deg 70% 95%),
-      inset 0 0 2px 1px hsl(222deg 100% 80%),
-      inset 0 0 5px 2px hsl(222deg 100% 70%);
+      inset 0 0 0 1px var(--shimmer-color-5),
+      inset 0 0 2px 1px var(--shimmer-color-6),
+      inset 0 0 5px 2px var(--shimmer-color-7);
     z-index: 2;
   }
 
   .shimmer-active {
     animation: shine 1.2s ease-in 1 forwards;
+  }
+
+  :root {
+    --shimmer-color-1: hsl(222deg 20% 95%);
+    --shimmer-color-2: hsl(222deg 20% 80%);
+    --shimmer-color-3: hsl(222deg 50% 70%);
+    --shimmer-color-4: hsl(222deg 100% 70%);
+    --shimmer-color-5: hsl(222deg 70% 95%);
+    --shimmer-color-6: hsl(222deg 100% 80%);
+    --shimmer-color-7: hsl(222deg 100% 70%);
+  }
+
+  .light {
+    --shimmer-color-1: hsl(222deg 20% 5%);
+    --shimmer-color-2: hsl(222deg 20% 20%);
+    --shimmer-color-3: hsl(222deg 50% 30%);
+    --shimmer-color-4: hsl(222deg 100% 30%);
+    --shimmer-color-5: hsl(222deg 70% 5%);
+    --shimmer-color-6: hsl(222deg 100% 20%);
+    --shimmer-color-7: hsl(222deg 100% 30%);
   }
 </style>
 
@@ -130,9 +149,11 @@
       }
     }
 
-    draw(ctx: CanvasRenderingContext2D) {
+    draw(ctx: CanvasRenderingContext2D, isLightMode: boolean) {
       const alpha = Math.min(this.z, 1);
-      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.strokeStyle = isLightMode
+        ? `rgba(0, 0, 0, ${alpha})`
+        : `rgba(255, 255, 255, ${alpha})`;
       ctx.lineWidth = Math.min(this.z * 0.5, 2);
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
@@ -152,6 +173,7 @@
     private audio: number[];
     private svgContainer: HTMLDivElement;
     private shimmerElement: HTMLDivElement;
+    private isLightMode: boolean;
 
     constructor() {
       super();
@@ -175,10 +197,13 @@
       this.svgContainer.style.justifyContent = "center";
       this.svgContainer.style.pointerEvents = "none";
 
+      this.shimmerElement = document.createElement("div");
+      this.isLightMode = false;
+
       for (let i = 0; i < 3; i++) {
         const svgElement = document.createElementNS(
           "http://www.w3.org/2000/svg",
-          "svg",
+          "svg"
         );
         svgElement.innerHTML = `
           <defs>
@@ -188,7 +213,7 @@
             <symbol id="lineMdWatchLoop1">
               <path
                 fill="none"
-                stroke="#fff"
+                stroke="currentColor"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
@@ -208,7 +233,7 @@
             <mask id="lineMdWatchLoop2">
               <use href="#lineMdWatchLoop1"></use>
               <use href="#lineMdWatchLoop1" transform="rotate(180 12 12)"></use>
-              <circle cx="12" cy="12" r="0" fill="#fff">
+              <circle cx="12" cy="12" r="0" fill="currentColor">
                 <animate
                   attributeName="r"
                   dur="3.78s"
@@ -270,10 +295,45 @@
       resizeObserver.observe(this);
 
       this.setup();
+
+      // Watch for theme changes
+      this.watchTheme();
     }
 
     disconnectedCallback() {
       cancelAnimationFrame(this.rafId);
+    }
+
+    watchTheme() {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === "attributes" && mutation.attributeName === "class") {
+            this.isLightMode = document.documentElement.classList.contains("light");
+            this.updateColors();
+          }
+        });
+      });
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+
+      // Initial check
+      this.isLightMode = document.documentElement.classList.contains("light");
+      this.updateColors();
+    }
+
+    updateColors() {
+      if (this.isLightMode) {
+        this.ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+        this.visualizerCtx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        this.svgContainer.style.color = "black";
+      } else {
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+        this.visualizerCtx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        this.svgContainer.style.color = "ghostwhite";
+      }
     }
 
     setup() {
@@ -300,7 +360,7 @@
       }
 
       this.ctx.translate(width / 2, height / 2);
-      this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      this.updateColors();
 
       this.lastTime = performance.now();
       this.rafId = requestAnimationFrame((time) => this.frame(time));
@@ -316,7 +376,7 @@
       this.ctx.fillRect(-width / 2, -height / 2, width, height);
       for (const star of this.stars) {
         star.update(width, height, SPEED, deltaTime);
-        star.draw(this.ctx);
+        star.draw(this.ctx, this.isLightMode);
       }
 
       // Update and draw visualizer
@@ -328,7 +388,7 @@
 
     updateVisualizer() {
       this.audio = this.audio.map((x) =>
-        Math.random() > 0.5 ? Math.max(x - 0.01, 0.02) : Math.min(x + 0.01, 1),
+        Math.random() > 0.5 ? Math.max(x - 0.01, 0.02) : Math.min(x + 0.01, 1)
       );
     }
 
@@ -346,7 +406,6 @@
       };
 
       this.visualizerCtx.clearRect(0, 0, width, height);
-      this.visualizerCtx.fillStyle = "rgba(255, 255, 255, 0.7)";
 
       for (const [i, piece] of this.audio.entries()) {
         const degrees = i * spacing;
@@ -359,7 +418,7 @@
           visualizer.bar.width / -2,
           visualizer.radius,
           visualizer.bar.width,
-          visualizer.bar.height * piece,
+          visualizer.bar.height * piece
         );
         this.visualizerCtx.restore();
       }
