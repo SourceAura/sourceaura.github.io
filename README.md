@@ -60,7 +60,7 @@
 
 -------
 
-- 09132024 :: Finishing things, we once began. Beggining again.
+- 09132024 :: Finishing things, we once began. Beginning again.
 
 -------
 
