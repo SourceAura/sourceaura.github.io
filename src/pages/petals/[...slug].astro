@@ -13,7 +13,10 @@ import { Image } from "astro:assets";
 export async function getStaticPaths() {
   const posts = (await getCollection("petals"))
     .filter((post) => !post.data.draft)
-    .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
+    .sort(
+      (a, b) =>
+        new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+    );
   return posts.map((post) => ({
     params: { slug: post.slug },
     props: post,
@@ -24,10 +27,14 @@ type Props = CollectionEntry<"petals">;
 const posts = await getCollection("petals");
 const sortedPosts = posts
   .filter((post) => !post.data.draft)
-  .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
+  .sort(
+    (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  );
 
 function getAdjacentPost(offset: number) {
-  const currentIndex = sortedPosts.findIndex((post: CollectionEntry<"petals">) => post.slug === Astro.params.slug);
+  const currentIndex = sortedPosts.findIndex(
+    (post: CollectionEntry<"petals">) => post.slug === Astro.params.slug,
+  );
   return sortedPosts[currentIndex + offset];
 }
 
@@ -40,16 +47,16 @@ const { Content, headings } = await post.render();
 
 <Layout title={post.data.title} description={post.data.description}>
   <Container>
-    <div class="max-w-3xl mx-auto">
-      <BackToPrevious href="/petals">back to gallery</BackToPrevious>
+    <div class="mx-auto max-w-3xl">
+      <BackToPrevious href="/petals"> petals </BackToPrevious>
       <article class="mt-8">
-        <h1 class="text-3xl font-semibold mb-4">{post.data.title}</h1>
-        <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <h1 class="mb-4 text-3xl font-semibold">{post.data.title}</h1>
+        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
           <FormattedDate date={new Date(post.data.date)} />
           <span class="mx-2">•</span>
           <span>{readingTime(post.body)} min read</span>
         </div>
-        <div class="prose dark:prose-invert max-w-none">
+        <div class="prose max-w-none dark:prose-invert">
           <Content />
         </div>
       </article>

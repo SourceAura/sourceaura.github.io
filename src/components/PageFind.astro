@@ -1,5 +1,8 @@
 ---
+import { Calendar } from "@/components/ui/calendar"
 import Search from "astro-pagefind/components/Search";
+import NowPlaying from "@/components/NowPlaying.astro";
+
 // Define your navigation pages
 const navigationPages = [
   { title: "Home", url: "/" },
@@ -8,6 +11,7 @@ const navigationPages = [
   { title: "404", url: "/404" },
   // Add any other main pages you want to include in the search
 ];
+
 ---
 
 <div
@@ -24,16 +28,27 @@ const navigationPages = [
       className="pagefind-ui"
       uiOptions={{
         showImages: true,
-        excerptLength: 15,
+        excerptLength: 16,
         resetStyles: false, 
       }}
     />
 
+    <div class="flex justify-between">
+      <div id="calendar-container" class="mb-4">
+        <!-- Placeholder for ShadUI Calendar -->
+        <Calendar />
+      </div>
+      <NowPlaying />
+    </div>
 
     <div class="text-right text-xs dark:prose-invert mt-2">
       Press <span class="prose text-xs dark:prose-invert"
-        ><kbd class="">Esc</kbd></span> 
+        ><kbd class="">Esc</kbd> </span> 
     </div>
+    <div id="time-display" class="text-left mb-4">
+      <p>Time: <span id="current-time"></span></p>
+    </div>
+
   </div>
 </div>
 
@@ -156,6 +171,14 @@ const navigationPages = [
       customSearch(e.target.value);
     }, 100); // Small delay to ensure PageFind has updated the results
   });
+
+  // Update the current time every second
+  function updateTime() {
+    const now = new Date();
+    document.getElementById("current-time").textContent = now.toLocaleTimeString();
+  }
+  setInterval(updateTime, 1000);
+  updateTime(); // Initial call to set time immediately
 </script>
 
 <style is:global>

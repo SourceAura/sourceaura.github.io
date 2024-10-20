@@ -31,4 +31,3 @@ export function getRandomSize(): string {
   }
   return sizes[0];
 }
-

@@ -1,61 +1,128 @@
-@import url('src/styles/valence.css');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* HTML */
-html {
-  overflow-y: auto;
-  color-scheme: dark; /* Change this to always use dark color scheme */
-  background-color: black; /* Set the default background color to black */
-  scroll-padding-top: 100px;
+@layer base {
+  :root {
+    --background: 0 0% 0%; /* Pitch black */
+    --foreground: 0 0% 98%; /* Ghostwhite */
+
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+  }
+
+  .light {
+    --background: 0 0% 98%; /* Ghostwhite */
+    --foreground: 0 0% 0%; /* Pitch black */
+
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 98%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 93%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 0% 93%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 0 0% 0%;
+  }
 }
 
-html.light { /* Add a new class for light mode */
-  color-scheme: light;
-  background-color: #f5f5f5 !important;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+html {
+  overflow-y: auto;
+  scroll-padding-top: 100px;
 }
 
 html,
 body {
   @apply size-full;
 }
-/* MAIN BODY END */
+
 body {
-  @apply font-sans antialiased;
-  @apply flex flex-col;
-  @apply bg-transparent;
-  @apply text-white; /* Change default text color to white */
+  @apply flex flex-col font-sans antialiased;
 }
+
 header {
-  @apply fixed left-0 right-0 top-0 z-50 py-6;
-  @apply bg-transparent dark:bg-transparent;
-  @apply saturate-200 backdrop-blur-sm;
+  @apply fixed left-0 right-0 top-0 z-50 h-7 bg-background/70 py-7 saturate-200 backdrop-blur-sm;
 }
+
 main {
   @apply flex-1 py-32;
 }
+
 footer {
   @apply py-6 text-sm;
 }
-/* ARTICLES */
+
 article {
-  @apply prose prose-neutral max-w-full dark:prose-invert prose-img:mx-auto prose-img:my-auto;
+  @apply prose prose-neutral prose-invert max-w-full prose-img:mx-auto prose-img:my-auto;
   @apply prose-headings:font-semibold;
-  @apply prose-headings:text-black prose-headings:dark:text-white;
 }
 
 @layer utilities {
   article a {
     @apply font-sans text-current underline underline-offset-[3px];
-    @apply decoration-black/30 dark:decoration-white/30;
+    @apply decoration-primary/30;
     @apply transition-colors duration-300 ease-in-out;
   }
   article a:hover {
-    @apply text-black dark:text-white;
-    @apply decoration-black/50 dark:decoration-white/50;
+    @apply text-primary;
+    @apply decoration-primary/50;
   }
+}
+
+.root {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  width: 100%;
+  top: 50%;
+  left: 50%;
 }
 
 .animate {
@@ -66,7 +133,7 @@ article {
 .animate.show {
   @apply translate-y-0 opacity-100;
 }
-/* to the top button  */
+
 html #back-to-top {
   @apply pointer-events-none opacity-0;
 }
@@ -75,15 +142,13 @@ html.scrolled #back-to-top {
   @apply pointer-events-auto opacity-100;
 }
 
-/* shiki config */
 pre {
-  @apply border border-black/15 py-5 dark:border-white/20;
+  @apply border border-primary/15 py-5;
 }
 
 :root {
-  /* Move dark mode variables here to make them default */
-  --astro-code-color-text: #fafafa;
-  --astro-code-color-background: #09090b;
+  --astro-code-color-text: theme("colors.foreground");
+  --astro-code-color-background: theme("colors.background");
   --astro-code-token-comment: #a19595;
   --astro-code-token-keyword: #f47067;
   --astro-code-token-string: #00a99a;
@@ -95,45 +160,7 @@ pre {
   --astro-code-token-link: #8d85ff;
 }
 
-.light { /* Change .dark to .light */
-  /* Move light mode variables here */
-  --astro-code-color-text: #09090b;
-  --astro-code-color-background: #fafafa;
-  --astro-code-token-comment: #a19595;
-  --astro-code-token-keyword: #f47067;
-  --astro-code-token-string: #00a99a;
-  --astro-code-token-function: #429996;
-  --astro-code-token-constant: #2b70c5;
-  --astro-code-token-parameter: #4e8fdf;
-  --astro-code-token-string-expression: #ae42a0;
-  --astro-code-token-punctuation: #8996a3;
-  --astro-code-token-link: #8d85ff;
+.light {
+  --astro-code-color-text: theme("colors.foreground");
+  --astro-code-color-background: theme("colors.background");
 }
-
-/* copy code button on codeblocks */
-.copy-code {
-  @apply absolute right-3 top-3 grid size-9 place-content-center rounded border border-black/15 bg-neutral-100 text-center duration-300 ease-in-out dark:border-white/20 dark:bg-neutral-900;
-}
-
-.copy-code:hover {
-  @apply bg-[#E9E9E9] transition-colors dark:bg-[#232323];
-}
-
-.copy-code:active {
-  @apply scale-90 transition-transform;
-}
-
-/*  */
-.fixed {
-  position: fixed;
-}
-.inset-0 {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-.z-0 {
-  z-index: -1;
-}
-

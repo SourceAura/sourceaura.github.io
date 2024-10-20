@@ -28,12 +28,15 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
 
 <style>
   .petal-container {
-    overflow-x: auto;
-    overflow-y: hidden;
+    width: 340; /* Set fixed width */
+    height: 210; /* Set fixed height */
+    overflow: auto; /* Allow both horizontal and vertical scrolling */
     padding: 0.25rem;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;  /* Firefox */
     -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    border: 1px solid #ccc; /* Add border for boxed appearance */
+    border-radius: 8px; /* Rounded corners */
   }
 
   .petal-container::-webkit-scrollbar {
@@ -46,7 +49,8 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
     grid-auto-flow: dense;
     grid-gap: 0.25rem;
     width: max-content;
-    max-height: 80vh;
+    padding: 1rem; /* Add padding for better spacing */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
   }
 
   .petal-item {
@@ -123,9 +127,50 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
     }
   }
 
+  function enableDragAndDrop() {
+    const items = document.querySelectorAll('.petal-item');
+    items.forEach(item => {
+      item.setAttribute('draggable', 'true');
+      item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', e.target.outerHTML);
+        e.target.classList.add('dragging');
+      });
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+      });
+    });
+
+    const grid = document.querySelector('.petal-grid');
+    grid.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const draggingItem = document.querySelector('.dragging');
+      const afterElement = getDragAfterElement(grid, e.clientY);
+      if (afterElement == null) {
+        grid.appendChild(draggingItem);
+      } else {
+        grid.insertBefore(draggingItem, afterElement);
+      }
+    });
+  }
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.petal-item:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
   // Use a single function for both DOMContentLoaded and astro:after-swap
   function onLoad() {
     initPetalLayout();
+    enableDragAndDrop(); // Enable drag and drop functionality
     window.addEventListener('resize', adjustPetalLayout);
   }
 

@@ -1,0 +1,126 @@
+---
+import Container from "@components/Container.astro";
+import { getNowPlaying } from '../utils/spotify';
+
+// Fetch the current playback state
+let playbackState = 'offline';
+let trackInfo = 'Spotify offline';
+try {
+  const response = await getNowPlaying();
+  if (response.status === 204) {
+    playbackState = 'not_playing';
+    trackInfo = 'Not playing';
+  } else if (response.status === 200) {
+    const data = await response.json();
+    playbackState = data.is_playing ? 'playing' : 'paused';
+    if (data.item) {
+      trackInfo = `${data.item.name} - ${data.item.artists[0].name}`;
+    } else {
+      trackInfo = 'No track information';
+    }
+  }
+} catch (error) {
+  console.error('Error fetching Spotify playback state:', error);
+}
+---
+
+<Container>
+  <!-- test sys-info button -->
+  <button
+    id="sys-info-btn"
+    aria-label="System information"
+    class="group flex items-center justify-start rounded-lg border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5 w-full px-4 relative"
+  >
+    <!-- Display current time -->
+    <span id="current-time" class="text-sm text-ghost-600 ml-2"></span>
+
+    <div class="flex-1"></div> <!-- Spacer to push other content to the right -->
+
+    <span id="track-info" class="text-sm text-ghost-600 mr-2">{trackInfo}</span>
+
+    <span id="online-indicator" class="glow-ring h-2 w-2 rounded-full" data-state={playbackState} title="Spotify status"></span>
+  </button>
+
+  <script define:vars={{ initialPlaybackState: playbackState, initialTrackInfo: trackInfo }}>
+    let playbackState = initialPlaybackState;
+    let trackInfo = initialTrackInfo;
+
+    // Function to update indicator state and glow effect
+    function updateIndicatorState() {
+      const indicator = document.getElementById('online-indicator');
+      const trackInfoElement = document.getElementById('track-info');
+      
+      switch (playbackState) {
+        case 'playing':
+          indicator.className = 'glow-ring h-2 w-2 rounded-full bg-green-500';
+          indicator.setAttribute('title', 'Spotify: Playing');
+          indicator.style.boxShadow = '0 0 10px green, 0 0 20px lime';
+          break;
+        case 'paused':
+          indicator.className = 'glow-ring h-2 w-2 rounded-full bg-yellow-500';
+          indicator.setAttribute('title', 'Spotify: Paused');
+          indicator.style.boxShadow = '0 0 10px yellow, 0 0 20px orange';
+          break;
+        case 'not_playing':
+        case 'offline':
+        default:
+          indicator.className = 'glow-ring h-2 w-2 rounded-full bg-red-500';
+          indicator.setAttribute('title', 'Spotify: Not playing or offline');
+          indicator.style.boxShadow = '0 0 10px red, 0 0 20px crimson';
+          break;
+      }
+
+      trackInfoElement.textContent = trackInfo;
+    }
+
+    // Function to update current time
+    function updateCurrentTime() {
+      const timeElement = document.getElementById('current-time');
+      const now = new Date();
+      timeElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Call updateIndicatorState immediately to set the default state
+    updateIndicatorState();
+
+    // Update time immediately and then every second
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
+
+    // Function to handle button click event
+    function handleSysInfoClick() {
+      window.location.href = '/euthymia';
+    }
+
+    // Event listener for button click
+    document.getElementById('sys-info-btn')?.addEventListener('click', handleSysInfoClick);
+
+    // Remove the previous click event listener for toggleOnlineIndicator
+    // document.getElementById('sys-info-btn')?.addEventListener('click', toggleOnlineIndicator);
+  </script>
+
+  <style>
+    .glow-ring {
+      position: relative;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      animation: pulsate 2s infinite; /* Animation for pulsating effect */
+      margin-left: 8px; /* Adjust margin for positioning */
+    }
+
+    @keyframes pulsate {
+      0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0px rgba(255, 255, 255, 0.7);
+      }
+      50% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+      }
+      100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0px rgba(255, 255, 255, 0);
+      }
+    }
+  </style>
+</Container>

@@ -56,7 +56,9 @@ const { prevPost, nextPost } = Astro.props;
             class="-translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"
           />
         </svg>
-        <div class="flex items-center text-sm">{nextPost?.data.title}</div>
+        <div class="flex items-center rounded text-sm">
+          {nextPost?.data.title}
+        </div>
       </a>
     ) : (
       <div class="invisible" />

@@ -1,0 +1,315 @@
+---
+import { SITE } from "@consts";
+import Container from "@components/Container.astro";
+import BackToTop from "@components/BackToTop.astro";
+---
+
+<footer class="animate">
+  <Container class="footer-container">
+    <div class="footer-content relative">
+      <div class="absolute -top-12 right-0">
+        <BackToTop />
+      </div>
+    </div>
+    <div class="flex items-center justify-between">
+      <div>
+        <a href="/about">
+          {SITE.TITLE} | 🫀 • 🫁 • 🧠 |
+        </a>
+        &copy; {new Date().getFullYear()}
+      </div>
+      <!--  -->
+      <button id="theme-toggle">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="1em"
+          height="1em"
+          viewBox="0 0 24 24"
+        >
+          <defs>
+            <mask id="lineMdLightDarkLoop0">
+              <circle cx="7.5" cy="7.5" r="5.5" fill="#fff"></circle>
+              <circle cx="7.5" cy="7.5" r="5.5">
+                <animate
+                  fill="freeze"
+                  attributeName="cx"
+                  dur="0.4s"
+                  values="7.5;11"></animate>
+                <animate
+                  fill="freeze"
+                  attributeName="r"
+                  dur="0.4s"
+                  values="5.5;6.5"></animate>
+              </circle>
+            </mask>
+            <mask id="lineMdLightDarkLoop1">
+              <g fill="#fff">
+                <circle cx="12" cy="9" r="5.5">
+                  <animate
+                    fill="freeze"
+                    attributeName="cy"
+                    begin="1s"
+                    dur="0.5s"
+                    values="9;15"></animate>
+                </circle>
+                <g fill-opacity="0">
+                  <use
+                    href="#lineMdLightDarkLoop2"
+                    transform="rotate(-75 12 15)"></use>
+                  <use
+                    href="#lineMdLightDarkLoop2"
+                    transform="rotate(-25 12 15)"></use>
+                  <use href="#lineMdLightDarkLoop2" transform="rotate(25 12 15)"
+                  ></use>
+                  <use href="#lineMdLightDarkLoop2" transform="rotate(75 12 15)"
+                  ></use>
+                  <set
+                    fill="freeze"
+                    attributeName="fill-opacity"
+                    begin="1.5s"
+                    to="1"></set>
+                  <animateTransform
+                    attributeName="transform"
+                    dur="5s"
+                    repeatCount="indefinite"
+                    type="rotate"
+                    values="0 12 15;50 12 15"></animateTransform>
+                </g>
+              </g>
+              <path d="M0 10h26v5h-26z"></path>
+              <path
+                stroke="#fff"
+                stroke-dasharray="26"
+                stroke-dashoffset="26"
+                stroke-width="2"
+                d="M22 12h-22"
+              >
+                <animate
+                  attributeName="d"
+                  dur="6s"
+                  repeatCount="indefinite"
+                  values="M22 12h-22;M24 12h-22;M22 12h-22"></animate>
+                <animate
+                  fill="freeze"
+                  attributeName="stroke-dashoffset"
+                  begin="0.5s"
+                  dur="0.4s"
+                  values="26;0"></animate>
+              </path>
+            </mask>
+            <symbol id="lineMdLightDarkLoop2">
+              <path d="M11 18h2L12 20z" opacity="0">
+                <animate
+                  fill="freeze"
+                  attributeName="d"
+                  begin="1.5s"
+                  dur="0.4s"
+                  values="M11 18h2L12 20z;M10.5 21.5h3L12 24z"></animate>
+                <set fill="freeze" attributeName="opacity" begin="1.5s" to="1"
+                ></set>
+              </path>
+            </symbol>
+          </defs>
+          <g fill="currentColor">
+            <rect
+              width="13"
+              height="13"
+              x="1"
+              y="1"
+              mask="url(#lineMdLightDarkLoop0)"></rect>
+            <path
+              d="M-2 11h28v13h-28z"
+              mask="url(#lineMdLightDarkLoop1)"
+              transform="rotate(-45 12 12)"></path>
+          </g>
+        </svg>
+      </button>
+      <!--  -->
+      <!-- <button id="theme-toggle">??? </button> -->
+
+      <!-- -->
+      <div class="theme-buttons flex flex-wrap items-center gap-1.5">
+        <button
+          id="light-theme-button"
+          aria-label="Light theme"
+          class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
+        >
+          <!-- Light theme SVG -->
+        </button>
+        <button
+          id="dark-theme-button"
+          aria-label="Dark theme"
+          class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
+        >
+          <!-- Dark theme SVG -->
+        </button>
+        <button
+          id="system-theme-button"
+          aria-label="System theme"
+          class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
+        >
+          <!-- System theme SVG -->
+        </button>
+        <!--  -->
+        <button
+          id="theme-toggle"
+          aria-label="System theme"
+          class="group flex size-9 items-center justify-center rounded border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="1em"
+            height="1em"
+            viewBox="0 0 24 24"
+            ><defs
+              ><mask id="lineMdLightDarkLoop0"
+                ><circle cx="7.5" cy="7.5" r="5.5" fill="#fff"></circle><circle
+                  cx="7.5"
+                  cy="7.5"
+                  r="5.5"
+                  ><animate
+                    fill="freeze"
+                    attributeName="cx"
+                    dur="0.3s"
+                    values="7.5;11"></animate><animate
+                    fill="freeze"
+                    attributeName="r"
+                    dur="0.3s"
+                    values="5.5;6.5"></animate></circle
+                ></mask
+              ><mask id="lineMdLightDarkLoop1"
+                ><g fill="#fff"
+                  ><circle cx="12" cy="9" r="5.5"
+                    ><animate
+                      fill="freeze"
+                      attributeName="cy"
+                      begin="0.75s"
+                      dur="0.375s"
+                      values="9;15"></animate></circle
+                  ><g fill-opacity="0"
+                    ><use
+                      href="#lineMdLightDarkLoop2"
+                      transform="rotate(-75 12 15)"></use><use
+                      href="#lineMdLightDarkLoop2"
+                      transform="rotate(-25 12 15)"></use><use
+                      href="#lineMdLightDarkLoop2"
+                      transform="rotate(25 12 15)"></use><use
+                      href="#lineMdLightDarkLoop2"
+                      transform="rotate(75 12 15)"></use><set
+                      fill="freeze"
+                      attributeName="fill-opacity"
+                      begin="1.125s"
+                      to="1"></set><animateTransform
+                      attributeName="transform"
+                      dur="3.75s"
+                      repeatCount="indefinite"
+                      type="rotate"
+                      values="0 12 15;50 12 15"></animateTransform></g
+                  ></g
+                ><path d="M0 10h26v5h-26z"></path><path
+                  stroke="#fff"
+                  stroke-dasharray="26"
+                  stroke-dashoffset="26"
+                  stroke-width="2"
+                  d="M22 12h-22"
+                  ><animate
+                    attributeName="d"
+                    dur="4.5s"
+                    repeatCount="indefinite"
+                    values="M22 12h-22;M24 12h-22;M22 12h-22"></animate><animate
+                    fill="freeze"
+                    attributeName="stroke-dashoffset"
+                    begin="0.375s"
+                    dur="0.3s"
+                    values="26;0"></animate></path
+                ></mask
+              ><symbol id="lineMdLightDarkLoop2"
+                ><path d="M11 18h2L12 20z" opacity="0"
+                  ><animate
+                    fill="freeze"
+                    attributeName="d"
+                    begin="1.125s"
+                    dur="0.3s"
+                    values="M11 18h2L12 20z;M10.5 21.5h3L12 24z"></animate><set
+                    fill="freeze"
+                    attributeName="opacity"
+                    begin="1.125s"
+                    to="1"></set></path
+                ></symbol
+              ></defs
+            ><g fill="currentColor"
+              ><rect
+                width="13"
+                height="13"
+                x="1"
+                y="1"
+                mask="url(#lineMdLightDarkLoop0)"></rect><path
+                d="M-2 11h28v13h-28z"
+                mask="url(#lineMdLightDarkLoop1)"
+                transform="rotate(-45 12 12)"></path></g
+            ></svg
+          >
+        </button>
+      </div>
+    </div>
+  </Container>
+</footer>
+
+<script>
+  function setupThemeToggle() {
+    const html = document.documentElement;
+    const themeToggle = document.getElementById("theme-toggle");
+    const lightThemeButton = document.getElementById("light-theme-button");
+    const darkThemeButton = document.getElementById("dark-theme-button");
+    const systemThemeButton = document.getElementById("system-theme-button");
+
+    // Check for saved theme preference or use the system preference
+    const savedTheme = localStorage.getItem("theme");
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      .matches
+      ? "dark"
+      : "light";
+    const initialTheme = savedTheme || systemTheme;
+
+    // Apply the initial theme
+    html.classList.remove("dark", "light");
+    html.classList.add(initialTheme);
+
+    // Theme toggle event listener
+    themeToggle?.addEventListener("click", () => {
+      const currentTheme = html.classList.contains("dark") ? "dark" : "light";
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+      html.classList.remove(currentTheme);
+      html.classList.add(newTheme);
+      localStorage.setItem("theme", newTheme);
+    });
+
+    // Light theme button
+    lightThemeButton?.addEventListener("click", () => {
+      html.classList.remove("dark");
+      html.classList.add("light");
+      localStorage.setItem("theme", "light");
+    });
+
+    // Dark theme button
+    darkThemeButton?.addEventListener("click", () => {
+      html.classList.remove("light");
+      html.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    });
+
+    // System theme button
+    systemThemeButton?.addEventListener("click", () => {
+      html.classList.remove("light", "dark");
+      html.classList.add(systemTheme);
+      localStorage.removeItem("theme");
+    });
+  }
+
+  // Run the setup on initial load
+  setupThemeToggle();
+
+  // Re-run the setup when the content changes (for Astro page changes)
+  document.addEventListener("astro:after-swap", setupThemeToggle);
+</script>

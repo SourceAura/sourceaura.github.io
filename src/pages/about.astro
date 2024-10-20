@@ -1,14 +1,41 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
+
+// import NowPlaying from "@components/NowPlaying.astro";
 // import Link from "@components/Link.astro";
 import Connect from "@components/Connect.astro";
-import BackToPrevious from "@components/BackToPrevious.astro";
-import { SITE } from "@consts";
-import { Image } from 'astro:assets';
-import myPhoto from '../assets/may-be.png';
 
-const skills = ['JavaScript', 'Python', 'Go Lang', 'TypeScript', 'React', 'Next.js', 'Astro', 'Tailwind CSS', 'HTML', 'CSS', 'SQL', 'PostgreSQL', 'MongoDB', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Linux', 'Windows'];
+// import BackToPrevious from "@components/BackToPrevious.astro";
+import { SITE } from "@consts";
+import { Image } from "astro:assets";
+import avatar from "../assets/go-bro.png";
+
+const skills = [
+  "JavaScript",
+  "Python",
+  "Go Lang",
+  "TypeScript",
+  "React",
+  "Next.js",
+  "Astro",
+  "Tailwind CSS",
+  "HTML",
+  "CSS",
+  "SQL",
+  "PostgreSQL",
+  "MongoDB",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "Azure",
+  "Git",
+  "GitHub",
+  "GitLab",
+  "Bitbucket",
+  "Linux",
+  "Windows",
+];
 ---
 
 <style is:global>
@@ -26,8 +53,12 @@ const skills = ['JavaScript', 'Python', 'Go Lang', 'TypeScript', 'React', 'Next.
   }
 
   @keyframes ticker {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
   }
 
   .skill-pill {
@@ -58,26 +89,29 @@ const skills = ['JavaScript', 'Python', 'Go Lang', 'TypeScript', 'React', 'Next.
 
 <Layout title="About Me" description={SITE.DESCRIPTION}>
   <Container>
-    <div class="flex flex-col items-center justify-center min-h-screen py-12 px-4">
-      <div class="w-full max-w-2xl mx-auto text-center">
-        <Image 
-          src={myPhoto} 
-          alt={SITE.TITLE} 
-          width={192} 
-          height={192} 
-          class="rounded-full object-cover mx-auto mb-8"
+    <div
+      class="flex min-h-screen flex-col items-center justify-center px-4 py-12"
+    >
+      <div class="mx-auto w-full max-w-2xl text-center">
+        <Image
+          src={avatar}
+          alt={SITE.TITLE}
+          width={192}
+          height={192}
+          class="mx-auto mb-8 rounded-full object-cover"
         />
-        
+
         <div class="skills-ticker mb-8">
           <div class="skills-ticker-content">
-            {skills.map((skill) => (
-              <span class="skill-pill">{skill}</span>
-            ))}
+            {skills.map((skill) => <span class="skill-pill">{skill}</span>)}
           </div>
         </div>
-        
+
         <Connect />
       </div>
     </div>
+    <span class="animate">
+      <!-- <BackToPrevious href="/">Go to home page</BackToPrevious> -->
+    </span>
   </Container>
 </Layout>
