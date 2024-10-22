@@ -102,7 +102,7 @@
   </button>
 </div>
 
-<script>
+<script is:inline>
   function setupThemeToggle() {
     const html = document.documentElement;
     const themeToggle = document.getElementById("theme-toggle");
@@ -137,5 +137,5 @@
   setupThemeToggle();
 
   // Re-run the setup when the content changes (for Astro page changes)
-  document.addEventListener("astro:after-swap", setupThemeToggle);
+  document.addEventListener("astro:page-load", setupThemeToggle);
 </script>
