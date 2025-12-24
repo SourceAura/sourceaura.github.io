@@ -20,11 +20,11 @@ const navigationPages = [
     id="pagefind-container"
     class="relative flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 p-4 shadow-lg dark:border-white/20"
   >
-    <!-- ✅ Pagefind UI: static import + client-only -->
+    <!-- ✅ Correct renderer hint -->
     <Search
       id="search"
       className="pagefind-ui"
-      client:only="pagefind"
+      client:only="preact"
       uiOptions={{
         showImages: true,
         excerptLength: 16,
@@ -46,7 +46,6 @@ const navigationPages = [
   </div>
 </div>
 
-<!-- ✅ ALL browser-only code fenced -->
 <script client:load define:vars={{ navigationPages }}>
   const ase = document.getElementById("ase");
   const backdrop = document.getElementById("backdrop");
@@ -80,7 +79,6 @@ const navigationPages = [
     if (!e.target.closest("#pagefind-container")) closePagefind();
   });
 
-  // Clock
   function updateTime() {
     const el = document.getElementById("current-time");
     if (el) el.textContent = new Date().toLocaleTimeString();
@@ -91,10 +89,6 @@ const navigationPages = [
 </script>
 
 <style is:global>
-  /* ============================
-     PAGEFIND: FULL TRANSPARENCY
-     ============================ */
-
   .pagefind-ui,
   .pagefind-ui * {
     background: transparent !important;
@@ -125,13 +119,10 @@ const navigationPages = [
     mix-blend-mode: difference;
   }
 
-  /* ============================
-     THEME VARIABLES
-     ============================ */
-
   :root {
     --pagefind-ui-scale: 0.75;
     --pagefind-ui-font: "Geist", sans-serif;
+
     --pagefind-ui-primary: transparent;
     --pagefind-ui-background: transparent;
     --pagefind-ui-border: transparent;
