@@ -5,10 +5,9 @@ import sitemap from "@astrojs/sitemap";
 import pagefind from "astro-pagefind";
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
-
+import preact from '@astrojs/preact';
 import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
-
 import react from "@astrojs/react";
 import vercel from '@astrojs/vercel/static';
 
@@ -23,6 +22,7 @@ export default defineConfig({
     icon(),
     sitemap(),
     mdx(),
+    preact(),
     pagefind({
       indexing: {
         verbose: true,
