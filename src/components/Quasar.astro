@@ -10,12 +10,10 @@
 
   canvas {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: block; /* Fixes small gaps at the bottom of the element */
-    z-index: -1;
+    inset: 0;
+    width: 100svw;
+    height: 100svh;
+    display: block;
   }
 </style>
 
@@ -24,36 +22,38 @@
   const SPEED = 0.07;
   const MAX_DT = 3;
 
-  function getViewport() {
-    return {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-  }
-
   class Star {
     constructor(cx, cy, spread) {
-      this.reset(cx, cy, spread);
+      this.cx = cx;
+      this.cy = cy;
+      this.spread = spread;
+      this.reset();
     }
 
-    reset(cx, cy, spread) {
-      this.x = cx + (Math.random() - 0.5) * spread;
-      this.y = cy + (Math.random() - 0.5) * spread;
+    reset() {
+      this.x = this.cx + (Math.random() - 0.5) * this.spread;
+      this.y = this.cy + (Math.random() - 0.5) * this.spread;
       this.z = Math.random();
       this.xPrev = this.x;
       this.yPrev = this.y;
     }
 
-    update(cx, cy, spread, speed, dt) {
+    update(speed, dt) {
       this.xPrev = this.x;
       this.yPrev = this.y;
 
       this.z += speed * 0.07 * dt;
-      this.x += (this.x - cx) * speed * this.z * dt;
-      this.y += (this.y - cy) * speed * this.z * dt;
+      this.x += (this.x - this.cx) * speed * this.z * dt;
+      this.y += (this.y - this.cy) * speed * this.z * dt;
 
-      if (this.x < 0 || this.x > spread || this.y < 0 || this.y > spread) {
-        this.reset(cx, cy, spread);
+      const half = this.spread / 2;
+      if (
+        this.x < this.cx - half ||
+        this.x > this.cx + half ||
+        this.y < this.cy - half ||
+        this.y > this.cy + half
+      ) {
+        this.reset();
       }
     }
 
@@ -72,11 +72,9 @@
     constructor() {
       super();
       this.canvas = document.createElement("canvas");
-      this.ctx = this.canvas.getContext("2d", { alpha: true });
-
+      this.ctx = this.canvas.getContext("2d");
       this.stars = [];
       this.lastTime = 0;
-      this.raf = 0;
       this.isLight = false;
     }
 
@@ -90,17 +88,12 @@
       this.watchTheme();
 
       this.lastTime = performance.now();
-      this.raf = requestAnimationFrame(this.frame);
-    }
-
-    disconnectedCallback() {
-      cancelAnimationFrame(this.raf);
-      window.removeEventListener("resize", this.resize);
-      window.removeEventListener("orientationchange", this.resize);
+      requestAnimationFrame(this.frame);
     }
 
     resize = () => {
-      const { width, height } = getViewport();
+      const width = window.innerWidth;
+      const height = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       this.canvas.width = width * dpr;
@@ -112,7 +105,7 @@
 
       const cx = width / 2;
       const cy = height / 2;
-      const spread = Math.max(width, height) * 1.2;
+      const spread = Math.max(width, height) * 1.3;
 
       this.stars = Array.from(
         { length: COUNT },
@@ -135,23 +128,18 @@
     }
 
     frame = (t) => {
-      let dt = (t - this.lastTime) / 16.67;
+      const dt = Math.min((t - this.lastTime) / 16.67, MAX_DT);
       this.lastTime = t;
-      dt = Math.min(dt, MAX_DT);
 
-      const { width, height } = getViewport();
-      const cx = width / 2;
-      const cy = height / 2;
-      const spread = Math.max(width, height) * 1.2;
-
-      this.ctx.fillRect(0, 0, width, height);
+      // ✅ clear FULL canvas (DPR-safe)
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       for (const s of this.stars) {
-        s.update(cx, cy, spread, SPEED, dt);
+        s.update(SPEED, dt);
         s.draw(this.ctx, this.isLight);
       }
 
-      this.raf = requestAnimationFrame(this.frame);
+      requestAnimationFrame(this.frame);
     };
   }
 
