@@ -1,9 +1,9 @@
 ---
 import { Calendar } from "@/components/ui/calendar";
 import Search from "astro-pagefind/components/Search";
-// import NowPlaying from "@/components/NowPlaying.astro";
+import NowPlaying from "@/components/NowPlaying.astro";
 
-// Define your navigation pages
+// Navigation pages injected into results
 const navigationPages = [
   { title: "Home", url: "/" },
   { title: "Petals", url: "/petals" },
@@ -15,13 +15,13 @@ const navigationPages = [
 <div
   transition:persist
   id="backdrop"
-  class="invisible fixed left-0 top-0 z-50 flex h-screen w-full justify-center bg-[rgba(0,0,0,0.5)] p-6 backdrop-blur-sm"
+  class="invisible fixed inset-0 z-50 flex h-screen w-full justify-center bg-[rgba(0,0,0,0.5)] p-6 backdrop-blur-sm"
 >
   <div
     id="pagefind-container"
-    class="relative m-0 flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 bg-neutral-100 p-4 shadow-lg dark:border-white/20 dark:bg-neutral-900"
+    class="relative flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 p-4 shadow-lg dark:border-white/20"
   >
-    <!-- ✅ FIX: client:load prevents Pagefind UI race condition -->
+    <!-- ✅ Pagefind UI (race-safe + transparent) -->
     <Search
       id="search"
       className="pagefind-ui"
@@ -34,18 +34,16 @@ const navigationPages = [
     />
 
     <div class="mt-4 flex justify-between">
-      <div id="calendar-container">
-        <Calendar />
-      </div>
-      <!-- <NowPlaying /> -->
+      <Calendar />
+      <NowPlaying />
     </div>
 
-    <div class="mt-4 text-right text-xs dark:prose-invert">
+    <div class="mt-3 text-right text-xs dark:prose-invert">
       Press <kbd>Esc</kbd>
     </div>
 
-    <div id="time-display" class="mt-2 text-left">
-      <p>Time: <span id="current-time"></span></p>
+    <div id="time-display" class="mt-2 text-left text-xs">
+      Time: <span id="current-time"></span>
     </div>
   </div>
 </div>
@@ -55,15 +53,16 @@ const navigationPages = [
   const backdrop = document.getElementById("backdrop");
 
   function openPagefind() {
-    const searchInput = document.querySelector(".pagefind-ui__search-input");
     backdrop?.classList.remove("invisible");
     backdrop?.classList.add("visible");
-    setTimeout(() => searchInput?.focus(), 0);
+    setTimeout(() => {
+      document.querySelector(".pagefind-ui__search-input")?.focus();
+    }, 0);
   }
 
   function closePagefind() {
-    const searchInput = document.querySelector(".pagefind-ui__search-input");
-    if (searchInput) searchInput.value = "";
+    const input = document.querySelector(".pagefind-ui__search-input");
+    if (input) input.value = "";
     backdrop?.classList.remove("visible");
     backdrop?.classList.add("invisible");
   }
@@ -75,18 +74,14 @@ const navigationPages = [
       e.preventDefault();
       openPagefind();
     }
-    if (e.key === "Escape") {
-      closePagefind();
-    }
+    if (e.key === "Escape") closePagefind();
   });
 
   backdrop?.addEventListener("click", (e) => {
-    if (!e.target.closest("#pagefind-container")) {
-      closePagefind();
-    }
+    if (!e.target.closest("#pagefind-container")) closePagefind();
   });
 
-  // Update the current time every second
+  // Clock
   function updateTime() {
     document.getElementById("current-time").textContent =
       new Date().toLocaleTimeString();
@@ -96,36 +91,54 @@ const navigationPages = [
 </script>
 
 <style is:global>
-  :root {
-    --pagefind-ui-scale: 0.75;
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-border-radius: 3px;
-    --pagefind-ui-font: "Geist", sans-serif;
-    --pagefind-ui-primary: transparent;
-    --pagefind-ui-text: #3d3d3d;
-    --pagefind-ui-background: transparent;
-    --pagefind-ui-border: #d0d0d0;
+  /* ============================
+     PAGEFIND: FULL TRANSPARENCY
+     ============================ */
+
+  .pagefind-ui,
+  .pagefind-ui * {
+    background: transparent !important;
   }
 
-  .dark {
-    --pagefind-ui-text: #d4d4d4;
-    --pagefind-ui-border: #404040;
+  .pagefind-ui__search-input {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
   }
 
-  #search input {
-    background: transparent;
-    font-weight: normal;
+  .pagefind-ui__results,
+  .pagefind-ui__result,
+  .pagefind-ui__message {
+    background: transparent !important;
+    box-shadow: none !important;
   }
 
-  #search .pagefind-ui__result-title {
+  .pagefind-ui__result-title {
     font-weight: 600;
   }
 
-  #search .pagefind-ui__result-excerpt mark {
-    background-color: transparent;
+  .pagefind-ui__result-excerpt mark {
+    background: transparent;
     outline: 1px solid currentColor;
     outline-offset: 1px;
     border-radius: 2px;
     mix-blend-mode: difference;
+  }
+
+  /* ============================
+     THEME VARIABLES
+     ============================ */
+
+  :root {
+    --pagefind-ui-scale: 0.75;
+    --pagefind-ui-font: "Geist", sans-serif;
+    --pagefind-ui-primary: transparent;
+    --pagefind-ui-background: transparent;
+    --pagefind-ui-border: transparent;
+    --pagefind-ui-text: #3d3d3d;
+  }
+
+  .dark {
+    --pagefind-ui-text: #d4d4d4;
   }
 </style>
