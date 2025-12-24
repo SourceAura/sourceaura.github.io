@@ -10,7 +10,7 @@
     pointer-events: none;
     overflow: hidden;
 
-    /* 🔒 hard isolation from other canvases */
+    /* Critical isolation so other canvases never break */
     contain: strict;
     isolation: isolate;
   }
@@ -18,56 +18,96 @@
   quasar-background canvas {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
     display: block;
+  }
+
+  @keyframes shimmer {
+    from {
+      --shimmer: 0deg;
+    }
+    to {
+      --shimmer: 360deg;
+    }
+  }
+
+  @keyframes shine {
+    0% {
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    55% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .shimmer {
+    position: absolute;
+    inset: -40px;
+    border-radius: inherit;
+    mask-image: conic-gradient(
+      from var(--shimmer, 0deg),
+      transparent 0%,
+      black 36%,
+      black 45%,
+      transparent 60%,
+      black 85%,
+      transparent 100%
+    );
+    animation: shimmer 1s linear infinite;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .shimmer-active {
+    animation: shine 1.2s ease-in forwards;
   }
 </style>
 
 <script>
-  const COUNT = 210;
+  const COUNT = 200;
   const SPEED = 0.05;
   const MAX_DT = 2;
 
   class Star {
-    constructor(cx, cy, spread) {
-      this.cx = cx;
-      this.cy = cy;
-      this.spread = spread;
-      this.reset();
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.z = 0;
+      this.xPrev = x;
+      this.yPrev = y;
     }
 
-    reset() {
-      this.x = this.cx + (Math.random() - 0.5) * this.spread;
-      this.y = this.cy + (Math.random() - 0.5) * this.spread;
-      this.z = Math.random();
-      this.xPrev = this.x;
-      this.yPrev = this.y;
-    }
-
-    update(speed, dt) {
+    update(w, h, speed, dt) {
       this.xPrev = this.x;
       this.yPrev = this.y;
 
-      this.z += speed * 0.07 * dt;
-      this.x += (this.x - this.cx) * speed * this.z * dt;
-      this.y += (this.y - this.cy) * speed * this.z * dt;
+      this.z += speed * 0.0675 * dt;
+      this.x += this.x * speed * 0.0225 * this.z * dt;
+      this.y += this.y * speed * 0.0225 * this.z * dt;
 
-      const half = this.spread / 2;
       if (
-        this.x < this.cx - half ||
-        this.x > this.cx + half ||
-        this.y < this.cy - half ||
-        this.y > this.cy + half
+        this.x > w / 2 ||
+        this.x < -w / 2 ||
+        this.y > h / 2 ||
+        this.y < -h / 2
       ) {
-        this.reset();
+        this.x = Math.random() * w - w / 2;
+        this.y = Math.random() * h - h / 2;
+        this.z = 0;
+        this.xPrev = this.x;
+        this.yPrev = this.y;
       }
     }
 
     draw(ctx, light) {
       const a = Math.min(this.z, 1);
       ctx.strokeStyle = light ? `rgba(0,0,0,${a})` : `rgba(255,255,255,${a})`;
-      ctx.lineWidth = Math.min(this.z * 0.6, 2);
+      ctx.lineWidth = Math.min(this.z * 0.5, 2);
       ctx.beginPath();
       ctx.moveTo(this.xPrev, this.yPrev);
       ctx.lineTo(this.x, this.y);
@@ -78,31 +118,53 @@
   class QuasarBackground extends HTMLElement {
     constructor() {
       super();
-      this.canvas = document.createElement("canvas");
-      this.ctx = this.canvas.getContext("2d");
+
+      this.starCanvas = document.createElement("canvas");
+      this.starCtx = this.starCanvas.getContext("2d");
+
+      this.visCanvas = document.createElement("canvas");
+      this.visCtx = this.visCanvas.getContext("2d");
+
       this.stars = [];
+      this.audio = new Float32Array(240);
+
       this.lastTime = 0;
       this.isLight = false;
+      this.raf = 0;
+      this.shimmerTimer = null;
     }
 
     connectedCallback() {
-      this.appendChild(this.canvas);
+      this.append(this.starCanvas, this.visCanvas);
 
-      // Resize only when needed, never per-frame
+      this.starCanvas.style.zIndex = "0";
+      this.visCanvas.style.zIndex = "1";
+
+      this.resize();
+      this.bindResize();
+
+      this.watchTheme();
+      this.startShimmer();
+
+      this.lastTime = performance.now();
+      this.raf = requestAnimationFrame(this.frame);
+    }
+
+    disconnectedCallback() {
+      cancelAnimationFrame(this.raf);
+      clearInterval(this.shimmerTimer);
+      this.unbindResize();
+    }
+
+    bindResize() {
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", this.resize);
       }
       window.addEventListener("resize", this.resize);
       window.addEventListener("orientationchange", this.resize);
-
-      this.watchTheme();
-      this.resize();
-
-      this.lastTime = performance.now();
-      requestAnimationFrame(this.frame);
     }
 
-    disconnectedCallback() {
+    unbindResize() {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener("resize", this.resize);
       }
@@ -112,30 +174,32 @@
 
     resize = () => {
       const vv = window.visualViewport;
-      const width = vv ? vv.width : window.innerWidth;
-      const height = vv ? vv.height : window.innerHeight;
-
+      const w = vv ? vv.width : window.innerWidth;
+      const h = vv ? vv.height : window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      this.canvas.width = Math.floor(width * dpr);
-      this.canvas.height = Math.floor(height * dpr);
+      this.starCanvas.width = w * dpr;
+      this.starCanvas.height = h * dpr;
+      this.starCtx.setTransform(dpr, 0, 0, dpr, w / 2, h / 2);
 
-      /* 🔑 Reset transform cleanly, no accumulation */
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const cx = width / 2;
-      const cy = height / 2;
-      const spread = Math.max(width, height) * 1.4;
+      this.visCanvas.width = w;
+      this.visCanvas.height = h;
 
       this.stars = Array.from(
         { length: COUNT },
-        () => new Star(cx, cy, spread),
+        () => new Star(Math.random() * w - w / 2, Math.random() * h - h / 2),
       );
     };
 
     watchTheme() {
       const update = () => {
         this.isLight = document.documentElement.classList.contains("light");
+        this.starCtx.fillStyle = this.isLight
+          ? "rgba(255,255,255,0.2)"
+          : "rgba(0,0,0,0.2)";
+        this.visCtx.fillStyle = this.isLight
+          ? "rgba(0,0,0,0.7)"
+          : "rgba(255,255,255,0.7)";
       };
 
       update();
@@ -145,19 +209,61 @@
       });
     }
 
-    frame = (t) => {
-      const dt = Math.min((t - this.lastTime) / 16.67, MAX_DT);
-      this.lastTime = t;
+    startShimmer() {
+      this.shimmerTimer = setInterval(() => {
+        const s = this.querySelector(".shimmer");
+        if (!s) return;
+        s.classList.add("shimmer-active");
+        setTimeout(() => s.classList.remove("shimmer-active"), 1200);
+      }, 3400);
+    }
 
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    frame = (t) => {
+      let dt = (t - this.lastTime) / 16.67;
+      this.lastTime = t;
+      dt = Math.min(dt, MAX_DT);
+
+      const w = this.starCanvas.width;
+      const h = this.starCanvas.height;
+
+      this.starCtx.fillRect(-w, -h, w * 2, h * 2);
 
       for (const s of this.stars) {
-        s.update(SPEED, dt);
-        s.draw(this.ctx, this.isLight);
+        s.update(w / 2, h / 2, SPEED, dt);
+        s.draw(this.starCtx, this.isLight);
       }
 
-      requestAnimationFrame(this.frame);
+      this.updateVisualizer();
+      this.drawVisualizer();
+
+      this.raf = requestAnimationFrame(this.frame);
     };
+
+    updateVisualizer() {
+      for (let i = 0; i < this.audio.length; i++) {
+        const v = this.audio[i] + (Math.random() - 0.5) * 0.02;
+        this.audio[i] = Math.max(0.02, Math.min(1, v));
+      }
+    }
+
+    drawVisualizer() {
+      const ctx = this.visCtx;
+      const w = this.visCanvas.width;
+      const h = this.visCanvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+
+      const step = (Math.PI * 2) / this.audio.length;
+
+      for (let i = 0; i < this.audio.length; i++) {
+        ctx.rotate(step);
+        ctx.fillRect(-1, 60, 2, 40 * this.audio[i]);
+      }
+
+      ctx.restore();
+    }
   }
 
   if (!customElements.get("quasar-background")) {
