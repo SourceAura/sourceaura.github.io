@@ -11,7 +11,7 @@
     position: fixed;
     inset: 0;
     width: 100vw;
-    height: 100vh; /* ⬅️ use vh, not dvh */
+    height: 100vh;
     z-index: -1;
     pointer-events: none;
     overflow: hidden;
@@ -95,14 +95,8 @@
       this.starCanvas.style.zIndex = "0";
       this.visCanvas.style.zIndex = "1";
 
-      // 🔑 Do not trust first measurement
-      this.resize();
-
-      // 🔑 Force layout-stable resize
-      requestAnimationFrame(() => this.resize());
-
-      window.addEventListener("resize", this.resize);
-      window.addEventListener("orientationchange", this.resize);
+      this.bindViewportEvents();
+      this.resize(true);
 
       this.watchTheme();
 
@@ -111,26 +105,61 @@
     }
 
     disconnectedCallback() {
-      window.removeEventListener("resize", this.resize);
-      window.removeEventListener("orientationchange", this.resize);
+      this.unbindViewportEvents();
     }
 
-    resize = () => {
-      // ✅ PRODUCTION-SAFE MEASUREMENTS
-      const w = document.documentElement.clientWidth;
-      const h = document.documentElement.clientHeight;
+    bindViewportEvents() {
+      window.addEventListener("resize", this.resize);
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", this.resize);
+        window.visualViewport.addEventListener("scroll", this.resize);
+      }
+    }
+
+    unbindViewportEvents() {
+      window.removeEventListener("resize", this.resize);
+
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", this.resize);
+        window.visualViewport.removeEventListener("scroll", this.resize);
+      }
+    }
+
+    resize = (force = false) => {
+      const vv = window.visualViewport;
+
+      const width = vv ? vv.width : document.documentElement.clientWidth;
+      const height = vv ? vv.height : document.documentElement.clientHeight;
+
+      const offsetX = vv ? vv.offsetLeft : 0;
+      const offsetY = vv ? vv.offsetTop : 0;
+
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      this.starCanvas.width = w * dpr;
-      this.starCanvas.height = h * dpr;
-      this.starCtx.setTransform(dpr, 0, 0, dpr, w / 2, h / 2);
+      this.starCanvas.width = width * dpr;
+      this.starCanvas.height = height * dpr;
 
-      this.visCanvas.width = w;
-      this.visCanvas.height = h;
+      // 🔑 THIS IS THE FIX
+      this.starCtx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        width / 2 - offsetX,
+        height / 2 - offsetY,
+      );
+
+      this.visCanvas.width = width;
+      this.visCanvas.height = height;
 
       this.stars = Array.from(
         { length: STAR_COUNT },
-        () => new Star(Math.random() * w - w / 2, Math.random() * h - h / 2),
+        () =>
+          new Star(
+            Math.random() * width - width / 2,
+            Math.random() * height - height / 2,
+          ),
       );
     };
 
