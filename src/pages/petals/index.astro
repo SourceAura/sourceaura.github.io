@@ -1,26 +1,33 @@
 ---
-import type { CollectionEntry } from 'astro:content';
+import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
 import PetalCard from "@components/PetalCard.astro";
 import { getCollection } from "astro:content";
 import { getRandomSize } from "@lib/utils";
 
-const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
+const posts: CollectionEntry<"petals">[] = (await getCollection("petals"))
   .filter((post) => !post.data.draft)
-  .sort((a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf());
+  .sort(
+    (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  );
 ---
 
-<Layout title="Petals Gallery" description="A collection of my projects and experiments">
+<Layout
+  title="Petals Gallery"
+  description="A collection of my projects and experiments"
+>
   <Container>
-    <!-- <h1 class="text-3xl font-bold mb-4">Gallery:</h1> -->
-    <div class="petal-container">
+    <!-- ✅ PAGEFIND FIX: searchable container -->
+    <div class="petal-container" data-pagefind-body>
       <div class="petal-grid">
-        {posts.map((post: CollectionEntry<'petals'>) => (
-          <div class={`petal-item ${getRandomSize()}`}>
-            <PetalCard post={post} />
-          </div>
-        ))}
+        {
+          posts.map((post) => (
+            <div class={`petal-item ${getRandomSize()}`}>
+              <PetalCard post={post} />
+            </div>
+          ))
+        }
       </div>
     </div>
   </Container>
@@ -28,19 +35,19 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
 
 <style>
   .petal-container {
-    width: 340; /* Set fixed width */
-    height: 210; /* Set fixed height */
-    overflow: auto; /* Allow both horizontal and vertical scrolling */
+    width: 340px;
+    height: 210px;
+    overflow: auto;
     padding: 0.25rem;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;  /* Firefox */
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    border: 1px solid #ccc; /* Add border for boxed appearance */
-    border-radius: 8px; /* Rounded corners */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    border: 1px solid #ccc;
+    border-radius: 8px;
   }
 
   .petal-container::-webkit-scrollbar {
-    display: none;  /* WebKit */
+    display: none;
   }
 
   .petal-grid {
@@ -49,8 +56,7 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
     grid-auto-flow: dense;
     grid-gap: 0.25rem;
     width: max-content;
-    padding: 1rem; /* Add padding for better spacing */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+    padding: 1rem;
   }
 
   .petal-item {
@@ -71,113 +77,4 @@ const posts: CollectionEntry<'petals'>[] = (await getCollection("petals"))
     grid-column: span 3;
     grid-row: span 3;
   }
-
-  @media (max-width: 640px) {
-    .petal-grid {
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    }
-    .medium, .large {
-      grid-column: span 2;
-      grid-row: span 2;
-    }
-  }
 </style>
-
-<script>
-  // Update the type declaration for startViewTransition
-  declare global {
-    type UpdateCallback = () => Promise<void> | void;
-    interface Document {
-      startViewTransition?: (callbackOptions?: UpdateCallback) => ViewTransition;
-    }
-    interface ViewTransition {
-      finished: Promise<undefined>;
-      ready: Promise<undefined>;
-      updateCallbackDone: Promise<undefined>;
-    }
-  }
-
-  function adjustPetalLayout() {
-    const container = document.querySelector('.petal-container') as HTMLElement | null;
-    const grid = document.querySelector('.petal-grid') as HTMLElement | null;
-    const items = document.querySelectorAll('.petal-item');
-    
-    if (!container || !grid) return;
-
-    let columnCount = Math.floor(container.clientHeight / 100);
-    grid.style.gridTemplateRows = `repeat(${columnCount}, minmax(100px, 1fr))`;
-
-    // Use Array.from() for better performance
-    const totalWidth = Array.from(items).reduce((total, item) => {
-      return total + (item instanceof HTMLElement ? item.offsetWidth : 0);
-    }, 0);
-
-    grid.style.width = `${totalWidth}px`;
-  }
-
-  function initPetalLayout() {
-    adjustPetalLayout();
-    
-    const container = document.querySelector('.petal-container') as HTMLElement | null;
-    if (container) {
-      // Use passive event listener for better scrolling performance
-      container.addEventListener('scroll', () => {
-        requestAnimationFrame(adjustPetalLayout);
-      }, { passive: true });
-    }
-  }
-
-  function enableDragAndDrop() {
-    const items = document.querySelectorAll('.petal-item');
-    items.forEach(item => {
-      item.setAttribute('draggable', 'true');
-      item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', e.target.outerHTML);
-        e.target.classList.add('dragging');
-      });
-      item.addEventListener('dragend', () => {
-        item.classList.remove('dragging');
-      });
-    });
-
-    const grid = document.querySelector('.petal-grid');
-    grid.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      const draggingItem = document.querySelector('.dragging');
-      const afterElement = getDragAfterElement(grid, e.clientY);
-      if (afterElement == null) {
-        grid.appendChild(draggingItem);
-      } else {
-        grid.insertBefore(draggingItem, afterElement);
-      }
-    });
-  }
-
-  function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.petal-item:not(.dragging)')];
-
-    return draggableElements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset: offset, element: child };
-      } else {
-        return closest;
-      }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-  }
-
-  // Use a single function for both DOMContentLoaded and astro:after-swap
-  function onLoad() {
-    initPetalLayout();
-    enableDragAndDrop(); // Enable drag and drop functionality
-    window.addEventListener('resize', adjustPetalLayout);
-  }
-
-  document.addEventListener('DOMContentLoaded', onLoad);
-
-  // Check for Astro's view transitions
-  if (document.startViewTransition) {
-    document.addEventListener('astro:after-swap', onLoad);
-  }
-</script>

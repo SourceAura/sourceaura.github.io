@@ -1,51 +1,63 @@
 // src/utils/spotify.ts
-import querystring from "querystring";
 
-const client_id = import.meta.env.SPOTIFY_CLIENT_ID;
-const client_secret = import.meta.env.SPOTIFY_CLIENT_SECRET;
-const refresh_token = import.meta.env.SPOTIFY_REFRESH_TOKEN;
+const CLIENT_ID = import.meta.env.SPOTIFY_CLIENT_ID;
+const REFRESH_TOKEN = import.meta.env.SPOTIFY_REFRESH_TOKEN;
 
-if (!client_id || !client_secret || !refresh_token) {
-  // This throws on the server only, which is what we want.
-  throw new Error(
-    "Missing Spotify env vars. Need SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN",
-  );
+const TOKEN_ENDPOINT = "https://accounts.spotify.com/api/token";
+const NOW_PLAYING_ENDPOINT =
+  "https://api.spotify.com/v1/me/player/currently-playing";
+
+if (!CLIENT_ID || !REFRESH_TOKEN) {
+  console.error("❌ Missing Spotify env vars");
 }
 
-const basic = Buffer.from(`${client_id}:${client_secret}`).toString("base64");
+// ⬇️ EXPLICIT NAMED EXPORT
+export async function getAccessToken(): Promise<string | null> {
+  console.log("🔐 Attempting to refresh Spotify access token");
 
-const NOW_PLAYING_ENDPOINT = "https://api.spotify.com/v1/me/player/currently-playing";
-const TOKEN_ENDPOINT = "https://accounts.spotify.com/api/token";
-
-export async function getAccessToken(): Promise<{ access_token: string }> {
-  const response = await fetch(TOKEN_ENDPOINT, {
+  const res = await fetch(TOKEN_ENDPOINT, {
     method: "POST",
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: querystring.stringify({
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: CLIENT_ID,
       grant_type: "refresh_token",
-      refresh_token,
+      refresh_token: REFRESH_TOKEN,
     }),
   });
 
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    throw new Error(`Spotify token error ${response.status}: ${body}`);
+  const raw = await res.text();
+  console.log("📨 Spotify token raw response:", raw);
+
+  let data: any;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    console.error("❌ Token response not JSON");
+    return null;
   }
 
-  return response.json();
+  if (!res.ok || data.error || !data.access_token) {
+    console.error("❌ Token refresh failed:", data);
+    return null;
+  }
+
+  console.log("✅ Spotify access token refreshed");
+  return data.access_token;
 }
 
-export async function getNowPlaying(): Promise<Response> {
-  const { access_token } = await getAccessToken();
+// ⬇️ EXPLICIT NAMED EXPORT
+export async function getNowPlaying(): Promise<Response | null> {
+  console.log("🎵 getNowPlaying() called");
 
-  // IMPORTANT: Spotify returns 204 when nothing is playing.
-  // Do NOT throw for 204. Just pass the response through.
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    console.warn("⚠ No access token, skipping Spotify request");
+    return null;
+  }
+
   return fetch(NOW_PLAYING_ENDPOINT, {
     headers: {
-      Authorization: `Bearer ${access_token}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 }

@@ -3,7 +3,7 @@ import crypto from "crypto";
 import http from "http";
 import { exec } from "child_process";
 
-const CLIENT_ID = "dd0969650b2143c7823e8323021b7f04";
+const CLIENT_ID = "6256da189f664c77b9e0f815e3557365";
 const PORT = 8000;
 const REDIRECT_URI = `http://127.0.0.1:${PORT}/callback`;
 const SCOPES = [

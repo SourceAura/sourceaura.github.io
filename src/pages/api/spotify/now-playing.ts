@@ -1,73 +1,53 @@
-// src/pages/api/spotify/now-playing.ts
 import type { APIRoute } from "astro";
+
+// ⬇️ MUST match named export exactly
 import { getNowPlaying } from "../../../utils/spotify";
 
 export const prerender = false;
 
-type NowPlayingPayload =
-  | {
-      isPlaying: true;
-      title: string;
-      artist: string;
-      albumImageUrl: string;
-      songUrl: string;
-    }
-  | {
-      isPlaying: false;
-      title?: string;
-      artist?: string;
-      albumImageUrl?: string;
-      songUrl?: string;
-    };
-
-function json(data: unknown, status = 200) {
+function json(data: any) {
   return new Response(JSON.stringify(data), {
-    status,
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "no-store, max-age=0",
+      "Cache-Control": "no-store",
     },
   });
 }
 
 export const GET: APIRoute = async () => {
+  console.log("🔥 /api/spotify/now-playing HIT");
+
   try {
     const response = await getNowPlaying();
 
-    // Nothing playing (or Spotify says "no content")
+    if (!response) {
+      return json({ isPlaying: false, debug: "no-response" });
+    }
+
     if (response.status === 204) {
-      const payload: NowPlayingPayload = { isPlaying: false };
-      return json(payload, 200);
+      return json({ isPlaying: false, debug: "204" });
     }
 
-    // If Spotify returns an error, surface a safe "not playing" payload
     if (!response.ok) {
-      const payload: NowPlayingPayload = { isPlaying: false };
-      return json(payload, 200);
+      return json({ isPlaying: false, debug: "not-ok" });
     }
 
-    const song = await response.json();
+    const data = await response.json();
 
-    // Spotify can return item: null
-    if (!song?.item) {
-      const payload: NowPlayingPayload = { isPlaying: false };
-      return json(payload, 200);
+    if (!data?.item) {
+      return json({ isPlaying: false, debug: "no-item" });
     }
 
-    const isPlaying = Boolean(song.is_playing);
-    const title = song.item.name as string;
-    const artist = (song.item.artists ?? []).map((a: any) => a.name).join(", ");
-    const albumImageUrl = song.item.album?.images?.[0]?.url ?? "";
-    const songUrl = song.item.external_urls?.spotify ?? "";
-
-    const payload: NowPlayingPayload = isPlaying
-      ? { isPlaying: true, title, artist, albumImageUrl, songUrl }
-      : { isPlaying: false, title, artist, albumImageUrl, songUrl };
-
-    return json(payload, 200);
-  } catch (err: any) {
-    // Don’t leak details to the client. Keep UI stable.
-    const payload: NowPlayingPayload = { isPlaying: false };
-    return json(payload, 200);
+    return json({
+      isPlaying: Boolean(data.is_playing),
+      title: data.item.name,
+      artist: data.item.artists.map((a: any) => a.name).join(", "),
+      albumImageUrl: data.item.album.images[0]?.url ?? "",
+      songUrl: data.item.external_urls.spotify,
+      debug: "ok",
+    });
+  } catch (err) {
+    console.error("💥 Unhandled API error:", err);
+    return json({ isPlaying: false, debug: "exception" });
   }
 };
