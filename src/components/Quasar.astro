@@ -5,11 +5,14 @@
     position: fixed;
     inset: 0;
     width: 100vw;
-    height: 100dvh; /* critical for mobile dynamic viewport */
+    height: 100dvh;
     z-index: -1;
     pointer-events: none;
     overflow: hidden;
-    display: block;
+
+    /* 🔒 hard isolation from other canvases */
+    contain: strict;
+    isolation: isolate;
   }
 
   quasar-background canvas {
@@ -80,15 +83,12 @@
       this.stars = [];
       this.lastTime = 0;
       this.isLight = false;
-
-      this.resize = this.resize.bind(this);
-      this.frame = this.frame.bind(this);
     }
 
     connectedCallback() {
       this.appendChild(this.canvas);
 
-      // Mobile-safe resize handling
+      // Resize only when needed, never per-frame
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", this.resize);
       }
@@ -110,7 +110,7 @@
       window.removeEventListener("orientationchange", this.resize);
     }
 
-    resize() {
+    resize = () => {
       const vv = window.visualViewport;
       const width = vv ? vv.width : window.innerWidth;
       const height = vv ? vv.height : window.innerHeight;
@@ -120,6 +120,7 @@
       this.canvas.width = Math.floor(width * dpr);
       this.canvas.height = Math.floor(height * dpr);
 
+      /* 🔑 Reset transform cleanly, no accumulation */
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const cx = width / 2;
@@ -130,7 +131,7 @@
         { length: COUNT },
         () => new Star(cx, cy, spread),
       );
-    }
+    };
 
     watchTheme() {
       const update = () => {
@@ -144,7 +145,7 @@
       });
     }
 
-    frame(t) {
+    frame = (t) => {
       const dt = Math.min((t - this.lastTime) / 16.67, MAX_DT);
       this.lastTime = t;
 
@@ -156,7 +157,7 @@
       }
 
       requestAnimationFrame(this.frame);
-    }
+    };
   }
 
   if (!customElements.get("quasar-background")) {
