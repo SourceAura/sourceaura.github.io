@@ -1,11 +1,17 @@
 <quasar-background></quasar-background>
 
 <style is:global>
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+  }
+
   quasar-background {
     position: fixed;
     inset: 0;
     width: 100vw;
-    height: 100dvh;
+    height: 100vh; /* ⬅️ use vh, not dvh */
     z-index: -1;
     pointer-events: none;
     overflow: hidden;
@@ -70,11 +76,9 @@
     constructor() {
       super();
 
-      // STAR CANVAS
       this.starCanvas = document.createElement("canvas");
       this.starCtx = this.starCanvas.getContext("2d");
 
-      // VISUALIZER CANVAS
       this.visCanvas = document.createElement("canvas");
       this.visCtx = this.visCanvas.getContext("2d");
 
@@ -83,7 +87,6 @@
 
       this.lastTime = 0;
       this.isLight = false;
-      this.raf = 0;
     }
 
     connectedCallback() {
@@ -92,47 +95,36 @@
       this.starCanvas.style.zIndex = "0";
       this.visCanvas.style.zIndex = "1";
 
+      // 🔑 Do not trust first measurement
       this.resize();
-      this.bindResize();
+
+      // 🔑 Force layout-stable resize
+      requestAnimationFrame(() => this.resize());
+
+      window.addEventListener("resize", this.resize);
+      window.addEventListener("orientationchange", this.resize);
+
       this.watchTheme();
 
       this.lastTime = performance.now();
-      this.raf = requestAnimationFrame(this.frame);
+      requestAnimationFrame(this.frame);
     }
 
     disconnectedCallback() {
-      cancelAnimationFrame(this.raf);
-      this.unbindResize();
-    }
-
-    bindResize() {
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", this.resize);
-      }
-      window.addEventListener("resize", this.resize);
-      window.addEventListener("orientationchange", this.resize);
-    }
-
-    unbindResize() {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", this.resize);
-      }
       window.removeEventListener("resize", this.resize);
       window.removeEventListener("orientationchange", this.resize);
     }
 
     resize = () => {
-      const vv = window.visualViewport;
-      const w = vv ? vv.width : window.innerWidth;
-      const h = vv ? vv.height : window.innerHeight;
+      // ✅ PRODUCTION-SAFE MEASUREMENTS
+      const w = document.documentElement.clientWidth;
+      const h = document.documentElement.clientHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      // Star canvas (centered)
       this.starCanvas.width = w * dpr;
       this.starCanvas.height = h * dpr;
       this.starCtx.setTransform(dpr, 0, 0, dpr, w / 2, h / 2);
 
-      // Visualizer canvas (screen space)
       this.visCanvas.width = w;
       this.visCanvas.height = h;
 
@@ -178,7 +170,7 @@
       this.updateVisualizer();
       this.drawVisualizer();
 
-      this.raf = requestAnimationFrame(this.frame);
+      requestAnimationFrame(this.frame);
     };
 
     updateVisualizer() {
