@@ -1,7 +1,6 @@
 ---
 import { Calendar } from "@/components/ui/calendar";
 import Search from "astro-pagefind/components/Search";
-// import NowPlaying from "@/components/NowPlaying.astro";
 
 // Navigation pages injected into results
 const navigationPages = [
@@ -21,11 +20,11 @@ const navigationPages = [
     id="pagefind-container"
     class="relative flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 p-4 shadow-lg dark:border-white/20"
   >
-    <!-- ✅ Pagefind UI (race-safe + transparent) -->
+    <!-- ✅ Pagefind UI: static import + client-only -->
     <Search
       id="search"
       className="pagefind-ui"
-      client:load
+      client:only="pagefind"
       uiOptions={{
         showImages: true,
         excerptLength: 16,
@@ -35,7 +34,6 @@ const navigationPages = [
 
     <div class="mt-4 flex justify-between">
       <Calendar />
-      <!-- <NowPlaying /> -->
     </div>
 
     <div class="mt-3 text-right text-xs dark:prose-invert">
@@ -48,7 +46,8 @@ const navigationPages = [
   </div>
 </div>
 
-<script define:vars={{ navigationPages }}>
+<!-- ✅ ALL browser-only code fenced -->
+<script client:load define:vars={{ navigationPages }}>
   const ase = document.getElementById("ase");
   const backdrop = document.getElementById("backdrop");
 
@@ -83,9 +82,10 @@ const navigationPages = [
 
   // Clock
   function updateTime() {
-    document.getElementById("current-time").textContent =
-      new Date().toLocaleTimeString();
+    const el = document.getElementById("current-time");
+    if (el) el.textContent = new Date().toLocaleTimeString();
   }
+
   updateTime();
   setInterval(updateTime, 1000);
 </script>

@@ -1,10 +1,10 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="25ee2891-0430-4178-9536-032dc9f25c6c",e._sentryDebugIdIdentifier="sentry-dbid-25ee2891-0430-4178-9536-032dc9f25c6c")}catch(e){}}();import { r as readingTime, $ as $$Container, g as getRandomSize, a as $$Layout } from '../chunks/Layout_DFngKXYt.mjs';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="25ee2891-0430-4178-9536-032dc9f25c6c",e._sentryDebugIdIdentifier="sentry-dbid-25ee2891-0430-4178-9536-032dc9f25c6c")}catch(e){}}();import { r as readingTime, $ as $$Container, g as getRandomSize, a as $$Layout } from '../chunks/Layout_BNks1611.mjs';
 import { b as createAstro, c as createComponent, r as renderTemplate, m as maybeRenderHead, d as addAttribute, a as renderComponent } from '../chunks/astro/server_CiN3CFiE.mjs';
 import 'kleur/colors';
 import { $ as $$Image } from '../chunks/_astro_assets_JVTAshYg.mjs';
 import { $ as $$FormattedDate } from '../chunks/FormattedDate_BdRAvYhO.mjs';
 /* empty css                                 */
-import { g as getCollection } from '../chunks/_astro_content_BrwlgINt.mjs';
+import { g as getCollection } from '../chunks/_astro_content_DSYgUPD5.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Astro = createAstro("https://sourceaura.vercel.app");

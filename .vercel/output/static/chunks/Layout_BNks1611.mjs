@@ -1,10 +1,10 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="9c4926c7-1b36-4d13-9b0b-4cb6409ed872",e._sentryDebugIdIdentifier="sentry-dbid-9c4926c7-1b36-4d13-9b0b-4cb6409ed872")}catch(e){}}();/* empty css                         */
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="4c808922-2c5b-4017-a9cd-4dfb837db8a4",e._sentryDebugIdIdentifier="sentry-dbid-4c808922-2c5b-4017-a9cd-4dfb837db8a4")}catch(e){}}();/* empty css                         */
 import * as Sentry from '@sentry/astro';
-import './_sentry-release-injection-file_m9rIRz0Q.mjs';
+import './_sentry-release-injection-file_XLhs1iUU.mjs';
 import { b as createAstro, c as createComponent, r as renderTemplate, d as addAttribute, a as renderComponent, m as maybeRenderHead, e as renderSlot, i as createTransitionScope, j as defineScriptVars, k as renderHead } from './astro/server_CiN3CFiE.mjs';
 import 'kleur/colors';
 import { clsx } from 'clsx';
-import { S as SITE } from './consts_Thi2dnnz.mjs';
+import { S as SITE } from './consts_CjocFYpl.mjs';
 import { jsx } from 'react/jsx-runtime';
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -12,7 +12,6 @@ import { DayPicker } from 'react-day-picker';
 import { twMerge } from 'tailwind-merge';
 import { Slot } from '@radix-ui/react-slot';
 import { cva } from 'class-variance-authority';
-import { join } from 'node:path/posix';
 
 Sentry.init({
   dsn: undefined                                 ,
@@ -22,9 +21,9 @@ Sentry.init({
   tracesSampleRate: 1
 });
 
-const $$Astro$5 = createAstro("https://sourceaura.vercel.app");
+const $$Astro$4 = createAstro("https://sourceaura.vercel.app");
 const $$ViewTransitions = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$5, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$4, $$props, $$slots);
   Astro2.self = $$ViewTransitions;
   const { fallback = "animate" } = Astro2.props;
   return renderTemplate`<meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback"${addAttribute(fallback, "content")}>`;
@@ -34,9 +33,9 @@ var __freeze$2 = Object.freeze;
 var __defProp$2 = Object.defineProperty;
 var __template$2 = (cooked, raw) => __freeze$2(__defProp$2(cooked, "raw", { value: __freeze$2(raw) }));
 var _a$2;
-const $$Astro$4 = createAstro("https://sourceaura.vercel.app");
+const $$Astro$3 = createAstro("https://sourceaura.vercel.app");
 const $$Head = createComponent(async ($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$4, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$3, $$props, $$slots);
   Astro2.self = $$Head;
   const canonicalURL = new URL(Astro2.url.pathname, Astro2.site);
   const { title, description, image = "/blog-placeholder-1.jpg" } = Astro2.props;
@@ -47,9 +46,9 @@ const $$Container = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${maybeRenderHead()}<div class="mx-auto max-w-screen-sm px-3"> ${renderSlot($$result, $$slots["default"])} </div>`;
 }, "/home/sourceaura/Documents/GitHub/sourceaura.github.io/src/components/Container.astro", void 0);
 
-const $$Astro$3 = createAstro("https://sourceaura.vercel.app");
+const $$Astro$2 = createAstro("https://sourceaura.vercel.app");
 const $$EmbedSpot = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$3, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
   Astro2.self = $$EmbedSpot;
   Astro2.props;
   return renderTemplate`${maybeRenderHead()}<div class="spotify-embed" data-astro-cid-hakibnf5> <iframe style="border-radius:12px" src="https://open.spotify.com/user/12161931859?si=39feca4257194dff?utm_source=generator&theme={theme}" width="100%" height="152" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" data-astro-cid-hakibnf5></iframe> </div> `;
@@ -75,9 +74,9 @@ const $$BackToTop = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${maybeRenderHead()}<button id="back-to-top" class="group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-8 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 rotate-90 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm">Back to top</div> </button>`;
 }, "/home/sourceaura/Documents/GitHub/sourceaura.github.io/src/components/BackToTop.astro", void 0);
 
-const $$Astro$2 = createAstro("https://sourceaura.vercel.app");
+const $$Astro$1 = createAstro("https://sourceaura.vercel.app");
 const $$Footer = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$Footer;
   return renderTemplate`${maybeRenderHead()}<footer class="animate"> ${renderComponent($$result, "Container", $$Container, { "class": "footer-container" }, { "default": ($$result2) => renderTemplate` <div class="footer-content relative"> <div class="absolute -top-12 right-0"> ${renderComponent($$result2, "BackToTop", $$BackToTop, {})} </div> </div> <div class="flex items-center justify-between"> <div> <a href="/about"> ${SITE.TITLE} | 🫀 • 🫁 • 🧠 |
 </a>
@@ -196,15 +195,6 @@ function Calendar({
 }
 Calendar.displayName = "Calendar";
 
-const $$Astro$1 = createAstro("https://sourceaura.vercel.app");
-const $$Search = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
-  Astro2.self = $$Search;
-  const { id, className, query, uiOptions = {} } = Astro2.props;
-  const bundlePath = join("/", "pagefind/");
-  return renderTemplate`${maybeRenderHead()}<div${addAttribute(id, "id")}${addAttribute([className, "pagefind-init"], "class:list")} data-pagefind-ui${addAttribute(bundlePath, "data-bundle-path")}${addAttribute(query, "data-query")}${addAttribute(JSON.stringify(uiOptions), "data-ui-options")}></div> `;
-}, "/home/sourceaura/Documents/GitHub/sourceaura.github.io/node_modules/astro-pagefind/src/components/Search.astro", void 0);
-
 var __freeze = Object.freeze;
 var __defProp = Object.defineProperty;
 var __template = (cooked, raw) => __freeze(__defProp(cooked, "raw", { value: __freeze(cooked.slice()) }));
@@ -216,11 +206,11 @@ const $$PageFind = createComponent(($$result, $$props, $$slots) => {
     { title: "About", url: "/about" },
     { title: "404", url: "/404" }
   ];
-  return renderTemplate(_a || (_a = __template(["", '<div id="backdrop" class="invisible fixed inset-0 z-50 flex h-screen w-full justify-center bg-[rgba(0,0,0,0.5)] p-6 backdrop-blur-sm"', '> <div id="pagefind-container" class="relative flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 p-4 shadow-lg dark:border-white/20"> <!-- \u2705 Pagefind UI (race-safe + transparent) --> ', ' <div class="mt-4 flex justify-between"> ', ' <!-- <NowPlaying /> --> </div> <div class="mt-3 text-right text-xs dark:prose-invert">\nPress <kbd>Esc</kbd> </div> <div id="time-display" class="mt-2 text-left text-xs">\nTime: <span id="current-time"></span> </div> </div> </div> <script>(function(){', '\n  const ase = document.getElementById("ase");\n  const backdrop = document.getElementById("backdrop");\n\n  function openPagefind() {\n    backdrop?.classList.remove("invisible");\n    backdrop?.classList.add("visible");\n    setTimeout(() => {\n      document.querySelector(".pagefind-ui__search-input")?.focus();\n    }, 0);\n  }\n\n  function closePagefind() {\n    const input = document.querySelector(".pagefind-ui__search-input");\n    if (input) input.value = "";\n    backdrop?.classList.remove("visible");\n    backdrop?.classList.add("invisible");\n  }\n\n  ase?.addEventListener("click", openPagefind);\n\n  document.addEventListener("keydown", (e) => {\n    if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {\n      e.preventDefault();\n      openPagefind();\n    }\n    if (e.key === "Escape") closePagefind();\n  });\n\n  backdrop?.addEventListener("click", (e) => {\n    if (!e.target.closest("#pagefind-container")) closePagefind();\n  });\n\n  // Clock\n  function updateTime() {\n    document.getElementById("current-time").textContent =\n      new Date().toLocaleTimeString();\n  }\n  updateTime();\n  setInterval(updateTime, 1000);\n})();<\/script> '])), maybeRenderHead(), addAttribute(createTransitionScope($$result, "t6dxx5el"), "data-astro-transition-persist"), renderComponent($$result, "Search", $$Search, { "id": "search", "className": "pagefind-ui", "client:load": true, "uiOptions": {
+  return renderTemplate(_a || (_a = __template(["", '<div id="backdrop" class="invisible fixed inset-0 z-50 flex h-screen w-full justify-center bg-[rgba(0,0,0,0.5)] p-6 backdrop-blur-sm"', '> <div id="pagefind-container" class="relative flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 p-4 shadow-lg dark:border-white/20"> <!-- \u2705 Pagefind UI: static import + client-only --> ', ' <div class="mt-4 flex justify-between"> ', ' </div> <div class="mt-3 text-right text-xs dark:prose-invert">\nPress <kbd>Esc</kbd> </div> <div id="time-display" class="mt-2 text-left text-xs">\nTime: <span id="current-time"></span> </div> </div> </div> <!-- \u2705 ALL browser-only code fenced --> <script client:load>(function(){', '\n  const ase = document.getElementById("ase");\n  const backdrop = document.getElementById("backdrop");\n\n  function openPagefind() {\n    backdrop?.classList.remove("invisible");\n    backdrop?.classList.add("visible");\n    setTimeout(() => {\n      document.querySelector(".pagefind-ui__search-input")?.focus();\n    }, 0);\n  }\n\n  function closePagefind() {\n    const input = document.querySelector(".pagefind-ui__search-input");\n    if (input) input.value = "";\n    backdrop?.classList.remove("visible");\n    backdrop?.classList.add("invisible");\n  }\n\n  ase?.addEventListener("click", openPagefind);\n\n  document.addEventListener("keydown", (e) => {\n    if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {\n      e.preventDefault();\n      openPagefind();\n    }\n    if (e.key === "Escape") closePagefind();\n  });\n\n  backdrop?.addEventListener("click", (e) => {\n    if (!e.target.closest("#pagefind-container")) closePagefind();\n  });\n\n  // Clock\n  function updateTime() {\n    const el = document.getElementById("current-time");\n    if (el) el.textContent = new Date().toLocaleTimeString();\n  }\n\n  updateTime();\n  setInterval(updateTime, 1000);\n})();<\/script> '])), maybeRenderHead(), addAttribute(createTransitionScope($$result, "t6dxx5el"), "data-astro-transition-persist"), renderComponent($$result, "Search", null, { "id": "search", "className": "pagefind-ui", "client:only": "pagefind", "uiOptions": {
     showImages: true,
     excerptLength: 16,
     resetStyles: false
-  }, "client:component-hydration": "load", "client:component-path": "astro-pagefind/components/Search", "client:component-export": "default" }), renderComponent($$result, "Calendar", Calendar, {}), defineScriptVars({ navigationPages }));
+  }, "client:component-hydration": "only", "client:component-path": "astro-pagefind/components/Search", "client:component-export": "default" }), renderComponent($$result, "Calendar", Calendar, {}), defineScriptVars({ navigationPages }));
 }, "/home/sourceaura/Documents/GitHub/sourceaura.github.io/src/components/PageFind.astro", "self");
 
 const $$Quasar = createComponent(($$result, $$props, $$slots) => {
@@ -236,4 +226,4 @@ const $$Layout = createComponent(($$result, $$props, $$slots) => {
 }, "/home/sourceaura/Documents/GitHub/sourceaura.github.io/src/layouts/Layout.astro", void 0);
 
 export { $$Container as $, $$Layout as a, cn as c, getRandomSize as g, readingTime as r };
-//# sourceMappingURL=Layout_DFngKXYt.mjs.map
+//# sourceMappingURL=Layout_BNks1611.mjs.map

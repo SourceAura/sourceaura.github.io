@@ -1,4 +1,4 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="5ba51ac3-5e35-41ca-b375-8246523316a0",e._sentryDebugIdIdentifier="sentry-dbid-5ba51ac3-5e35-41ca-b375-8246523316a0")}catch(e){}}();import { $ as $$Container, a as $$Layout } from '../chunks/Layout_DFngKXYt.mjs';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="5ba51ac3-5e35-41ca-b375-8246523316a0",e._sentryDebugIdIdentifier="sentry-dbid-5ba51ac3-5e35-41ca-b375-8246523316a0")}catch(e){}}();import { $ as $$Container, a as $$Layout } from '../chunks/Layout_BNks1611.mjs';
 import { c as createComponent, r as renderTemplate, a as renderComponent, m as maybeRenderHead } from '../chunks/astro/server_CiN3CFiE.mjs';
 import 'kleur/colors';
 /* empty css                                    */

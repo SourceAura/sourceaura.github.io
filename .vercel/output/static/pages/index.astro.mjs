@@ -1,7 +1,7 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="8b612989-ccd1-4b9a-8698-daa4d4670c3e",e._sentryDebugIdIdentifier="sentry-dbid-8b612989-ccd1-4b9a-8698-daa4d4670c3e")}catch(e){}}();import { $ as $$Container, a as $$Layout } from '../chunks/Layout_DFngKXYt.mjs';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="8b612989-ccd1-4b9a-8698-daa4d4670c3e",e._sentryDebugIdIdentifier="sentry-dbid-8b612989-ccd1-4b9a-8698-daa4d4670c3e")}catch(e){}}();import { $ as $$Container, a as $$Layout } from '../chunks/Layout_BNks1611.mjs';
 import { c as createComponent, r as renderTemplate, a as renderComponent, m as maybeRenderHead } from '../chunks/astro/server_CiN3CFiE.mjs';
 import 'kleur/colors';
-import { S as SITE, a as HOME } from '../chunks/consts_Thi2dnnz.mjs';
+import { S as SITE, a as HOME } from '../chunks/consts_CjocFYpl.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$Index = createComponent(($$result, $$props, $$slots) => {

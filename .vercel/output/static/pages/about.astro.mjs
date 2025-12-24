@@ -1,8 +1,8 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="94698935-d67c-4c8d-b0a0-4966f31a3251",e._sentryDebugIdIdentifier="sentry-dbid-94698935-d67c-4c8d-b0a0-4966f31a3251")}catch(e){}}();import { c as cn, $ as $$Container, a as $$Layout } from '../chunks/Layout_DFngKXYt.mjs';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="94698935-d67c-4c8d-b0a0-4966f31a3251",e._sentryDebugIdIdentifier="sentry-dbid-94698935-d67c-4c8d-b0a0-4966f31a3251")}catch(e){}}();import { c as cn, $ as $$Container, a as $$Layout } from '../chunks/Layout_BNks1611.mjs';
 import { b as createAstro, c as createComponent, r as renderTemplate, m as maybeRenderHead, d as addAttribute, s as spreadAttributes, e as renderSlot, a as renderComponent } from '../chunks/astro/server_CiN3CFiE.mjs';
 import 'kleur/colors';
 import 'clsx';
-import { H as HERO, S as SITE } from '../chunks/consts_Thi2dnnz.mjs';
+import { H as HERO, S as SITE } from '../chunks/consts_CjocFYpl.mjs';
 import { $ as $$Image } from '../chunks/_astro_assets_JVTAshYg.mjs';
 import { _ as __0__________assets_go_bro_png__ } from '../chunks/go-bro_CzP6qpv_.mjs';
 /* empty css                                 */

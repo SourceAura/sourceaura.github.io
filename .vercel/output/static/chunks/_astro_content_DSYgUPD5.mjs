@@ -1,4 +1,4 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="3e88a623-7631-4e42-bfae-e8d3655be872",e._sentryDebugIdIdentifier="sentry-dbid-3e88a623-7631-4e42-bfae-e8d3655be872")}catch(e){}}();import { Traverse } from 'neotraverse/modern';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="c52559d1-88e0-47f6-a363-46681887744c",e._sentryDebugIdIdentifier="sentry-dbid-c52559d1-88e0-47f6-a363-46681887744c")}catch(e){}}();import { Traverse } from 'neotraverse/modern';
 import pLimit from 'p-limit';
 import { r as removeBase, i as isCoreRemotePath, V as VALID_INPUT_FORMATS, A as AstroError, U as UnknownContentCollectionError, p as prependForwardSlash } from './astro/assets-service_hdxxXx8_.mjs';
 import { c as createComponent, f as renderUniqueStylesheet, g as renderScriptElement, h as createHeadAndContent, r as renderTemplate, a as renderComponent, u as unescapeHTML } from './astro/server_CiN3CFiE.mjs';
@@ -309,7 +309,7 @@ createCollectionToGlobResultMap({
 });
 
 let lookupMap = {};
-lookupMap = {"petals":{"type":"content","entries":{"00-nemo":"/src/content/petals/00-nemo/index.mdx","01-spot-eye-see":"/src/content/petals/01-spot-eye-see/index.mdx","05-web-dev":"/src/content/petals/05-web-dev/index.mdx","07-axols":"/src/content/petals/07-axols/index.mdx","99-draft":"/src/content/petals/99-draft/index.md","08-project-1":"/src/content/petals/08-project-1/index.md"}}};
+lookupMap = {"petals":{"type":"content","entries":{"00-nemo":"/src/content/petals/00-nemo/index.mdx","05-web-dev":"/src/content/petals/05-web-dev/index.mdx","01-spot-eye-see":"/src/content/petals/01-spot-eye-see/index.mdx","07-axols":"/src/content/petals/07-axols/index.mdx","08-project-1":"/src/content/petals/08-project-1/index.md","99-draft":"/src/content/petals/99-draft/index.md"}}};
 
 new Set(Object.keys(lookupMap));
 
@@ -337,4 +337,4 @@ const getCollection = createGetCollection({
 });
 
 export { getCollection as g };
-//# sourceMappingURL=_astro_content_BrwlgINt.mjs.map
+//# sourceMappingURL=_astro_content_DSYgUPD5.mjs.map

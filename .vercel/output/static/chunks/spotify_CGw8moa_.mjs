@@ -1,4 +1,4 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="902e021e-ebe4-4a00-9883-2159953f6b67",e._sentryDebugIdIdentifier="sentry-dbid-902e021e-ebe4-4a00-9883-2159953f6b67")}catch(e){}}();import './_sentry-release-injection-file_m9rIRz0Q.mjs';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="902e021e-ebe4-4a00-9883-2159953f6b67",e._sentryDebugIdIdentifier="sentry-dbid-902e021e-ebe4-4a00-9883-2159953f6b67")}catch(e){}}();import './_sentry-release-injection-file_XLhs1iUU.mjs';
 
 const CLIENT_ID = "415978a1c6b944a19d190f86f36f518e";
 const REFRESH_TOKEN = "AQB2jmGL7LNC3Z5io4zdpyeMXbrtvZZ8ujUnq1DURL6MclQFT8MphUMmHmPGVvwYI0UJB8wt51aG7bmPOQkzXLJYm3BwUB1KxrOm-TlTkdgtG9Uv5xYIa9aBi9svF3GJ55cvrCTMOAxFHn5U1zq3RElDGs_BZ5BO2UTE0G6QaSNzkiT86UZTxQ43rw61g2S8aPdj4RfP--xJUr4Jm3rYHy8mWV455LGQ0zNO4eVITNCk_cYXfcB6DZAqb8quYMdZKwIS5794C9MSkYGrhjVSNHbXX-O5OXP3vbkx70NsJu_6GNQtLtpTM3SW0Vg";
@@ -46,4 +46,4 @@ async function getNowPlaying() {
 }
 
 export { getNowPlaying as g };
-//# sourceMappingURL=spotify_CzlPYEUZ.mjs.map
+//# sourceMappingURL=spotify_CGw8moa_.mjs.map

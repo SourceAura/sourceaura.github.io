@@ -1,8 +1,8 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="b65d08f3-0f91-4cd3-abe5-55d4693e6393",e._sentryDebugIdIdentifier="sentry-dbid-b65d08f3-0f91-4cd3-abe5-55d4693e6393")}catch(e){}}();import { $ as $$Container, a as $$Layout } from '../chunks/Layout_DFngKXYt.mjs';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="b65d08f3-0f91-4cd3-abe5-55d4693e6393",e._sentryDebugIdIdentifier="sentry-dbid-b65d08f3-0f91-4cd3-abe5-55d4693e6393")}catch(e){}}();import { $ as $$Container, a as $$Layout } from '../chunks/Layout_BNks1611.mjs';
 import { c as createComponent, r as renderTemplate, a as renderComponent, m as maybeRenderHead } from '../chunks/astro/server_CiN3CFiE.mjs';
 import 'kleur/colors';
 import { $ as $$BackToPrevious } from '../chunks/BackToPrevious_BXkzZBwq.mjs';
-import { S as SITE } from '../chunks/consts_Thi2dnnz.mjs';
+import { S as SITE } from '../chunks/consts_CjocFYpl.mjs';
 export { renderers } from '../renderers.mjs';
 
 const $$404 = createComponent(($$result, $$props, $$slots) => {

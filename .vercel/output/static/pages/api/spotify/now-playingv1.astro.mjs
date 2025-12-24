@@ -1,5 +1,5 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="0090e9f3-71d2-4a8a-8edc-44a906e2802d",e._sentryDebugIdIdentifier="sentry-dbid-0090e9f3-71d2-4a8a-8edc-44a906e2802d")}catch(e){}}();import { g as getNowPlaying } from '../../../chunks/spotify_CzlPYEUZ.mjs';
-import '../../../chunks/_sentry-release-injection-file_m9rIRz0Q.mjs';
+;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="0090e9f3-71d2-4a8a-8edc-44a906e2802d",e._sentryDebugIdIdentifier="sentry-dbid-0090e9f3-71d2-4a8a-8edc-44a906e2802d")}catch(e){}}();import { g as getNowPlaying } from '../../../chunks/spotify_CGw8moa_.mjs';
+import '../../../chunks/_sentry-release-injection-file_XLhs1iUU.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 async function GET() {
