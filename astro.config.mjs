@@ -5,11 +5,14 @@ import sitemap from "@astrojs/sitemap";
 import pagefind from "astro-pagefind";
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
-import preact from '@astrojs/preact';
+
+
 import sentry from "@sentry/astro";
-import spotlightjs from "@spotlightjs/astro";
 import react from "@astrojs/react";
+import preact from '@astrojs/preact';
 import vercel from '@astrojs/vercel/static';
+import spotlightjs from "@spotlightjs/astro";
+
 
 
 // https://astro.build/config
