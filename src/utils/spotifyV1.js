@@ -19,7 +19,7 @@ const TOKEN_ENDPOINT = `https://accounts.spotify.com/api/token`;
 const getAccessToken = async () => {
   try {
     console.log('Fetching access token from Spotify');
-
+    
     // Make a POST request to the Spotify token endpoint
     const response = await fetch(TOKEN_ENDPOINT, {
       method: 'POST',
