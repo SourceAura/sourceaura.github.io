@@ -32,11 +32,13 @@ const { title, description } = Astro.props;
     <PageFind />
     <style>
       body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden; /* Only if you want to prevent scrolling entirely */
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+        }
       }
       .content-wrapper {
         position: relative;
