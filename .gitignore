@@ -2,10 +2,10 @@
 dist/
 # generated types
 # .astro/
-# saves 
+# saves
 
 src/capsules/
-# 404 
+# 404
 # 404.astro/
 
 # dependencies
@@ -22,7 +22,7 @@ pnpm-debug.log*
 
 
 # environment variables
-.env
+#.env
 .env.production
 
 # macOS-specific files
