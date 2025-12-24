@@ -5,19 +5,21 @@
     position: fixed !important;
     inset: 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
-    display: block;
-    z-index: -1;
-    pointer-events: none;
+    height: 100dvh !important; /* Adjusts dynamically on mobile */
+    display: block !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
     margin: 0;
     padding: 0;
+    overflow: hidden;
   }
 
-  canvas {
-    position: fixed;
-    inset: 0;
-    width: 100svw;
-    height: 100svh;
+  quasar-background canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
     display: block;
   }
 </style>
@@ -46,7 +48,6 @@
     update(speed, dt) {
       this.xPrev = this.x;
       this.yPrev = this.y;
-
       this.z += speed * 0.07 * dt;
       this.x += (this.x - this.cx) * speed * this.z * dt;
       this.y += (this.y - this.cy) * speed * this.z * dt;
@@ -85,27 +86,37 @@
 
     connectedCallback() {
       this.appendChild(this.canvas);
-      this.resize();
 
-      window.addEventListener("resize", this.resize);
+      // Use VisualViewport API for better mobile support if available
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", this.resize);
+      } else {
+        window.addEventListener("resize", this.resize);
+      }
+
       window.addEventListener("orientationchange", this.resize);
 
+      this.resize();
       this.watchTheme();
-
       this.lastTime = performance.now();
       requestAnimationFrame(this.frame);
     }
 
     resize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      // Priority: VisualViewport (Mobile) > innerWidth/Height
+      const width = window.visualViewport
+        ? window.visualViewport.width
+        : window.innerWidth;
+      const height = window.visualViewport
+        ? window.visualViewport.height
+        : window.innerHeight;
+
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       this.canvas.width = width * dpr;
       this.canvas.height = height * dpr;
-      this.canvas.style.width = `${width}px`;
-      this.canvas.style.height = `${height}px`;
 
+      // CSS handles the display size via 100% in the <style> block
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const cx = width / 2;
@@ -121,9 +132,6 @@
     watchTheme() {
       const update = () => {
         this.isLight = document.documentElement.classList.contains("light");
-        this.ctx.fillStyle = this.isLight
-          ? "rgba(255,255,255,0.15)"
-          : "rgba(0,0,0,0.15)";
       };
       update();
       new MutationObserver(update).observe(document.documentElement, {
@@ -136,7 +144,7 @@
       const dt = Math.min((t - this.lastTime) / 16.67, MAX_DT);
       this.lastTime = t;
 
-      // ✅ clear FULL canvas (DPR-safe)
+      // Clear using the scaled coordinates
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       for (const s of this.stars) {
@@ -148,5 +156,7 @@
     };
   }
 
-  customElements.define("quasar-background", QuasarBackground);
+  if (!customElements.get("quasar-background")) {
+    customElements.define("quasar-background", QuasarBackground);
+  }
 </script>
