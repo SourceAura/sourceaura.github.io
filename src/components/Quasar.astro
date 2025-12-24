@@ -20,7 +20,11 @@
   quasar-background canvas {
     position: absolute;
     inset: 0;
-    display: block;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
   }
 </style>
 
