@@ -1,4 +1,4 @@
-<quasar-background aria-hidden="true"></quasar-background>
+<quasar-background></quasar-background>
 
 <style is:global>
   html,
@@ -20,7 +20,7 @@
   quasar-background canvas {
     position: fixed;
     inset: 0;
-    display: block;
+    /*display: block;*/
   }
 </style>
 
@@ -97,6 +97,7 @@
 
       this.bindViewportEvents();
       this.resize(true);
+
       this.watchTheme();
 
       this.lastTime = performance.now();
@@ -109,6 +110,7 @@
 
     bindViewportEvents() {
       window.addEventListener("resize", this.resize);
+
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", this.resize);
         window.visualViewport.addEventListener("scroll", this.resize);
@@ -117,23 +119,36 @@
 
     unbindViewportEvents() {
       window.removeEventListener("resize", this.resize);
+
       if (window.visualViewport) {
         window.visualViewport.removeEventListener("resize", this.resize);
         window.visualViewport.removeEventListener("scroll", this.resize);
       }
     }
 
-    resize = () => {
+    resize = (force = false) => {
       const vv = window.visualViewport;
-      const width = vv ? vv.width : window.innerWidth;
-      const height = vv ? vv.height : window.innerHeight;
+
+      const width = vv ? vv.width : document.documentElement.clientWidth;
+      const height = vv ? vv.height : document.documentElement.clientHeight;
+
+      const offsetX = vv ? vv.offsetLeft : 0;
+      const offsetY = vv ? vv.offsetTop : 0;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       this.starCanvas.width = width * dpr;
       this.starCanvas.height = height * dpr;
 
-      this.starCtx.setTransform(dpr, 0, 0, dpr, width / 2, height / 2);
+      // 🔑 THIS IS THE FIX
+      this.starCtx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        width / 2 - offsetX,
+        height / 2 - offsetY,
+      );
 
       this.visCanvas.width = width;
       this.visCanvas.height = height;
@@ -154,6 +169,9 @@
         this.starCtx.fillStyle = this.isLight
           ? "rgba(255,255,255,0.2)"
           : "rgba(0,0,0,0.2)";
+        this.visCtx.fillStyle = this.isLight
+          ? "rgba(0,0,0,0.7)"
+          : "rgba(255,255,255,0.7)";
       };
 
       update();
@@ -178,8 +196,37 @@
         s.draw(this.starCtx, this.isLight);
       }
 
+      this.updateVisualizer();
+      this.drawVisualizer();
+
       requestAnimationFrame(this.frame);
     };
+
+    updateVisualizer() {
+      for (let i = 0; i < this.audio.length; i++) {
+        const v = this.audio[i] + (Math.random() - 0.5) * 0.02;
+        this.audio[i] = Math.max(0.02, Math.min(1, v));
+      }
+    }
+
+    drawVisualizer() {
+      const ctx = this.visCtx;
+      const w = this.visCanvas.width;
+      const h = this.visCanvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+
+      const step = (Math.PI * 2) / this.audio.length;
+
+      for (let i = 0; i < this.audio.length; i++) {
+        ctx.rotate(step);
+        ctx.fillRect(-1, 60, 2, 40 * this.audio[i]);
+      }
+
+      ctx.restore();
+    }
   }
 
   if (!customElements.get("quasar-background")) {
