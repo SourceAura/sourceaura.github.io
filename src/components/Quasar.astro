@@ -2,24 +2,21 @@
 
 <style is:global>
   quasar-background {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100dvh !important; /* Adjusts dynamically on mobile */
-    display: block !important;
-    z-index: -1 !important;
-    pointer-events: none !important;
-    margin: 0;
-    padding: 0;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh; /* critical for mobile dynamic viewport */
+    z-index: -1;
+    pointer-events: none;
     overflow: hidden;
+    display: block;
   }
 
   quasar-background canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     display: block;
   }
 </style>
@@ -48,6 +45,7 @@
     update(speed, dt) {
       this.xPrev = this.x;
       this.yPrev = this.y;
+
       this.z += speed * 0.07 * dt;
       this.x += (this.x - this.cx) * speed * this.z * dt;
       this.y += (this.y - this.cy) * speed * this.z * dt;
@@ -82,57 +80,63 @@
       this.stars = [];
       this.lastTime = 0;
       this.isLight = false;
+
+      this.resize = this.resize.bind(this);
+      this.frame = this.frame.bind(this);
     }
 
     connectedCallback() {
       this.appendChild(this.canvas);
 
-      // Use VisualViewport API for better mobile support if available
+      // Mobile-safe resize handling
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", this.resize);
-      } else {
-        window.addEventListener("resize", this.resize);
       }
-
+      window.addEventListener("resize", this.resize);
       window.addEventListener("orientationchange", this.resize);
 
-      this.resize();
       this.watchTheme();
+      this.resize();
+
       this.lastTime = performance.now();
       requestAnimationFrame(this.frame);
     }
 
-    resize = () => {
-      // Priority: VisualViewport (Mobile) > innerWidth/Height
-      const width = window.visualViewport
-        ? window.visualViewport.width
-        : window.innerWidth;
-      const height = window.visualViewport
-        ? window.visualViewport.height
-        : window.innerHeight;
+    disconnectedCallback() {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", this.resize);
+      }
+      window.removeEventListener("resize", this.resize);
+      window.removeEventListener("orientationchange", this.resize);
+    }
+
+    resize() {
+      const vv = window.visualViewport;
+      const width = vv ? vv.width : window.innerWidth;
+      const height = vv ? vv.height : window.innerHeight;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      this.canvas.width = width * dpr;
-      this.canvas.height = height * dpr;
+      this.canvas.width = Math.floor(width * dpr);
+      this.canvas.height = Math.floor(height * dpr);
 
-      // CSS handles the display size via 100% in the <style> block
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const cx = width / 2;
       const cy = height / 2;
-      const spread = Math.max(width, height) * 1.3;
+      const spread = Math.max(width, height) * 1.4;
 
       this.stars = Array.from(
         { length: COUNT },
         () => new Star(cx, cy, spread),
       );
-    };
+    }
 
     watchTheme() {
       const update = () => {
         this.isLight = document.documentElement.classList.contains("light");
       };
+
       update();
       new MutationObserver(update).observe(document.documentElement, {
         attributes: true,
@@ -140,11 +144,10 @@
       });
     }
 
-    frame = (t) => {
+    frame(t) {
       const dt = Math.min((t - this.lastTime) / 16.67, MAX_DT);
       this.lastTime = t;
 
-      // Clear using the scaled coordinates
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       for (const s of this.stars) {
@@ -153,7 +156,7 @@
       }
 
       requestAnimationFrame(this.frame);
-    };
+    }
   }
 
   if (!customElements.get("quasar-background")) {
