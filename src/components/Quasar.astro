@@ -2,10 +2,15 @@
 
 <style is:global>
   quasar-background {
-    position: fixed;
-    inset: 0;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: block;
     z-index: -1;
     pointer-events: none;
+    margin: 0;
+    padding: 0;
   }
 
   canvas {
@@ -19,8 +24,8 @@
 
 <script>
   const COUNT = 210;
-  const SPEED = 0.07;
-  const MAX_DT = 3;
+  const SPEED = 0.05;
+  const MAX_DT = 2;
 
   class Star {
     constructor(cx, cy, spread) {
