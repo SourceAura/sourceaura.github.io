@@ -6,7 +6,6 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    contain: strict;
   }
 
   canvas {
@@ -24,60 +23,45 @@
   const MAX_DT = 2;
 
   function getViewport() {
-    if (window.visualViewport) {
-      return {
-        width: window.visualViewport.width,
-        height: window.visualViewport.height,
-        scale: window.visualViewport.scale || 1,
-      };
-    }
     return {
       width: window.innerWidth,
       height: window.innerHeight,
-      scale: 1,
     };
   }
 
   class Star {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-      this.z = Math.random();
-      this.xPrev = x;
-      this.yPrev = y;
+    constructor(cx, cy, spread) {
+      this.reset(cx, cy, spread);
     }
 
-    update(w, h, speed, dt) {
+    reset(cx, cy, spread) {
+      this.x = cx + (Math.random() - 0.5) * spread;
+      this.y = cy + (Math.random() - 0.5) * spread;
+      this.z = Math.random();
+      this.xPrev = this.x;
+      this.yPrev = this.y;
+    }
+
+    update(cx, cy, spread, speed, dt) {
       this.xPrev = this.x;
       this.yPrev = this.y;
 
       this.z += speed * 0.07 * dt;
-      this.x += this.x * speed * 0.025 * this.z * dt;
-      this.y += this.y * speed * 0.025 * this.z * dt;
+      this.x += (this.x - cx) * speed * this.z * dt;
+      this.y += (this.y - cy) * speed * this.z * dt;
 
-      if (
-        this.x < -w / 2 ||
-        this.x > w / 2 ||
-        this.y < -h / 2 ||
-        this.y > h / 2
-      ) {
-        this.x = Math.random() * w - w / 2;
-        this.y = Math.random() * h - h / 2;
-        this.z = 0;
-        this.xPrev = this.x;
-        this.yPrev = this.y;
+      if (this.x < 0 || this.x > spread || this.y < 0 || this.y > spread) {
+        this.reset(cx, cy, spread);
       }
     }
 
     draw(ctx, light) {
-      const alpha = Math.min(this.z, 1);
-      ctx.strokeStyle = light
-        ? `rgba(0,0,0,${alpha})`
-        : `rgba(255,255,255,${alpha})`;
+      const a = Math.min(this.z, 1);
+      ctx.strokeStyle = light ? `rgba(0,0,0,${a})` : `rgba(255,255,255,${a})`;
       ctx.lineWidth = Math.min(this.z * 0.6, 2);
       ctx.beginPath();
-      ctx.moveTo(this.x, this.y);
-      ctx.lineTo(this.xPrev, this.yPrev);
+      ctx.moveTo(this.xPrev, this.yPrev);
+      ctx.lineTo(this.x, this.y);
       ctx.stroke();
     }
   }
@@ -87,6 +71,7 @@
       super();
       this.canvas = document.createElement("canvas");
       this.ctx = this.canvas.getContext("2d", { alpha: true });
+
       this.stars = [];
       this.lastTime = 0;
       this.raf = 0;
@@ -98,8 +83,6 @@
       this.resize();
 
       window.addEventListener("resize", this.resize);
-      window.visualViewport?.addEventListener("resize", this.resize);
-      window.visualViewport?.addEventListener("scroll", this.resize);
       window.addEventListener("orientationchange", this.resize);
 
       this.watchTheme();
@@ -111,8 +94,6 @@
     disconnectedCallback() {
       cancelAnimationFrame(this.raf);
       window.removeEventListener("resize", this.resize);
-      window.visualViewport?.removeEventListener("resize", this.resize);
-      window.visualViewport?.removeEventListener("scroll", this.resize);
       window.removeEventListener("orientationchange", this.resize);
     }
 
@@ -120,20 +101,20 @@
       const { width, height } = getViewport();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      this.canvas.width = Math.ceil(width * dpr);
-      this.canvas.height = Math.ceil(height * dpr);
+      this.canvas.width = width * dpr;
+      this.canvas.height = height * dpr;
       this.canvas.style.width = `${width}px`;
       this.canvas.style.height = `${height}px`;
 
-      this.ctx.setTransform(dpr, 0, 0, dpr, width / 2, height / 2);
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const spread = Math.max(width, height) * 1.2;
 
       this.stars = Array.from(
         { length: COUNT },
-        () =>
-          new Star(
-            Math.random() * width - width / 2,
-            Math.random() * height - height / 2,
-          ),
+        () => new Star(cx, cy, spread),
       );
     };
 
@@ -157,11 +138,14 @@
       dt = Math.min(dt, MAX_DT);
 
       const { width, height } = getViewport();
+      const cx = width / 2;
+      const cy = height / 2;
+      const spread = Math.max(width, height) * 1.2;
 
-      this.ctx.fillRect(-width / 2, -height / 2, width, height);
+      this.ctx.fillRect(0, 0, width, height);
 
       for (const s of this.stars) {
-        s.update(width, height, SPEED, dt);
+        s.update(cx, cy, spread, SPEED, dt);
         s.draw(this.ctx, this.isLight);
       }
 
