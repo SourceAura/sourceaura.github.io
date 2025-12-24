@@ -1,68 +1,28 @@
 <quasar-background></quasar-background>
-<!-- Keep Tweaking -->
-<style>
+
+<style is:global>
   quasar-background {
     position: fixed;
     inset: 0;
     width: 100vw;
-    height: 100dvh; /* critical for mobile dynamic viewport */
+    height: 100dvh;
     z-index: -1;
     pointer-events: none;
     overflow: hidden;
-    display: block;
   }
 
-  @keyframes shimmer {
-    from {
-      --shimmer: 0deg;
-    }
-    to {
-      --shimmer: 360deg;
-    }
-  }
-
-  @keyframes shine {
-    0% {
-      opacity: 0;
-    }
-    15% {
-      opacity: 1;
-    }
-    55% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
-  }
-
-  .shimmer {
+  quasar-background canvas {
     position: absolute;
-    inset: -40px;
-    border-radius: inherit;
-    mask-image: conic-gradient(
-      from var(--shimmer, 0deg),
-      transparent 0%,
-      black 36%,
-      black 45%,
-      transparent 60%,
-      black 85%,
-      transparent 100%
-    );
-    animation: shimmer 1s linear infinite;
-    pointer-events: none;
-    opacity: 0;
-  }
-
-  .shimmer-active {
-    animation: shine 1.2s ease-in forwards;
+    inset: 0;
+    display: block;
   }
 </style>
 
 <script>
-  const COUNT = 200;
+  const STAR_COUNT = 200;
   const SPEED = 0.05;
   const MAX_DT = 2;
+  const BINS = 240;
 
   class Star {
     constructor(x, y) {
@@ -100,8 +60,8 @@
       ctx.strokeStyle = light ? `rgba(0,0,0,${a})` : `rgba(255,255,255,${a})`;
       ctx.lineWidth = Math.min(this.z * 0.5, 2);
       ctx.beginPath();
-      ctx.moveTo(this.x, this.y);
-      ctx.lineTo(this.xPrev, this.yPrev);
+      ctx.moveTo(this.xPrev, this.yPrev);
+      ctx.lineTo(this.x, this.y);
       ctx.stroke();
     }
   }
@@ -110,37 +70,31 @@
     constructor() {
       super();
 
-      this.canvas = document.createElement("canvas");
-      this.ctx = this.canvas.getContext("2d");
+      // STAR CANVAS
+      this.starCanvas = document.createElement("canvas");
+      this.starCtx = this.starCanvas.getContext("2d");
 
-      this.vis = document.createElement("canvas");
-      this.vctx = this.vis.getContext("2d");
+      // VISUALIZER CANVAS
+      this.visCanvas = document.createElement("canvas");
+      this.visCtx = this.visCanvas.getContext("2d");
 
       this.stars = [];
-      this.audio = new Float32Array(240);
+      this.audio = new Float32Array(BINS);
 
       this.lastTime = 0;
-      this.raf = 0;
       this.isLight = false;
-      this.shimmerTimer = null;
+      this.raf = 0;
     }
 
     connectedCallback() {
-      this.append(this.canvas, this.vis);
+      this.append(this.starCanvas, this.visCanvas);
 
-      this.canvas.style.position = "absolute";
-      this.vis.style.position = "absolute";
-      this.canvas.style.inset = "0";
-      this.vis.style.inset = "0";
-
-      this.canvas.style.zIndex = "0";
-      this.vis.style.zIndex = "1";
+      this.starCanvas.style.zIndex = "0";
+      this.visCanvas.style.zIndex = "1";
 
       this.resize();
-      window.addEventListener("resize", this.resize);
-
+      this.bindResize();
       this.watchTheme();
-      this.startShimmer();
 
       this.lastTime = performance.now();
       this.raf = requestAnimationFrame(this.frame);
@@ -148,27 +102,42 @@
 
     disconnectedCallback() {
       cancelAnimationFrame(this.raf);
-      clearInterval(this.shimmerTimer);
+      this.unbindResize();
+    }
+
+    bindResize() {
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", this.resize);
+      }
+      window.addEventListener("resize", this.resize);
+      window.addEventListener("orientationchange", this.resize);
+    }
+
+    unbindResize() {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", this.resize);
+      }
       window.removeEventListener("resize", this.resize);
+      window.removeEventListener("orientationchange", this.resize);
     }
 
     resize = () => {
-      const w = this.clientWidth;
-      const h = this.clientHeight;
-      const dpr = window.devicePixelRatio || 1;
+      const vv = window.visualViewport;
+      const w = vv ? vv.width : window.innerWidth;
+      const h = vv ? vv.height : window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      this.canvas.width = w * dpr;
-      this.canvas.height = h * dpr;
-      this.canvas.style.width = `${w}px`;
-      this.canvas.style.height = `${h}px`;
+      // Star canvas (centered)
+      this.starCanvas.width = w * dpr;
+      this.starCanvas.height = h * dpr;
+      this.starCtx.setTransform(dpr, 0, 0, dpr, w / 2, h / 2);
 
-      this.ctx.setTransform(dpr, 0, 0, dpr, w / 2, h / 2);
-
-      this.vis.width = w;
-      this.vis.height = h;
+      // Visualizer canvas (screen space)
+      this.visCanvas.width = w;
+      this.visCanvas.height = h;
 
       this.stars = Array.from(
-        { length: COUNT },
+        { length: STAR_COUNT },
         () => new Star(Math.random() * w - w / 2, Math.random() * h - h / 2),
       );
     };
@@ -176,31 +145,19 @@
     watchTheme() {
       const update = () => {
         this.isLight = document.documentElement.classList.contains("light");
-
-        this.ctx.fillStyle = this.isLight
+        this.starCtx.fillStyle = this.isLight
           ? "rgba(255,255,255,0.2)"
           : "rgba(0,0,0,0.2)";
-
-        this.vctx.fillStyle = this.isLight
+        this.visCtx.fillStyle = this.isLight
           ? "rgba(0,0,0,0.7)"
           : "rgba(255,255,255,0.7)";
       };
 
       update();
-
       new MutationObserver(update).observe(document.documentElement, {
         attributes: true,
         attributeFilter: ["class"],
       });
-    }
-
-    startShimmer() {
-      this.shimmerTimer = setInterval(() => {
-        const shimmer = this.querySelector(".shimmer");
-        if (!shimmer) return;
-        shimmer.classList.add("shimmer-active");
-        setTimeout(() => shimmer.classList.remove("shimmer-active"), 1200);
-      }, 3400);
     }
 
     frame = (t) => {
@@ -208,14 +165,14 @@
       this.lastTime = t;
       dt = Math.min(dt, MAX_DT);
 
-      const w = this.clientWidth;
-      const h = this.clientHeight;
+      const w = this.starCanvas.width / 2;
+      const h = this.starCanvas.height / 2;
 
-      this.ctx.fillRect(-w / 2, -h / 2, w, h);
+      this.starCtx.fillRect(-w, -h, w * 2, h * 2);
 
       for (const s of this.stars) {
-        s.update(w, h, SPEED, dt);
-        s.draw(this.ctx, this.isLight);
+        s.update(w * 2, h * 2, SPEED, dt);
+        s.draw(this.starCtx, this.isLight);
       }
 
       this.updateVisualizer();
@@ -232,12 +189,11 @@
     }
 
     drawVisualizer() {
-      const ctx = this.vctx;
-      const w = this.vis.width;
-      const h = this.vis.height;
+      const ctx = this.visCtx;
+      const w = this.visCanvas.width;
+      const h = this.visCanvas.height;
 
       ctx.clearRect(0, 0, w, h);
-
       ctx.save();
       ctx.translate(w / 2, h / 2);
 
@@ -252,5 +208,7 @@
     }
   }
 
-  customElements.define("quasar-background", QuasarBackground);
+  if (!customElements.get("quasar-background")) {
+    customElements.define("quasar-background", QuasarBackground);
+  }
 </script>
