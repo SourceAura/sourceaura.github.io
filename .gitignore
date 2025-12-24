@@ -24,7 +24,7 @@ pnpm-debug.log*
 # environment variables
 #.env
 .env.production
-
+spotify-pkce.js
 # macOS-specific files
 .DS_Store
 
