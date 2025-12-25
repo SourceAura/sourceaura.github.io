@@ -4,12 +4,10 @@
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@*": [
-        "./src/*"
-      ],
-      "@utils/*": ["src/utils/*"]
+      "@*": ["./src/*"],
+      "@utils/*": ["src/utils/*"],
     },
     "jsx": "react-jsx",
-    "jsxImportSource": "react"
-  }
+    "jsxImportSource": "react",
+  },
 }

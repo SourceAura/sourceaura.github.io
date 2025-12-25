@@ -1,19 +1,16 @@
 import tailwind from "@astrojs/tailwind";
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
-import sitemap from "@astrojs/sitemap";
 import pagefind from "astro-pagefind";
+import sitemap from "@astrojs/sitemap";
+
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
-
-
-import sentry from "@sentry/astro";
-import react from "@astrojs/react";
 import preact from '@astrojs/preact';
-import vercel from '@astrojs/vercel/static';
+import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
-
-
+import react from "@astrojs/react";
+import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
@@ -25,8 +22,12 @@ export default defineConfig({
     icon(),
     sitemap(),
     mdx(),
-    preact(),
+     preact(),
     pagefind({
+      search: {
+        index: true,
+        search: true,
+      },
       indexing: {
         verbose: true,
       },
