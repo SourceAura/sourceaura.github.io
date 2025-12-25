@@ -1,13 +1,5 @@
----
-/**
- * Qi: visualizer
- * Theme-aware (matches Quasar stars)
- */
----
-
 <div id="qi-root">
   <div class="qi-core">
-    <div class=""></div>
     <canvas id="qi-vis"></canvas>
   </div>
 </div>
@@ -27,13 +19,15 @@
     width: 180px;
     height: 180px;
     border-radius: 9999px;
+    /* NOTE: no overflow hidden */
   }
 
   #qi-vis {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    /* expand canvas beyond the visible circle */
+    inset: -50%;
+    width: 200%;
+    height: 200%;
   }
 </style>
 
@@ -59,9 +53,12 @@
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
     const size = canvas.clientWidth;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
+
+    // center drawing space
     ctx.setTransform(dpr, 0, 0, dpr, size / 2, size / 2);
   }
 

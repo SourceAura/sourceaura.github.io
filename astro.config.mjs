@@ -30,6 +30,7 @@ export default defineConfig({
       },
       indexing: {
         verbose: true,
+        rootSelector: "main",
       },
     }),
     vue(),

@@ -33,7 +33,7 @@ const navigationPages = [
     </div>
 
     <div id="time-display" class="mb-4 text-left">
-      <p>Time: <span id="current-time"></span></p>
+      <p>time: <span id="current-time"></span></p>
     </div>
   </div>
 </div>
@@ -138,5 +138,62 @@ const navigationPages = [
     border-radius: 3px;
     color: inherit;
     mix-blend-mode: difference;
+  }
+
+  /* ============================= */
+  /* Pagefind result readability   */
+  /* ============================= */
+
+  .pagefind-ui__result {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--pagefind-ui-border);
+  }
+
+  /* Title */
+  .pagefind-ui__result-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.35;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Meta row (read time, etc) */
+  .pagefind-ui__result-meta {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    opacity: 0.65;
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* Individual meta items */
+  .pagefind-ui__result-meta-item::after {
+    content: "·";
+    margin-left: 0.5rem;
+  }
+
+  .pagefind-ui__result-meta-item:last-child::after {
+    content: "";
+  }
+
+  /* Snippet */
+  .pagefind-ui__result-excerpt {
+    font-size: 0.8rem;
+    line-height: 1.55;
+    opacity: 0.85;
+    max-width: 65ch;
+  }
+
+  /* Highlighted terms */
+  .pagefind-ui__result-excerpt mark {
+    font-weight: 500;
+    padding: 0 0.1em;
+  }
+
+  /* Remove last divider */
+  .pagefind-ui__result:last-child {
+    border-bottom: none;
   }
 </style>
