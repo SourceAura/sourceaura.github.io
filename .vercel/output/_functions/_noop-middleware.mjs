@@ -1,0 +1,3 @@
+!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"96e94530d97e603637f9db44419164a83c1e8fde"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="82e3c49e-9ee5-48d0-91bd-96d40e0d26d9",e._sentryDebugIdIdentifier="sentry-dbid-82e3c49e-9ee5-48d0-91bd-96d40e0d26d9");})();}catch(e){}};const onRequest = (_, next) => next();
+
+export { onRequest };
