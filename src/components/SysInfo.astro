@@ -2,7 +2,6 @@
 // src/components/SysInfo.astro
 import Container from "@components/Container.astro";
 // import NowPlaying from "@components/NowPlaying.astro";
-import SpotifyEmbed from "@/components/Embed-Spot.astro";
 ---
 
 <Container style="width: 210px; overflow: hidden; padding: 0 10px;">
@@ -35,8 +34,7 @@ import SpotifyEmbed from "@/components/Embed-Spot.astro";
     id="now-playing-popover"
     class="absolute left-1/2 z-50 mt-2 hidden w-[310px] -translate-x-1/2 transform rounded bg-white shadow-lg"
   >
-    <SpotifyEmbed theme="dark" />
-
+    <!-- Popover content -->
     <!-- <NowPlaying class="w-full" /> -->
   </div>
 
