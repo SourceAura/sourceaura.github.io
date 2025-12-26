@@ -1,0 +1,389 @@
+<!DOCTYPE html><html lang="en"> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>"><meta name="generator" content="Astro v5.16.6"><!-- Font preloads --><link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/geist-mono.woff2" as="font" type="font/woff2" crossorigin><!-- Canonical URL --><link rel="canonical" href="https://sourceaura.vercel.app/petals/07-axols/"><!-- Primary Meta Tags --><title>Axols: An Evolution Simulation in Go</title><meta name="title" content="Axols: An Evolution Simulation in Go"><meta name="description" content="Exploring the fascinating world of digital evolution with Axols, a 2D particle-based life simulation."><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://sourceaura.vercel.app/petals/07-axols/"><meta property="og:title" content="Axols: An Evolution Simulation in Go"><meta property="og:description" content="Exploring the fascinating world of digital evolution with Axols, a 2D particle-based life simulation."><meta property="og:image" content="https://sourceaura.vercel.app/blog-placeholder-1.jpg"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://sourceaura.vercel.app/petals/07-axols/"><meta property="twitter:title" content="Axols: An Evolution Simulation in Go"><meta property="twitter:description" content="Exploring the fascinating world of digital evolution with Axols, a 2D particle-based life simulation."><meta property="twitter:image" content="https://sourceaura.vercel.app/blog-placeholder-1.jpg"><!-- PageFind --><!-- <link href="/pagefind/pagefind-ui.css" rel="stylesheet" /> --><!-- <script is:inline src="/pagefind/pagefind-ui.js"></script> --><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.Dg8c2ea1.js"></script><script>
+  function init() {
+    preloadTheme();
+    onScroll();
+    animate();
+    updateThemeButtons();
+    addCopyCodeButtons();
+    setGiscusTheme();
+
+    const backToTop = document.getElementById("back-to-top");
+    backToTop?.addEventListener("click", (event) => scrollToTop(event));
+
+    const backToPrev = document.getElementById("back-to-prev");
+    backToPrev?.addEventListener("click", () => window.history.back());
+
+    const lightThemeButton = document.getElementById("light-theme-button");
+    lightThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "light");
+      toggleTheme(false);
+      updateThemeButtons();
+    });
+
+    const darkThemeButton = document.getElementById("dark-theme-button");
+    darkThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "dark");
+      toggleTheme(true);
+      updateThemeButtons();
+    });
+
+    const systemThemeButton = document.getElementById("system-theme-button");
+    systemThemeButton?.addEventListener("click", () => {
+      localStorage.setItem("theme", "system");
+      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+      updateThemeButtons();
+    });
+
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", (event) => {
+        if (localStorage.theme === "system") {
+          toggleTheme(event.matches);
+        }
+      });
+
+    document.addEventListener("scroll", onScroll);
+  }
+
+  function updateThemeButtons() {
+    const theme = localStorage.getItem("theme");
+    const lightThemeButton = document.getElementById("light-theme-button");
+    const darkThemeButton = document.getElementById("dark-theme-button");
+    const systemThemeButton = document.getElementById("system-theme-button");
+
+    function removeActiveButtonTheme(button) {
+      button?.classList.remove("bg-black/5");
+      button?.classList.remove("dark:bg-white/5");
+    }
+
+    function addActiveButtonTheme(button) {
+      button?.classList.add("bg-black/5");
+      button?.classList.add("dark:bg-white/5");
+    }
+
+    removeActiveButtonTheme(lightThemeButton);
+    removeActiveButtonTheme(darkThemeButton);
+    removeActiveButtonTheme(systemThemeButton);
+
+    if (theme === "light") {
+      addActiveButtonTheme(lightThemeButton);
+    } else if (theme === "dark") {
+      addActiveButtonTheme(darkThemeButton);
+    } else {
+      addActiveButtonTheme(systemThemeButton);
+    }
+  }
+
+  function animate() {
+    const animateElements = document.querySelectorAll(".animate");
+
+    animateElements.forEach((element, index) => {
+      setTimeout(() => {
+        element.classList.add("show");
+      }, index * 100);
+    });
+  }
+
+  function onScroll() {
+    if (window.scrollY > 0) {
+      document.documentElement.classList.add("scrolled");
+    } else {
+      document.documentElement.classList.remove("scrolled");
+    }
+  }
+
+  function scrollToTop(event) {
+    event.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function toggleTheme(dark) {
+    const css = document.createElement("style");
+
+    css.appendChild(
+      document.createTextNode(
+        `* {
+             -webkit-transition: none !important;
+             -moz-transition: none !important;
+             -o-transition: none !important;
+             -ms-transition: none !important;
+             transition: none !important;
+          }
+        `,
+      ),
+    );
+
+    document.head.appendChild(css);
+
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    window.getComputedStyle(css).opacity;
+    document.head.removeChild(css);
+
+    setGiscusTheme();
+  }
+
+  function preloadTheme() {
+    const userTheme = localStorage.theme;
+
+    if (userTheme === "light" || userTheme === "dark") {
+      toggleTheme(userTheme === "dark");
+    } else {
+      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+  }
+
+  function addCopyCodeButtons() {
+    let copyButtonLabel = "📋";
+    let codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    async function copyCode(codeBlock, copyButton) {
+      const codeText = codeBlock.innerText;
+      const buttonText = copyButton.innerText;
+      const textToCopy = codeText.replace(buttonText, "");
+
+      await navigator.clipboard.writeText(textToCopy);
+      copyButton.innerText = "✅";
+
+      setTimeout(() => {
+        copyButton.innerText = copyButtonLabel;
+      }, 2000);
+    }
+
+    for (let codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const copyButton = document.createElement("button");
+      copyButton.innerText = copyButtonLabel;
+      copyButton.classList = "copy-code";
+
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock.parentNode.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton?.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+  }
+
+  const setGiscusTheme = () => {
+    const giscus = document.querySelector(".giscus-frame");
+
+    const isDark = document.documentElement.classList.contains("dark");
+
+    if (giscus) {
+      const url = new URL(giscus.src);
+      url.searchParams.set("theme", isDark ? "dark" : "light");
+      giscus.src = url.toString();
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", () => init());
+  document.addEventListener("astro:after-swap", () => init());
+  preloadTheme();
+</script><!-- ✅ Pagefind metadata (THIS IS THE KEY) --><meta data-pagefind-meta="title" content="Axols: An Evolution Simulation in Go"><meta data-pagefind-meta="description" content="Exploring the fascinating world of digital evolution with Axols, a 2D particle-based life simulation."><link rel="stylesheet" href="/_astro/about.BVr-97Rd.css">
+<style>.giscus[data-astro-cid-an2nl7ar]{--color-primary: #ff5733;--color-secondary: #333;--background-color: transparent !important;--border-color: rgba(224, 224, 224, .3)}.giscus-frame[data-astro-cid-an2nl7ar]{background-color:transparent!important}.giscus[data-astro-cid-an2nl7ar] .gsc-comment[data-astro-cid-an2nl7ar]{border:1px solid var(--border-color);border-radius:8px;padding:10px;margin-bottom:10px;background-color:#ffffff1a!important}.giscus[data-astro-cid-an2nl7ar] .gsc-comment-author[data-astro-cid-an2nl7ar]{font-weight:700;color:var(--color-primary)}@media(prefers-color-scheme:dark){.giscus[data-astro-cid-an2nl7ar]{color:#f8f8ff!important}}@media(prefers-color-scheme:light){.giscus[data-astro-cid-an2nl7ar]{color:#000!important}}
+</style><script type="module" src="/_astro/page.-LtTBHPp.js"></script></head> <body> <!-- Background layers --> <quasar-background aria-hidden="true"></quasar-background>  <script type="module">(function(){try{var n=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};n.SENTRY_RELEASE={id:"b7fc66a568b43e4970dcf5789b4b3da09a007298"}}catch{}})();try{(function(){var n=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},t=new n.Error().stack;t&&(n._sentryDebugIds=n._sentryDebugIds||{},n._sentryDebugIds[t]="e3fe286a-2b4a-4efc-ab39-720309c3bb09",n._sentryDebugIdIdentifier="sentry-dbid-e3fe286a-2b4a-4efc-ab39-720309c3bb09")})()}catch{}const r=200,h=.05,o=2,d=240;class l{constructor(t,s){this.x=t,this.y=s,this.z=0,this.xPrev=t,this.yPrev=s}update(t,s,e,i){this.xPrev=this.x,this.yPrev=this.y,this.z+=e*.0675*i,this.x+=this.x*e*.0225*this.z*i,this.y+=this.y*e*.0225*this.z*i,(this.x>t/2||this.x<-t/2||this.y>s/2||this.y<-s/2)&&(this.x=Math.random()*t-t/2,this.y=Math.random()*s-s/2,this.z=0,this.xPrev=this.x,this.yPrev=this.y)}draw(t,s){const e=Math.min(this.z,1);t.strokeStyle=s?`rgba(0,0,0,${e})`:`rgba(255,255,255,${e})`,t.lineWidth=Math.min(this.z*.5,2),t.beginPath(),t.moveTo(this.xPrev,this.yPrev),t.lineTo(this.x,this.y),t.stroke()}}class v extends HTMLElement{constructor(){super(),this.starCanvas=document.createElement("canvas"),this.starCtx=this.starCanvas.getContext("2d"),this.visCanvas=document.createElement("canvas"),this.visCtx=this.visCanvas.getContext("2d"),this.stars=[],this.audio=new Float32Array(d),this.lastTime=0,this.isLight=!1}connectedCallback(){this.append(this.starCanvas,this.visCanvas),this.starCanvas.style.zIndex="0",this.visCanvas.style.zIndex="1",this.bindViewportEvents(),this.resize(!0),this.watchTheme(),this.lastTime=performance.now(),requestAnimationFrame(this.frame)}disconnectedCallback(){this.unbindViewportEvents()}bindViewportEvents(){window.addEventListener("resize",this.resize),window.visualViewport&&(window.visualViewport.addEventListener("resize",this.resize),window.visualViewport.addEventListener("scroll",this.resize))}unbindViewportEvents(){window.removeEventListener("resize",this.resize),window.visualViewport&&(window.visualViewport.removeEventListener("resize",this.resize),window.visualViewport.removeEventListener("scroll",this.resize))}resize=()=>{const t=window.visualViewport,s=t?t.width:window.innerWidth,e=t?t.height:window.innerHeight,i=Math.min(window.devicePixelRatio||1,2);this.starCanvas.width=s*i,this.starCanvas.height=e*i,this.starCtx.setTransform(i,0,0,i,s/2,e/2),this.visCanvas.width=s,this.visCanvas.height=e,this.stars=Array.from({length:r},()=>new l(Math.random()*s-s/2,Math.random()*e-e/2))};watchTheme(){const t=()=>{this.isLight=document.documentElement.classList.contains("light"),this.starCtx.fillStyle=this.isLight?"rgba(255,255,255,0.2)":"rgba(0,0,0,0.2)"};t(),new MutationObserver(t).observe(document.documentElement,{attributes:!0,attributeFilter:["class"]})}frame=t=>{let s=(t-this.lastTime)/16.67;this.lastTime=t,s=Math.min(s,o);const e=this.starCanvas.width/2,i=this.starCanvas.height/2;this.starCtx.fillRect(-e,-i,e*2,i*2);for(const a of this.stars)a.update(e*2,i*2,h,s),a.draw(this.starCtx,this.isLight);requestAnimationFrame(this.frame)}}customElements.get("quasar-background")||customElements.define("quasar-background",v);</script> <div id="qi-root" data-astro-cid-7riuhlff> <canvas id="qi-vis" data-astro-cid-7riuhlff></canvas> </div>  <script type="module">(function(){try{var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};e.SENTRY_RELEASE={id:"b7fc66a568b43e4970dcf5789b4b3da09a007298"}}catch{}})();try{(function(){var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]="575710be-2129-4bb0-a00c-3f356ff95940",e._sentryDebugIdIdentifier="sentry-dbid-575710be-2129-4bb0-a00c-3f356ff95940")})()}catch{}const o=document.getElementById("qi-vis"),n=o.getContext("2d"),g=240,i=new Float32Array(g);let c=!1,a=0,d=0;function f(){c=document.documentElement.classList.contains("light")}f();new MutationObserver(f).observe(document.documentElement,{attributes:!0,attributeFilter:["class"]});function l(){const e=Math.min(window.devicePixelRatio||1,2),t=o.getBoundingClientRect();a=t.width,d=t.height,o.width=Math.round(a*e),o.height=Math.round(d*e),n.setTransform(e,0,0,e,0,0)}l();let s;window.addEventListener("resize",()=>{clearTimeout(s),s=setTimeout(l,150)});window.addEventListener("orientationchange",()=>{clearTimeout(s),s=setTimeout(l,150)});function h(){for(let e=0;e<i.length;e++)i[e]=Math.max(.02,Math.min(1,i[e]+(Math.random()-.5)*.025))}function m(){const e=a/2,t=d/2;n.clearRect(0,0,a,d),n.save(),n.translate(e,t),n.fillStyle=c?"rgba(0,0,0,0.7)":"rgba(255,255,255,0.7)";const b=Math.PI*2/i.length;for(let r=0;r<i.length;r++)n.rotate(b),n.fillRect(-1,60,2,i[r]*42);n.restore()}function u(){h(),m(),requestAnimationFrame(u)}u();</script> <!-- UI --> <header class="py-4" data-astro-transition-persist="astro-l7r54iwe-1"> <div class="mx-auto max-w-screen-sm px-3">  <div class="flex h-full items-center justify-between"> <a aria-label=" {SITE.ALIAS} " class="flex items-center rounded border border-black/15 bg-transparent px-2 py-1 text-xs font-semibold transition-colors duration-300 hover:bg-black/5 dark:border-white/20 dark:bg-neutral-900 dark:hover:bg-white/5" onclick="
+          event.preventDefault();
+          window.openPagefind
+            ? window.openPagefind()
+            : window.dispatchEvent(new Event('open-pagefind'));
+        "> <button id="ase" href="#" type="button" aria-label="Open search" class="text-sm opacity-80 transition hover:opacity-100"> <!-- &nbsp;{SITE.ALIAS}&nbsp; --> <div class="select-none text-xs">sourceaura</div> </button> </a> <!-- CENTER: OPTIONAL BRAND / LOGO --> <nav class="flex items-center gap-1 text-sm"> <div class="mx-auto max-w-screen-sm px-3">  <a href="/euthymia" aria-label="System information" class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5" style="background-color: transparent; text-decoration: none;" data-astro-cid-w6xnny7c> <!-- ECG BACKGROUND --> <canvas id="heartbeat" width="180" height="18" class="pointer-events-none absolute inset-0 m-auto" style="z-index: 0;" data-astro-cid-w6xnny7c></canvas> <!-- FOREGROUND CONTENT --> <div class="relative z-10 flex w-full items-center px-3" data-astro-cid-w6xnny7c> <!-- Time (left) --> <span data-role="sysinfo-time" class="text-ghost-600 cursor-pointer text-sm" style="white-space: nowrap;" data-astro-cid-w6xnny7c></span> <!-- INVISIBLE SPACER (≈ 2/3 width) --> <span aria-hidden="true" class="block" style="width: 80px;" data-astro-cid-w6xnny7c></span> <!-- Indicator (right) --> <span class="glow-ring ml-auto h-1.5 w-1.5 rounded-full" title="System vitals" data-astro-cid-w6xnny7c></span> </div> </a> <script type="module">
+    /* =========================
+       Time (Military, multi-mount safe)
+    ========================= */
+    function updateCurrentTime() {
+      const timeEl = document.querySelector('[data-role="sysinfo-time"]');
+      if (!timeEl) return;
+
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const value = `${hours}:${minutes}`;
+
+      if (timeEl.textContent !== value) {
+        timeEl.textContent = value;
+      }
+    }
+
+    if (window.__sysinfoTimeInterval) {
+      clearInterval(window.__sysinfoTimeInterval);
+    }
+
+    updateCurrentTime();
+    window.__sysinfoTimeInterval = setInterval(updateCurrentTime, 1000);
+
+    /* =========================
+       ECG Simulation Engine
+    ========================= */
+    const canvas = document.getElementById("heartbeat");
+    const ctx = canvas.getContext("2d");
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const MID = H / 2;
+
+    let x = 0;
+    let lastTime = performance.now();
+    let nextBeatAt = 0;
+    let baselinePhase = 0;
+    let visible = true;
+
+    let heartRate = 58 + Math.random() * 6;
+    let beat = null;
+
+    const TRAIL_ALPHA_VISIBLE = 0.06;
+    const TRAIL_ALPHA_HIDDEN = 0.085;
+
+    document.addEventListener("visibilitychange", () => {
+      visible = !document.hidden;
+    });
+
+    function setThemeColor() {
+      const isDark = document.documentElement.classList.contains("dark");
+      const color = isDark ? "255,255,255" : "20,20,20";
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(${color},0.9)`;
+      ctx.shadowColor = `rgba(${color},0.55)`;
+      ctx.shadowBlur = 5;
+    }
+
+    setThemeColor();
+    new MutationObserver(setThemeColor).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    function scheduleBeat(type = "normal") {
+      let interval;
+
+      if (type === "premature") interval = 420 + Math.random() * 240;
+      else if (type === "pause") interval = 1800 + Math.random() * 700;
+      else {
+        interval = 60000 / heartRate;
+        interval *= 0.94 + Math.random() * 0.12;
+      }
+
+      nextBeatAt = performance.now() + interval;
+
+      const rBase = 10 + Math.random() * 4;
+      const isPAC = type === "premature";
+
+      beat = {
+        age: 0,
+        duration: (isPAC ? 120 : 145) + Math.random() * 55,
+        q: -(1.8 + Math.random() * 1.2),
+        r: rBase * (isPAC ? 0.85 : 1.0),
+        s: -(4 + Math.random() * 2.5),
+        t: (2 + Math.random() * 1.8) * (isPAC ? 0.75 : 1.0),
+      };
+    }
+
+    scheduleBeat("normal");
+
+    function beatValue(b) {
+      const p = b.age / b.duration;
+      if (p < 0.08) return 0;
+      if (p < 0.11) return b.q * ((p - 0.08) / 0.03);
+      if (p < 0.135) return b.r;
+      if (p < 0.19) return b.s;
+      if (p < 0.48) return b.t * Math.sin((p - 0.19) * Math.PI * 2.1);
+      return 0;
+    }
+
+    function fade(alpha) {
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    function frame(now) {
+      const dt = now - lastTime;
+      lastTime = now;
+
+      fade(visible ? TRAIL_ALPHA_VISIBLE : TRAIL_ALPHA_HIDDEN);
+      ctx.beginPath();
+
+      const steps = visible ? 2 : 1;
+
+      for (let i = 0; i < steps; i++) {
+        baselinePhase += 0.0022;
+        const wander = Math.sin(baselinePhase) * 0.65;
+        const noise = (Math.random() - 0.5) * 0.22;
+
+        let y = MID + wander + noise;
+
+        if (beat) {
+          y -= beatValue(beat);
+          beat.age += 1;
+          if (beat.age > beat.duration + 12) beat = null;
+        }
+
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 1, y);
+
+        x += 1;
+        if (x >= W) x = 0;
+      }
+
+      ctx.stroke();
+
+      if (visible && now >= nextBeatAt) {
+        const roll = Math.random();
+        if (roll < 0.04) scheduleBeat("premature");
+        else if (roll < 0.06) scheduleBeat("pause");
+        else scheduleBeat("normal");
+      } else if (!visible && now >= nextBeatAt) {
+        scheduleBeat("normal");
+      }
+
+      heartRate += (Math.random() - 0.5) * 0.0025 * (dt / 16.67);
+      heartRate = Math.min(68, Math.max(52, heartRate));
+
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  </script>   </div> </nav> </div>  </div> </header> <script type="module">(function(){try{var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};e.SENTRY_RELEASE={id:"b7fc66a568b43e4970dcf5789b4b3da09a007298"}}catch{}})();try{(function(){var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},f=new e.Error().stack;f&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[f]="e3b0c442-98fc-4c14-9afb-f4c8996fb924",e._sentryDebugIdIdentifier="sentry-dbid-e3b0c442-98fc-4c14-9afb-f4c8996fb924")})()}catch{}</script> <main>  <div class="mx-auto max-w-screen-sm px-3">  <div class="mx-auto max-w-3xl"> <a href="/petals" class="not-prose group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-7 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm"> petals </div> </a> <!-- ✅ PAGEFIND FIX: mark the article as searchable --> <article class="mt-8" data-pagefind-body> <h1 class="mb-4 text-3xl font-semibold">Axols: An Evolution Simulation in Go</h1> <div class="mb-4 text-sm text-gray-600 dark:text-gray-400"> <time datetime="2024-09-13T00:00:00.000Z"> September 12, 2024 </time> <span class="mx-2">•</span> <span>3 min read min read</span> </div> <div class="prose max-w-none dark:prose-invert"> <p>// Local image stored in the the same folder</p>
+
+
+<p><img src="/_astro/axol.b5OtjvDG_wl2M6.webp" alt="A starry night sky." loading="lazy" decoding="async" fetchpriority="auto" width="1024" height="1024"></p>
+<p>Have you ever wondered how life evolves over time? What if you could watch evolution happen right before your eyes? Enter Axols, a captivating evolution simulation that brings the process of natural selection to life on your computer screen.</p>
+<p>Axols is a Go-based project that simulates the life and evolution of particle-like creatures called “axols” in a 2D environment. Using the Pixel game library, it creates a visually engaging representation of these digital lifeforms as they navigate their world, seek food, and evolve over generations.</p>
+<h2 id="key-features-of-axols">Key Features of Axols</h2>
+<ol>
+<li>
+<p><strong>Two Distinct Species</strong>: The simulation starts with two different types of axols, each with their own unique properties. This diversity sets the stage for interesting evolutionary paths.</p>
+</li>
+<li>
+<p><strong>Food-Seeking Behavior</strong>: Axols aren’t just wandering aimlessly. They actively seek out food sources within their sensory range, mimicking real-world foraging behaviors.</p>
+</li>
+<li>
+<p><strong>Generational Evolution</strong>: Every 10 seconds, a new generation is born. The most successful axols (those who consumed the most food) get to pass on their traits, driving the evolution of the population.</p>
+</li>
+<li>
+<p><strong>Mutation and Crossover</strong>: Just like in nature, axols’ offspring inherit traits from their parents, but with the possibility of mutations. This genetic variation is the fuel for evolution.</p>
+</li>
+<li>
+<p><strong>Visual Representation</strong>: Each axol is beautifully rendered with a translucent body, a nucleus, and a wiggling tail. It’s not just data - you can actually see the creatures moving and evolving!</p>
+</li>
+</ol>
+<p>What makes Axols particularly interesting is how it simplifies complex evolutionary concepts into a visually appealing and easy-to-understand format. Whether you’re a biology enthusiast, a coding aficionado, or just someone curious about the mechanics of life, Axols offers a unique and engaging experience.</p>
+<p>While the project is still evolving (pun intended!), with plans for multiple biomes and more complex evolutionary mechanisms, it already provides a fascinating glimpse into the world of digital life simulations.</p>
+<p>So why not give it a try? Clone the repository, run the simulation, and watch as generations of axols adapt and evolve before your eyes. Who knows - you might just gain a new perspective on the intricate dance of life and evolution!</p> </div> </article> <div class="mt-12"> <div class="grid grid-cols-2 gap-1.5 sm:gap-3"> <div class="invisible"></div> <a href="01-spot-eye-see" class="group relative flex flex-grow flex-row-reverse flex-nowrap rounded-lg border border-black/15 px-4 py-4 pr-10 no-underline transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute right-2 top-1/2 size-5 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-3 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 19 12 12 19" class="-translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="flex items-center rounded text-sm"> Spot Eye Sea </div> </a> </div> </div> <div class="mt-12"> <div class="giscus" data-astro-cid-an2nl7ar></div> <script src="https://giscus.app/client.js" data-repo="sourceaura/sourceaura.github.io" data-repo-id="MDEwOlJlcG9zaXRvcnkyMDg2Nzg2NjY=" data-category="Show and tell" data-category-id="DIC_kwDODHAvCs4Cgi0j" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="transparent_dark" data-lang="en" crossorigin="anonymous" async></script>  </div> </div>  </div>  </main> <footer class="animate"> <div class="mx-auto max-w-screen-sm px-3">  <div class="footer-content relative"> <div class="absolute -top-12 right-0"> <button id="back-to-top" class="group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-8 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 rotate-90 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm">Back to top</div> </button> </div> </div> <div class="flex items-center justify-between"> <div> <a href="/about"> sourceaura | 🫀 • 🫁 • 🧠 |
+</a>
+&copy; 2025 </div> <!-- <ThemeSwitch /> --> <!-- <button id="theme-toggle">??? </button> --> <!-- --> <div class="theme-buttons flex flex-wrap items-center gap-1.5"> <!-- <button id="theme-toggle"> --> <button id="theme-toggle"> <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"> <defs> <mask id="lineMdLightDarkLoop0"> <circle cx="7.5" cy="7.5" r="5.5" fill="#fff"></circle> <circle cx="7.5" cy="7.5" r="5.5"> <animate fill="freeze" attributeName="cx" dur="0.4s" values="7.5;11"></animate> <animate fill="freeze" attributeName="r" dur="0.4s" values="5.5;6.5"></animate> </circle> </mask> <mask id="lineMdLightDarkLoop1"> <g fill="#fff"> <circle cx="12" cy="9" r="5.5"> <animate fill="freeze" attributeName="cy" begin="1s" dur="0.5s" values="9;15"></animate> </circle> <g fill-opacity="0"> <use href="#lineMdLightDarkLoop2" transform="rotate(-75 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(-25 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(25 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(75 12 15)"></use> <set fill="freeze" attributeName="fill-opacity" begin="1.5s" to="1"></set> <animateTransform attributeName="transform" dur="5s" repeatCount="indefinite" type="rotate" values="0 12 15;50 12 15"></animateTransform> </g> </g> <path d="M0 10h26v5h-26z"></path> <path stroke="#fff" stroke-dasharray="26" stroke-dashoffset="26" stroke-width="2" d="M22 12h-22"> <animate attributeName="d" dur="6s" repeatCount="indefinite" values="M22 12h-22;M24 12h-22;M22 12h-22"></animate> <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.4s" values="26;0"></animate> </path> </mask> <symbol id="lineMdLightDarkLoop2"> <path d="M11 18h2L12 20z" opacity="0"> <animate fill="freeze" attributeName="d" begin="1.5s" dur="0.4s" values="M11 18h2L12 20z;M10.5 21.5h3L12 24z"></animate> <set fill="freeze" attributeName="opacity" begin="1.5s" to="1"></set> </path> </symbol> </defs> <g fill="currentColor"> <rect width="13" height="13" x="1" y="1" mask="url(#lineMdLightDarkLoop0)"></rect> <path d="M-2 11h28v13h-28z" mask="url(#lineMdLightDarkLoop1)" transform="rotate(-45 12 12)"></path> </g> </svg> </button> <!--  --> </div> </div>  </div> </footer> <script type="module">(function(){try{var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};e.SENTRY_RELEASE={id:"b7fc66a568b43e4970dcf5789b4b3da09a007298"}}catch{}})();try{(function(){var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]="b387fb54-efa2-4cb6-b5b2-55df1bfef753",e._sentryDebugIdIdentifier="sentry-dbid-b387fb54-efa2-4cb6-b5b2-55df1bfef753")})()}catch{}function a(){const e=document.documentElement,t=document.getElementById("theme-toggle"),o=document.getElementById("light-theme-button"),l=document.getElementById("dark-theme-button"),c=document.getElementById("system-theme-button"),i=localStorage.getItem("theme"),s=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light",m=i||s;e.classList.remove("dark","light"),e.classList.add(m),t?.addEventListener("click",()=>{const d=e.classList.contains("dark")?"dark":"light",n=d==="dark"?"light":"dark";e.classList.remove(d),e.classList.add(n),localStorage.setItem("theme",n)}),o?.addEventListener("click",()=>{e.classList.remove("dark"),e.classList.add("light"),localStorage.setItem("theme","light")}),l?.addEventListener("click",()=>{e.classList.remove("light"),e.classList.add("dark"),localStorage.setItem("theme","dark")}),c?.addEventListener("click",()=>{e.classList.remove("light","dark"),e.classList.add(s),localStorage.removeItem("theme")})}a();document.addEventListener("astro:after-swap",a);</script> <!-- Search --> <div id="backdrop" class="pointer-events-none invisible fixed left-0 top-0 z-40 flex h-screen w-full justify-center bg-black/60 p-6 backdrop-blur-sm" data-astro-transition-persist="astro-t6dxx5el-2"> <div id="pagefind-container" class="relative flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-white/20 bg-transparent p-4 shadow-xl"> <!-- STATIC Pagefind --> <div id="search" class="pagefind-ui pagefind-init" data-pagefind-ui data-bundle-path="/pagefind/" data-ui-options="{&#34;showImages&#34;:true,&#34;excerptLength&#34;:16,&#34;resetStyles&#34;:false}"></div> <script type="module" src="/_astro/Search.astro_astro_type_script_index_0_lang.DoDLUEwO.js"></script> <div class="mt-2 flex justify-between"></div> <div class="mt-2 flex items-baseline justify-between text-xs text-white"> <span id="current-time" class="font-mono tabular-nums"></span> <span>Press <kbd class="align-baseline">Esc</kbd></span> </div> </div> </div> <script type="module">(function(){try{var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};e.SENTRY_RELEASE={id:"b7fc66a568b43e4970dcf5789b4b3da09a007298"}}catch{}})();try{(function(){var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]="ec20ac5a-f1b3-43fc-87cd-3cb88dad027f",e._sentryDebugIdIdentifier="sentry-dbid-ec20ac5a-f1b3-43fc-87cd-3cb88dad027f")})()}catch{}const c=document.getElementById("ase"),n=document.getElementById("backdrop");function i(){const e=document.querySelector("#search input");n?.classList.remove("invisible","pointer-events-none"),n?.classList.add("visible"),e?.focus()}function d(){const e=document.querySelector("#search input");e&&(e.value=""),n?.classList.add("invisible","pointer-events-none"),n?.classList.remove("visible")}c?.addEventListener("click",e=>{e.preventDefault(),i()});document.addEventListener("keydown",e=>{(e.key==="/"||(e.metaKey||e.ctrlKey)&&e.key==="k")&&(e.preventDefault(),i()),e.key==="Escape"&&d()});n?.addEventListener("click",e=>{e.target.closest("#pagefind-container")||d()});function o(){const e=document.getElementById("current-time");e&&(e.textContent=new Intl.DateTimeFormat(void 0,{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:!0}).format(new Date))}o();setInterval(o,1e3);</script> </body></html>
