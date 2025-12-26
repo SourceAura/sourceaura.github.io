@@ -27,6 +27,10 @@
 
   let isLight = false;
 
+  // 🔒 Cached dimensions (THIS is the fix)
+  let cssW = 0;
+  let cssH = 0;
+
   function updateTheme() {
     isLight = document.documentElement.classList.contains("light");
   }
@@ -41,15 +45,29 @@
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const rect = canvas.getBoundingClientRect();
 
-    canvas.width = Math.round(rect.width * dpr);
-    canvas.height = Math.round(rect.height * dpr);
+    cssW = rect.width;
+    cssH = rect.height;
 
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+
+    // draw in CSS pixels
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   resize();
-  window.addEventListener("resize", resize);
-  window.addEventListener("orientationchange", resize);
+
+  // Debounced resize (mobile-safe)
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 150);
+  });
+
+  window.addEventListener("orientationchange", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 150);
+  });
 
   function updateAudio() {
     for (let i = 0; i < audio.length; i++) {
@@ -61,11 +79,11 @@
   }
 
   function draw() {
-    const rect = canvas.getBoundingClientRect();
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
+    // ✅ USE CACHED CENTER
+    const cx = cssW / 2;
+    const cy = cssH / 2;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, cssW, cssH);
 
     ctx.save();
     ctx.translate(cx, cy);

@@ -1,0 +1,16 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import PetalCarousel from "@components/PetalCarousel.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("petals")).filter((p) => !p.data.draft);
+---
+
+<Layout title="Petals">
+  <Container>
+    <div class="game-container" data-pagefind-body>
+      <PetalCarousel posts={posts} />
+    </div>
+  </Container>
+</Layout>

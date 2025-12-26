@@ -1,0 +1,208 @@
+---
+import PetalCard from "@components/PetalCard.astro";
+const { posts } = Astro.props;
+---
+
+<div class="carousel-layer" id="petal-shell">
+  <div class="carousel-viewport">
+    <div class="carousel-ring" id="petal-ring">
+      {
+        posts.map((post, i) => (
+          <div
+            class="carousel-item"
+            tabindex="0"
+            data-index={i}
+            data-href={`/petals/${post.slug}`}
+          >
+            <div class="parallax-layer">
+              <PetalCard post={post} />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="carousel-hint" aria-hidden="true">
+    <span>Drag</span>
+    <span>Click</span>
+    <span>Double</span>
+    <span>Enter</span>
+  </div>
+</div>
+
+<script>
+  const shell = document.getElementById("petal-shell");
+  const ring = document.getElementById("petal-ring");
+  const items = [...ring.querySelectorAll(".carousel-item")];
+
+  const count = items.length;
+  const step = 360 / count;
+
+  const autoSpeed = 0.025;
+  const friction = 0.96;
+  const velClamp = 3.2;
+  const snapStrength = 0.06;
+  const settleThreshold = 0.015;
+
+  let angle = 0;
+  let vel = 0;
+  let isDragging = false;
+
+  function getRadius() {
+    return matchMedia("(max-width: 768px)").matches ? 220 : 300;
+  }
+
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function snapAngle(a) {
+    return Math.round(a / step) * step;
+  }
+
+  function applyTransforms() {
+    const radius = getRadius();
+    ring.style.transform = `rotateY(${angle}deg)`;
+
+    const normalized = ((angle % 360) + 360) % 360;
+    const active = ((Math.round(-normalized / step) % count) + count) % count;
+
+    items.forEach((el, i) => {
+      el.style.transform = `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`;
+
+      let dist = Math.abs(i - active);
+      dist = Math.min(dist, count - dist);
+      const depth = Math.min(1, dist / Math.floor(count / 2 || 1));
+
+      el.style.opacity = 1 - depth * 0.7;
+      el.style.filter = `blur(${depth * 6}px)`;
+      el.style.setProperty("--panel-scale", 1 - depth * 0.12);
+      el.classList.toggle("active", i === active);
+    });
+  }
+
+  function tick() {
+    angle += vel;
+    vel *= friction;
+
+    if (Math.abs(vel) < settleThreshold) {
+      const snapped = snapAngle(angle);
+      angle += (snapped - angle) * snapStrength;
+      if (Math.abs(snapped - angle) < 0.001) {
+        angle = snapped;
+        vel = 0;
+      }
+    }
+
+    applyTransforms();
+    requestAnimationFrame(tick);
+  }
+
+  // Fully isolated input handling
+  shell.addEventListener("pointerdown", (e) => {
+    isDragging = true;
+    shell.setPointerCapture?.(e.pointerId);
+  });
+
+  shell.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+
+    vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
+    angle += e.movementX * 0.12;
+  });
+
+  shell.addEventListener("pointerup", () => {
+    isDragging = false;
+  });
+
+  items.forEach((el) => {
+    const href = el.dataset.href;
+    el.addEventListener("dblclick", () => (window.location.href = href));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") window.location.href = href;
+    });
+  });
+
+  applyTransforms();
+  requestAnimationFrame(tick);
+</script>
+
+<style>
+  /* ── ISOLATED LAYER ── */
+  .carousel-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    isolation: isolate;
+  }
+
+  /* Only the carousel itself is interactive */
+  .carousel-viewport {
+    pointer-events: auto;
+    position: absolute;
+    left: 50%;
+    top: 55%;
+    transform: translate(-50%, -50%);
+    width: min(100%, 900px);
+    height: 360px;
+    perspective: 1400px;
+  }
+
+  .carousel-ring {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+  }
+
+  .carousel-item {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: clamp(250px, 44vw, 380px);
+    height: 130px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+
+  .parallax-layer {
+    width: 100%;
+    height: 100%;
+    transform: scale(var(--panel-scale, 1));
+    transition: transform 0.15s ease;
+  }
+
+  .carousel-item.active {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 0 30px rgba(255, 255, 255, 0.14),
+      0 0 60px rgba(255, 255, 255, 0.06);
+  }
+
+  .carousel-hint {
+    pointer-events: none;
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.4rem;
+    opacity: 0.55;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 768px) {
+    .carousel-viewport {
+      top: 62%;
+      height: 320px;
+    }
+  }
+</style>

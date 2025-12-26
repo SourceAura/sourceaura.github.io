@@ -227,5 +227,12 @@ import Container from "@components/Container.astro";
       background: transparent;
       image-rendering: pixelated;
     }
+
+    @media (max-width: 768px) {
+      .sysinfo-root {
+        position: absolute;
+        top: env(safe-area-inset-top);
+      }
+    }
   </style>
 </Container>
