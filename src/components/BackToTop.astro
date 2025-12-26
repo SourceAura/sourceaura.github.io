@@ -1,27 +1,72 @@
 ---
-
+const SHOW_AFTER = 240;
 ---
 
-<button
-  id="back-to-top"
-  class="group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-8 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
->
+<div id="back-to-top" aria-hidden="true" class="back-to-top-indicator">
   <svg
-    xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    class="absolute left-2 top-1/2 size-4 -translate-y-1/2 rotate-90 fill-none stroke-current stroke-2"
+    width="18"
+    height="18"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <line
-      x1="5"
-      y1="12"
-      x2="19"
-      y2="12"
-      class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"
-    ></line>
-    <polyline
-      points="12 5 5 12 12 19"
-      class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"
-    ></polyline>
+    <path d="M12 19V5"></path>
+    <path d="M5 12l7-7 7 7"></path>
   </svg>
-  <div class="text-sm">Back to top</div>
-</button>
+</div>
+
+<script define:vars={{ SHOW_AFTER }}>
+  const el = document.getElementById("back-to-top");
+  const root = document.documentElement;
+
+  function updateBackToTop() {
+    const y =
+      window.scrollY ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0;
+
+    const active = y > SHOW_AFTER;
+
+    el.classList.toggle("active", active);
+    root.toggleAttribute("data-backtotop", active);
+  }
+
+  // Always attach listeners once
+  window.addEventListener("scroll", updateBackToTop, { passive: true });
+  document.addEventListener("astro:page-load", updateBackToTop);
+  document.addEventListener("astro:after-swap", updateBackToTop);
+
+  updateBackToTop();
+
+  el.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+</script>
+
+<style>
+  .back-to-top-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    color: currentColor;
+  }
+
+  .back-to-top-indicator.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .back-to-top-indicator {
+      transition: none;
+    }
+  }
+</style>

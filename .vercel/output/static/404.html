@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en" data-astro-cid-sckkx6r4> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>"><meta name="generator" content="Astro v5.16.6"><!-- Font preloads --><link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/geist-mono.woff2" as="font" type="font/woff2" crossorigin><!-- Canonical URL --><link rel="canonical" href="https://sourceaura.vercel.app/404/"><!-- Primary Meta Tags --><title>404 | sourceaura</title><meta name="title" content="404 | sourceaura"><meta name="description" content="euthymia [ eu·​thy·​mia] (noun): "><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://sourceaura.vercel.app/404/"><meta property="og:title" content="404 | sourceaura"><meta property="og:description" content="euthymia [ eu·​thy·​mia] (noun): "><meta property="og:image" content="https://sourceaura.vercel.app/blog-placeholder-1.jpg"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://sourceaura.vercel.app/404/"><meta property="twitter:title" content="404 | sourceaura"><meta property="twitter:description" content="euthymia [ eu·​thy·​mia] (noun): "><meta property="twitter:image" content="https://sourceaura.vercel.app/blog-placeholder-1.jpg"><!-- PageFind --><!-- <link href="/pagefind/pagefind-ui.css" rel="stylesheet" /> --><!-- <script is:inline src="/pagefind/pagefind-ui.js"></script> --><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.yyYLduxR.js"></script><script>
+<!DOCTYPE html><html lang="en"> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>"><meta name="generator" content="Astro v5.16.6"><!-- Font preloads --><link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/geist-mono.woff2" as="font" type="font/woff2" crossorigin><!-- Canonical URL --><link rel="canonical" href="https://sourceaura.vercel.app/404/"><!-- Primary Meta Tags --><title>404 | sourceaura</title><meta name="title" content="404 | sourceaura"><meta name="description" content="euthymia [ eu·​thy·​mia] (noun): "><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://sourceaura.vercel.app/404/"><meta property="og:title" content="404 | sourceaura"><meta property="og:description" content="euthymia [ eu·​thy·​mia] (noun): "><meta property="og:image" content="https://sourceaura.vercel.app/blog-placeholder-1.jpg"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://sourceaura.vercel.app/404/"><meta property="twitter:title" content="404 | sourceaura"><meta property="twitter:description" content="euthymia [ eu·​thy·​mia] (noun): "><meta property="twitter:image" content="https://sourceaura.vercel.app/blog-placeholder-1.jpg"><!-- PageFind --><!-- <link href="/pagefind/pagefind-ui.css" rel="stylesheet" /> --><!-- <script is:inline src="/pagefind/pagefind-ui.js"></script> --><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.DKJP5Q6u.js"></script><script>
   function init() {
     preloadTheme();
     onScroll();
@@ -192,116 +192,8 @@
   document.addEventListener("DOMContentLoaded", () => init());
   document.addEventListener("astro:after-swap", () => init());
   preloadTheme();
-</script><link rel="stylesheet" href="/_astro/about.Bz5FkGBS.css"><script type="module" src="/_astro/page.Cb_A5-Qi.js"></script></head> <body data-astro-cid-sckkx6r4> <!-- Persistent background layers --> <script>
-  (() => {
-    const root = document.documentElement;
-
-    // If user prefers reduced motion, keep everything steady.
-    const reduceMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    );
-    const isReduced = () => !!reduceMotion?.matches;
-
-    // Guard: avoid double-mount on Astro client navigation.
-    if (window.__pulse?.__mounted) return;
-
-    let lastInteraction = performance.now();
-    let baseHz = 0.9; // calm baseline
-    let boostHz = 1.6; // "alert" / search-open
-    let boosted = false;
-
-    let phase = 0;
-    let raf = 0;
-    let running = false;
-
-    // Utility: write CSS vars
-    function writeVars(pulse, decay, ph) {
-      root.style.setProperty("--pulse-phase", String(ph));
-      root.style.setProperty("--pulse", String(pulse));
-      root.style.setProperty("--pulse-decay", String(decay));
-    }
-
-    function touch() {
-      lastInteraction = performance.now();
-    }
-
-    function setBoost(on) {
-      boosted = !!on;
-      touch();
-    }
-
-    function stop() {
-      running = false;
-      if (raf) cancelAnimationFrame(raf);
-      raf = 0;
-    }
-
-    function start() {
-      if (running) return;
-      running = true;
-      raf = requestAnimationFrame(loop);
-    }
-
-    function loop(t) {
-      if (!running) return;
-
-      // Background tab CPU saver
-      if (document.hidden) {
-        // Put vars into a calm, steady state while hidden
-        writeVars("0.5", "0.0", phase);
-        stop();
-        return;
-      }
-
-      // Reduced motion: keep stable, no oscillation
-      if (isReduced()) {
-        writeVars("0.5", "0.0", phase);
-        raf = requestAnimationFrame(loop); // still lightweight; could also stop entirely
-        return;
-      }
-
-      const dt = Math.min((t - (loop.last || t)) / 1000, 0.05);
-      loop.last = t;
-
-      const idle = (t - lastInteraction) / 1000;
-      const decay = Math.exp(-idle / 6); // glow decay curve
-
-      const hz = boosted ? boostHz : baseHz;
-      const speed = hz * (0.5 + decay * 0.8);
-
-      phase += dt * speed * Math.PI * 2;
-
-      const pulse = (Math.sin(phase) + 1) / 2;
-
-      writeVars(pulse.toFixed(4), decay.toFixed(4), phase.toFixed(4));
-
-      raf = requestAnimationFrame(loop);
-    }
-
-    // Resume on tab focus
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) start();
-    });
-
-    // React to reduced-motion changes
-    reduceMotion?.addEventListener?.("change", () => {
-      // If entering reduced mode, reset to calm
-      if (isReduced()) writeVars("0.5", "0.0", phase.toFixed(4));
-      touch();
-    });
-
-    // Public API
-    window.__pulse = {
-      __mounted: true,
-      touch,
-      setBoost,
-    };
-
-    // Initialize vars
-    writeVars("0.5", "1.0", "0");
-    start();
-  })();
-</script> <div id="qi-root" data-astro-cid-7riuhlff> <canvas id="qi-vis" data-astro-cid-7riuhlff></canvas> </div>  <script type="module" src="/_astro/Qi.astro_astro_type_script_index_0_lang.7EcRzZed.js"></script> <quasar-background></quasar-background>  <script type="module">(function(){try{var t=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};t.SENTRY_RELEASE={id:"6498010bc47562afb2a9fe6629b85673e1045e9e"}}catch{}})();try{(function(){var t=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},e=new t.Error().stack;e&&(t._sentryDebugIds=t._sentryDebugIds||{},t._sentryDebugIds[e]="0251e675-8eaf-4b27-ad28-2911f86ac862",t._sentryDebugIdIdentifier="sentry-dbid-0251e675-8eaf-4b27-ad28-2911f86ac862")})()}catch{}const v=210,m=.05,b=2,o=(t,e,i)=>t+(e-t)*i,r=(t,e,i)=>Math.max(e,Math.min(i,t));class y{constructor(e){this.spread=e,this.reset(0,0,e)}reset(e,i,s){this.x=e+(Math.random()-.5)*s,this.y=i+(Math.random()-.5)*s,this.z=Math.random(),this.xPrev=this.x,this.yPrev=this.y}update(e,i,s,n,a){this.xPrev=this.x,this.yPrev=this.y,this.z+=n*.07*a,this.x+=(this.x-e)*n*this.z*a,this.y+=(this.y-i)*n*this.z*a;const h=s/2;(this.x<e-h||this.x>e+h||this.y<i-h||this.y>i+h)&&this.reset(e,i,s)}draw(e,i){const s=Math.min(this.z,1);e.strokeStyle=i?`rgba(0,0,0,${s})`:`rgba(255,255,255,${s})`,e.lineWidth=Math.min(this.z*.6,2),e.beginPath(),e.moveTo(this.xPrev,this.yPrev),e.lineTo(this.x,this.y),e.stroke()}}class g extends HTMLElement{constructor(){super(),this.canvas=document.createElement("canvas"),this.ctx=this.canvas.getContext("2d"),this.stars=[],this.lastTime=0,this.isLight=!1,this.base={cx:0,cy:0,spread:0},this.influence={x:.5,y:.5,a:0,d:0},this.influenceLive={x:.5,y:.5,a:0,d:0}}connectedCallback(){this.appendChild(this.canvas),window.visualViewport?window.visualViewport.addEventListener("resize",this.resize):window.addEventListener("resize",this.resize),window.addEventListener("orientationchange",this.resize),this.resize(),this.watchTheme(),window.addEventListener("petal:light",e=>{const i=e.detail||{};this.influence.x=r(i.x??.5,0,1),this.influence.y=r(i.y??.5,0,1),this.influence.a=r(i.a??0,0,1),this.influence.d=r(i.d??0,0,1)}),this.lastTime=performance.now(),requestAnimationFrame(this.frame)}resize=()=>{const e=window.visualViewport?window.visualViewport.width:window.innerWidth,i=window.visualViewport?window.visualViewport.height:window.innerHeight,s=Math.min(window.devicePixelRatio||1,2);this.canvas.width=e*s,this.canvas.height=i*s,this.ctx.setTransform(s,0,0,s,0,0),this.base.cx=e/2,this.base.cy=i/2,this.base.spread=Math.max(e,i)*1.3,this.stars=Array.from({length:v},()=>new y(this.base.spread));for(const n of this.stars)n.reset(this.base.cx,this.base.cy,this.base.spread)};watchTheme(){const e=()=>{this.isLight=document.documentElement.classList.contains("light")};e(),new MutationObserver(e).observe(document.documentElement,{attributes:!0,attributeFilter:["class"]})}frame=e=>{const i=Math.min((e-this.lastTime)/16.67,b);this.lastTime=e,this.influenceLive.x=o(this.influenceLive.x,this.influence.x,.08),this.influenceLive.y=o(this.influenceLive.y,this.influence.y,.08),this.influenceLive.a=o(this.influenceLive.a,this.influence.a,.06),this.influenceLive.d=o(this.influenceLive.d,this.influence.d,.06);const s=window.visualViewport?window.visualViewport.width:window.innerWidth,n=window.visualViewport?window.visualViewport.height:window.innerHeight,a=18,h=(this.influenceLive.x-.5)*2,c=(this.influenceLive.y-.5)*2,l=this.base.cx+h*a*this.influenceLive.a,u=this.base.cy+c*a*this.influenceLive.a,f=1-.1*this.influenceLive.a,w=this.base.spread*f;this.ctx.clearRect(0,0,s,n);for(const d of this.stars)d.update(l,u,w,m,i),d.draw(this.ctx,this.isLight);requestAnimationFrame(this.frame)}}customElements.get("quasar-background")||customElements.define("quasar-background",g);</script> <!-- App chrome --> <header class="py-4" data-role="app-header" data-astro-transition-persist="astro-l7r54iwe-1"> <div class="mx-auto max-w-screen-sm px-3">  <div class="flex h-full items-center justify-between"> <!-- SEARCH PILL (toggles PageFind) --> <a href="/" aria-label="Toggle search" role="button" tabindex="0" data-role="search-pill" class="group relative flex items-center
+</script><link rel="stylesheet" href="/_astro/about.1JWawZOn.css">
+<link rel="stylesheet" href="/_astro/_slug_.BmgsgslP.css"><script type="module" src="/_astro/page._pKRSa6h.js"></script></head> <body> <quasar-background></quasar-background>  <script type="module">(function(){try{var t=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};t.SENTRY_RELEASE={id:"3bf00602cf7bab128f3262eb433e55a9e8dac6d2"}}catch{}})();try{(function(){var t=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},e=new t.Error().stack;e&&(t._sentryDebugIds=t._sentryDebugIds||{},t._sentryDebugIds[e]="0251e675-8eaf-4b27-ad28-2911f86ac862",t._sentryDebugIdIdentifier="sentry-dbid-0251e675-8eaf-4b27-ad28-2911f86ac862")})()}catch{}const v=210,m=.05,b=2,o=(t,e,i)=>t+(e-t)*i,r=(t,e,i)=>Math.max(e,Math.min(i,t));class y{constructor(e){this.spread=e,this.reset(0,0,e)}reset(e,i,s){this.x=e+(Math.random()-.5)*s,this.y=i+(Math.random()-.5)*s,this.z=Math.random(),this.xPrev=this.x,this.yPrev=this.y}update(e,i,s,n,a){this.xPrev=this.x,this.yPrev=this.y,this.z+=n*.07*a,this.x+=(this.x-e)*n*this.z*a,this.y+=(this.y-i)*n*this.z*a;const h=s/2;(this.x<e-h||this.x>e+h||this.y<i-h||this.y>i+h)&&this.reset(e,i,s)}draw(e,i){const s=Math.min(this.z,1);e.strokeStyle=i?`rgba(0,0,0,${s})`:`rgba(255,255,255,${s})`,e.lineWidth=Math.min(this.z*.6,2),e.beginPath(),e.moveTo(this.xPrev,this.yPrev),e.lineTo(this.x,this.y),e.stroke()}}class g extends HTMLElement{constructor(){super(),this.canvas=document.createElement("canvas"),this.ctx=this.canvas.getContext("2d"),this.stars=[],this.lastTime=0,this.isLight=!1,this.base={cx:0,cy:0,spread:0},this.influence={x:.5,y:.5,a:0,d:0},this.influenceLive={x:.5,y:.5,a:0,d:0}}connectedCallback(){this.appendChild(this.canvas),window.visualViewport?window.visualViewport.addEventListener("resize",this.resize):window.addEventListener("resize",this.resize),window.addEventListener("orientationchange",this.resize),this.resize(),this.watchTheme(),window.addEventListener("petal:light",e=>{const i=e.detail||{};this.influence.x=r(i.x??.5,0,1),this.influence.y=r(i.y??.5,0,1),this.influence.a=r(i.a??0,0,1),this.influence.d=r(i.d??0,0,1)}),this.lastTime=performance.now(),requestAnimationFrame(this.frame)}resize=()=>{const e=window.visualViewport?window.visualViewport.width:window.innerWidth,i=window.visualViewport?window.visualViewport.height:window.innerHeight,s=Math.min(window.devicePixelRatio||1,2);this.canvas.width=e*s,this.canvas.height=i*s,this.ctx.setTransform(s,0,0,s,0,0),this.base.cx=e/2,this.base.cy=i/2,this.base.spread=Math.max(e,i)*1.3,this.stars=Array.from({length:v},()=>new y(this.base.spread));for(const n of this.stars)n.reset(this.base.cx,this.base.cy,this.base.spread)};watchTheme(){const e=()=>{this.isLight=document.documentElement.classList.contains("light")};e(),new MutationObserver(e).observe(document.documentElement,{attributes:!0,attributeFilter:["class"]})}frame=e=>{const i=Math.min((e-this.lastTime)/16.67,b);this.lastTime=e,this.influenceLive.x=o(this.influenceLive.x,this.influence.x,.08),this.influenceLive.y=o(this.influenceLive.y,this.influence.y,.08),this.influenceLive.a=o(this.influenceLive.a,this.influence.a,.06),this.influenceLive.d=o(this.influenceLive.d,this.influence.d,.06);const s=window.visualViewport?window.visualViewport.width:window.innerWidth,n=window.visualViewport?window.visualViewport.height:window.innerHeight,a=18,h=(this.influenceLive.x-.5)*2,c=(this.influenceLive.y-.5)*2,l=this.base.cx+h*a*this.influenceLive.a,u=this.base.cy+c*a*this.influenceLive.a,f=1-.1*this.influenceLive.a,w=this.base.spread*f;this.ctx.clearRect(0,0,s,n);for(const d of this.stars)d.update(l,u,w,m,i),d.draw(this.ctx,this.isLight);requestAnimationFrame(this.frame)}}customElements.get("quasar-background")||customElements.define("quasar-background",g);</script> <div id="qi-root" data-astro-cid-7riuhlff> <canvas id="qi-vis" data-astro-cid-7riuhlff></canvas> </div>  <script type="module" src="/_astro/Qi.astro_astro_type_script_index_0_lang.BVxsZucF.js"></script> <header class="py-4" data-role="app-header" data-astro-transition-persist="astro-l7r54iwe-1"> <div class="mx-auto max-w-screen-sm px-3">  <div class="flex h-full items-center justify-between"> <!-- ASE (context-aware) --> <a id="ase" href="/" aria-label="nagerboshi" role="button" tabindex="0" data-role="search-pill" class="group relative flex items-center
     overflow-hidden rounded-full
     border border-black/15
     px-3 py-1.5
@@ -311,23 +203,7 @@
     focus-visible:bg-black/5
     dark:border-white/20
     dark:hover:bg-white/5
-    dark:focus-visible:bg-white/5" style="background-color: transparent; text-decoration: none;" onclick="
-    event.preventDefault();
-    window.togglePagefind
-      ? window.togglePagefind()
-      : (window.openPagefind
-          ? window.openPagefind()
-          : window.dispatchEvent(new Event('open-pagefind')));
-  " onkeydown="
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      window.togglePagefind
-        ? window.togglePagefind()
-        : (window.openPagefind
-            ? window.openPagefind()
-            : window.dispatchEvent(new Event('open-pagefind')));
-    }
-  "> <span class="select-none tracking-wide opacity-80 transition group-hover:opacity-100"> nagerboshi </span> </a>  <nav class="flex items-center gap-1 text-sm"> <div class="mx-auto max-w-screen-sm px-3">  <a href="/euthymia" aria-label="System information" class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5" style="background-color: transparent; text-decoration: none;" data-astro-cid-w6xnny7c> <canvas id="heartbeat" width="180" height="18" class="pointer-events-none absolute inset-0 m-auto" style="z-index: 0;" data-astro-cid-w6xnny7c></canvas> <div class="relative z-10 flex w-full items-center px-3" data-astro-cid-w6xnny7c> <span data-role="sysinfo-time" class="text-ghost-600 cursor-pointer text-sm" style="white-space: nowrap;" data-astro-cid-w6xnny7c></span> <span aria-hidden="true" class="block" style="width: 80px;" data-astro-cid-w6xnny7c></span> <span class="glow-ring ml-auto h-1.5 w-1.5 rounded-full" title="System vitals" data-astro-cid-w6xnny7c></span> </div> </a> <script type="module">
+    dark:focus-visible:bg-white/5" style="background-color: transparent; text-decoration: none;"> <span id="ase-label" class="select-none tracking-wide opacity-80 transition group-hover:opacity-100"> nagerboshi </span> </a> <script type="module">(function(){try{var t=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};t.SENTRY_RELEASE={id:"3bf00602cf7bab128f3262eb433e55a9e8dac6d2"}}catch{}})();try{(function(){var t=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},a=new t.Error().stack;a&&(t._sentryDebugIds=t._sentryDebugIds||{},t._sentryDebugIds[a]="e9f52ca0-3091-4485-9224-2556da4b8ba4",t._sentryDebugIdIdentifier="sentry-dbid-e9f52ca0-3091-4485-9224-2556da4b8ba4")})()}catch{}const e=document.getElementById("ase");if(e){let t=function(){n!=="search"&&(n="search",e.id="ase",e.dataset.role="search-pill",e.href="/",e.setAttribute("aria-label","Open search"))},a=function(){n!=="petal"&&(n="petal",e.removeAttribute("id"),e.removeAttribute("data-role"),e.href="/petals",e.setAttribute("aria-label","Back to petals"))},i=function(){document.body.dataset.view==="petal"?a():t()},n="search";i(),new MutationObserver(i).observe(document.body,{attributes:!0,attributeFilter:["data-view"]}),e.addEventListener("click",d=>{n==="search"&&(d.preventDefault(),window.togglePagefind?window.togglePagefind():window.dispatchEvent(new Event("open-pagefind")))}),e.addEventListener("keydown",d=>{(d.key==="Enter"||d.key===" ")&&n==="search"&&(d.preventDefault(),window.togglePagefind?window.togglePagefind():window.dispatchEvent(new Event("open-pagefind")))})}</script> <nav class="flex items-center gap-1 text-sm"> <div class="mx-auto max-w-screen-sm px-3">  <a href="/euthymia" aria-label="System information" class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5" style="background-color: transparent; text-decoration: none;" data-astro-cid-w6xnny7c> <canvas id="heartbeat" width="180" height="18" class="pointer-events-none absolute inset-0 m-auto" style="z-index: 0;" data-astro-cid-w6xnny7c></canvas> <div class="relative z-10 flex w-full items-center px-3" data-astro-cid-w6xnny7c> <span data-role="sysinfo-time" class="text-ghost-600 cursor-pointer text-sm" style="white-space: nowrap;" data-astro-cid-w6xnny7c></span> <span aria-hidden="true" class="block" style="width: 80px;" data-astro-cid-w6xnny7c></span> <span class="glow-ring ml-auto h-1.5 w-1.5 rounded-full" title="System vitals" data-astro-cid-w6xnny7c></span> </div> </a> <script type="module">
     /* ===============================
        TIME + TEMPORAL FLARES
     =============================== */
@@ -510,36 +386,73 @@
 
     if (reduceMotion) drawStatic();
     else frame();
-  </script>   </div> </nav> </div>  </div>  </header> <main class="content-wrapper" data-astro-cid-sckkx6r4>  <meta name="pagefind:filter" content="nav"> <div class="mx-auto max-w-screen-sm px-3">  <div class="mt-16 grid place-items-center gap-3"> <h4 class="animate text-2xl font-semibold text-black dark:text-white">
+  </script>   </div> </nav> </div>  </div>  </header> <main>  <meta name="pagefind:filter" content="nav"> <div class="mx-auto max-w-screen-sm px-3">  <div class="mt-16 grid place-items-center gap-3"> <h4 class="animate text-2xl font-semibold text-black dark:text-white">
 404: Page not found
-</h4> <span class="animate"> <a href="/" class="not-prose group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-7 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm"> Go to home page </div> </a> </span> </div>  </div>  </main> <footer class="animate"> <div class="mx-auto max-w-screen-sm px-3">  <div class="footer-content relative"> <div class="absolute -top-12 right-0"> <button id="back-to-top" class="group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-8 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 rotate-90 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm">Back to top</div> </button> </div> </div> <div class="flex items-center justify-between"> <div> <a href="/about"> sourceaura | 🫀 • 🫁 • 🧠 |
+</h4> <span class="animate"> <a href="/" class="not-prose group relative flex w-fit flex-nowrap rounded border border-black/15 py-1.5 pl-7 pr-3 transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute left-2 top-1/2 size-4 -translate-y-1/2 fill-none stroke-current stroke-2"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-2 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"></line> <polyline points="12 5 5 12 12 19" class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"></polyline> </svg> <div class="text-sm"> Go to home page </div> </a> </span> </div>  </div>  </main> <footer class="app-footer" data-astro-cid-sz7xmlte> <div class="mx-auto max-w-screen-sm px-3">  <div class="flex items-center justify-between" data-astro-cid-sz7xmlte> <!-- LEFT --> <div class="text-sm opacity-80" data-astro-cid-sz7xmlte> <a href="/about" data-astro-cid-sz7xmlte> sourceaura | 🫀 • 🫁 • 🧠 |
 </a>
-&copy; 2025 </div> <!-- <ThemeSwitch /> --> <!-- <button id="theme-toggle">??? </button> --> <!-- --> <div class="theme-buttons flex flex-wrap items-center gap-1.5"> <!-- <button id="theme-toggle"> --> <button id="theme-toggle"> <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"> <defs> <mask id="lineMdLightDarkLoop0"> <circle cx="7.5" cy="7.5" r="5.5" fill="#fff"></circle> <circle cx="7.5" cy="7.5" r="5.5"> <animate fill="freeze" attributeName="cx" dur="0.4s" values="7.5;11"></animate> <animate fill="freeze" attributeName="r" dur="0.4s" values="5.5;6.5"></animate> </circle> </mask> <mask id="lineMdLightDarkLoop1"> <g fill="#fff"> <circle cx="12" cy="9" r="5.5"> <animate fill="freeze" attributeName="cy" begin="1s" dur="0.5s" values="9;15"></animate> </circle> <g fill-opacity="0"> <use href="#lineMdLightDarkLoop2" transform="rotate(-75 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(-25 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(25 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(75 12 15)"></use> <set fill="freeze" attributeName="fill-opacity" begin="1.5s" to="1"></set> <animateTransform attributeName="transform" dur="5s" repeatCount="indefinite" type="rotate" values="0 12 15;50 12 15"></animateTransform> </g> </g> <path d="M0 10h26v5h-26z"></path> <path stroke="#fff" stroke-dasharray="26" stroke-dashoffset="26" stroke-width="2" d="M22 12h-22"> <animate attributeName="d" dur="6s" repeatCount="indefinite" values="M22 12h-22;M24 12h-22;M22 12h-22"></animate> <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.4s" values="26;0"></animate> </path> </mask> <symbol id="lineMdLightDarkLoop2"> <path d="M11 18h2L12 20z" opacity="0"> <animate fill="freeze" attributeName="d" begin="1.5s" dur="0.4s" values="M11 18h2L12 20z;M10.5 21.5h3L12 24z"></animate> <set fill="freeze" attributeName="opacity" begin="1.5s" to="1"></set> </path> </symbol> </defs> <g fill="currentColor"> <rect width="13" height="13" x="1" y="1" mask="url(#lineMdLightDarkLoop0)"></rect> <path d="M-2 11h28v13h-28z" mask="url(#lineMdLightDarkLoop1)" transform="rotate(-45 12 12)"></path> </g> </svg> </button> <!--  --> </div> </div>  </div> </footer> <script type="module">(function(){try{var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};e.SENTRY_RELEASE={id:"6498010bc47562afb2a9fe6629b85673e1045e9e"}}catch{}})();try{(function(){var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]="b387fb54-efa2-4cb6-b5b2-55df1bfef753",e._sentryDebugIdIdentifier="sentry-dbid-b387fb54-efa2-4cb6-b5b2-55df1bfef753")})()}catch{}function o(){const e=document.documentElement,t=document.getElementById("theme-toggle"),a=document.getElementById("light-theme-button"),l=document.getElementById("dark-theme-button"),i=document.getElementById("system-theme-button"),c=localStorage.getItem("theme"),s=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light",m=c||s;e.classList.remove("dark","light"),e.classList.add(m),t?.addEventListener("click",()=>{const n=e.classList.contains("dark")?"dark":"light",d=n==="dark"?"light":"dark";e.classList.remove(n),e.classList.add(d),localStorage.setItem("theme",d)}),a?.addEventListener("click",()=>{e.classList.remove("dark"),e.classList.add("light"),localStorage.setItem("theme","light")}),l?.addEventListener("click",()=>{e.classList.remove("light"),e.classList.add("dark"),localStorage.setItem("theme","dark")}),i?.addEventListener("click",()=>{e.classList.remove("light","dark"),e.classList.add(s),localStorage.removeItem("theme")})}o();document.addEventListener("astro:after-swap",o);</script> <div id="backdrop" class="pointer-events-none invisible fixed
+&copy; 2025 </div> <!-- RIGHT CONTROLS --> <div class="footer-controls" data-astro-cid-sz7xmlte> <div class="theme-switch" data-astro-cid-sz7xmlte> <div class="theme-buttons flex items-center"> <button type="button" data-theme-toggle aria-label="Toggle theme"> <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"> <defs> <mask id="lineMdLightDarkLoop0"> <circle cx="7.5" cy="7.5" r="5.5" fill="#fff"></circle> <circle cx="7.5" cy="7.5" r="5.5"> <animate fill="freeze" attributeName="cx" dur="0.4s" values="7.5;11"></animate> <animate fill="freeze" attributeName="r" dur="0.4s" values="5.5;6.5"></animate> </circle> </mask> <mask id="lineMdLightDarkLoop1"> <g fill="#fff"> <circle cx="12" cy="9" r="5.5"> <animate fill="freeze" attributeName="cy" begin="1s" dur="0.5s" values="9;15"></animate> </circle> <g fill-opacity="0"> <use href="#lineMdLightDarkLoop2" transform="rotate(-75 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(-25 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(25 12 15)"></use> <use href="#lineMdLightDarkLoop2" transform="rotate(75 12 15)"></use> <set fill="freeze" attributeName="fill-opacity" begin="1.5s" to="1"></set> <animateTransform attributeName="transform" dur="5s" repeatCount="indefinite" type="rotate" values="0 12 15;50 12 15"></animateTransform> </g> </g> <path d="M0 10h26v5h-26z"></path> <path stroke="#fff" stroke-dasharray="26" stroke-dashoffset="26" stroke-width="2" d="M22 12h-22"> <animate attributeName="d" dur="6s" repeatCount="indefinite" values="M22 12h-22;M24 12h-22;M22 12h-22"></animate> <animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.4s" values="26;0"></animate> </path> </mask> <symbol id="lineMdLightDarkLoop2"> <path d="M11 18h2L12 20z" opacity="0"> <animate fill="freeze" attributeName="d" begin="1.5s" dur="0.4s" values="M11 18h2L12 20z;M10.5 21.5h3L12 24z"></animate> <set fill="freeze" attributeName="opacity" begin="1.5s" to="1"></set> </path> </symbol> </defs> <g fill="currentColor"> <rect width="13" height="13" x="1" y="1" mask="url(#lineMdLightDarkLoop0)"></rect> <path d="M-2 11h28v13h-28z" mask="url(#lineMdLightDarkLoop1)" transform="rotate(-45 12 12)"></path> </g> </svg> </button> </div> <script>
+  const html = document.documentElement;
+
+  function applyTheme(theme) {
+    html.classList.remove("light", "dark");
+    html.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+      applyTheme(saved);
+    } else {
+      const system = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+      applyTheme(system);
+    }
+  }
+
+  // Initialize immediately (works on home + first load)
+  initTheme();
+
+  // One global click handler (survives Astro transitions)
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-theme-toggle]");
+    if (!btn) return;
+
+    const next = html.classList.contains("dark") ? "light" : "dark";
+    applyTheme(next);
+  });
+</script> </div> <div class="back-to-top" data-astro-cid-sz7xmlte> <div id="back-to-top" aria-hidden="true" class="back-to-top-indicator" data-astro-cid-wlspcwf4> <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-astro-cid-wlspcwf4> <path d="M12 19V5" data-astro-cid-wlspcwf4></path> <path d="M5 12l7-7 7 7" data-astro-cid-wlspcwf4></path> </svg> </div> <script>(function(){const SHOW_AFTER = 240;
+
+  const el = document.getElementById("back-to-top");
+  const root = document.documentElement;
+
+  function updateBackToTop() {
+    const y =
+      window.scrollY ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0;
+
+    const active = y > SHOW_AFTER;
+
+    el.classList.toggle("active", active);
+    root.toggleAttribute("data-backtotop", active);
+  }
+
+  // Always attach listeners once
+  window.addEventListener("scroll", updateBackToTop, { passive: true });
+  document.addEventListener("astro:page-load", updateBackToTop);
+  document.addEventListener("astro:after-swap", updateBackToTop);
+
+  updateBackToTop();
+
+  el.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+})();</script>  </div> </div> </div>  </div> </footer>  <div id="backdrop" class="pointer-events-none invisible fixed
 inset-0 z-40 bg-transparent" data-astro-transition-persist="astro-t6dxx5el-2"> <div id="pagefind-shell" class="flex
 justify-center"> <div id="pagefind-container" class="relative flex max-h-[70vh]
 w-full max-w-screen-sm flex-col overflow-auto rounded border bg-transparent p-4
-shadow-xl"> <div id="search" class="pagefind-ui pagefind-init" data-pagefind-ui data-bundle-path="/pagefind/" data-ui-options="{&#34;showImages&#34;:true,&#34;excerptLength&#34;:16,&#34;resetStyles&#34;:false,&#34;filters&#34;:{&#34;nav&#34;:true}}"></div> <script type="module" src="/_astro/Search.astro_astro_type_script_index_0_lang.C_Wav3ox.js"></script> <div class="mt-2 flex items-baseline justify-between text-xs"> <span id="current-time" class="font-mono tabular-nums"></span> <span>Press
-<kbd>Esc</kbd></span> </div> </div> </div> </div>  <script type="module">(function(){try{var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};e.SENTRY_RELEASE={id:"6498010bc47562afb2a9fe6629b85673e1045e9e"}}catch{}})();try{(function(){var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]="9dc3b15e-acc3-4e92-8d2e-bf2b3efb95c0",e._sentryDebugIdIdentifier="sentry-dbid-9dc3b15e-acc3-4e92-8d2e-bf2b3efb95c0")})()}catch{}const l=document.getElementById("backdrop"),g=document.getElementById("pagefind-shell"),a=document.getElementById("pagefind-container"),i=document.documentElement;let s=!1,L=0,x=null,n=-14,c=0,d=-14,r=0,b=0;const k=38,A=1;function D(){const e=Math.max(0,Math.min(1,1-Math.abs(n)/14));i.style.setProperty("--search-proximity",e.toFixed(4)),i.style.setProperty("--search-lift",(e*1.2).toFixed(4))}function h(){const e=Math.max(0,Math.min(1,1-Math.abs(n)/14)),t=.985+.015*e;g.style.transform=`translateY(${n}px) scale(${t})`,g.style.opacity=String(.1+.9*e),D()}function v(){r||(b=performance.now(),r=requestAnimationFrame(_))}function E(){r&&(cancelAnimationFrame(r),r=0)}function _(e){const t=Math.min((e-b)/1e3,.033);if(b=e,document.hidden){E();return}const y=(-520*(n-d)-k*c)/A;if(c+=y*t,n+=c*t,Math.abs(c)<.02&&Math.abs(n-d)<.05){n=d,c=0,h(),E();return}h(),r=requestAnimationFrame(_)}let w=0,S=performance.now(),o=0,m=0;function q(e){return Math.max(0,Math.min(1,e))}function B(){m||(m=requestAnimationFrame(f))}function f(e){const t=Math.min((e-(f.last||e))/1e3,.05);if(f.last=e,o*=Math.pow(.06,t),o<.001){o=0,i.style.setProperty("--scroll-momentum","0"),m=0;return}i.style.setProperty("--scroll-momentum",o.toFixed(4)),m=requestAnimationFrame(f)}a.addEventListener("scroll",()=>{const e=performance.now(),t=Math.abs(a.scrollTop-w),M=Math.max(16,e-S),T=t/M,y=q(T*.9);o=Math.max(o,y),i.style.setProperty("--scroll-momentum",o.toFixed(4)),w=a.scrollTop,S=e,B(),s&&p()});function p(){window.__pulse?.touch?.(),s&&(window.__pulse?.setBoost?.(!0),clearTimeout(x),x=setTimeout(()=>{window.__pulse?.setBoost?.(!1)},2200))}function F(){p(),window.__pulse?.setBoost?.(!0),s=!0,l.classList.remove("invisible","pointer-events-none"),l.classList.add("visible"),i.classList.add("pagefind-open"),d=0,v(),requestAnimationFrame(()=>{a.scrollTop=L,w=a.scrollTop}),requestAnimationFrame(()=>{const e=document.querySelector("#search input");e?.focus({preventScroll:!0}),e?.classList.add("focus-enter"),setTimeout(()=>e?.classList.remove("focus-enter"),240)})}function u(){s=!1,L=a.scrollTop,window.__pulse?.setBoost?.(!1),d=-14,v(),l.classList.add("invisible","pointer-events-none"),l.classList.remove("visible"),i.classList.remove("pagefind-open");const e=document.querySelector("#search input");e&&(e.value="")}function P(){s?u():F()}document.addEventListener("keydown",e=>{if(e.key==="/"||(e.metaKey||e.ctrlKey)&&e.key==="k"){e.preventDefault(),P();return}e.key==="Escape"&&u(),s&&p()});l.addEventListener("pointermove",()=>{s&&p()});l.addEventListener("click",e=>{e.target.closest("#pagefind-container")||u()});document.addEventListener("visibilitychange",()=>{document.hidden||v()});window.addEventListener("astro:before-swap",u);window.openPagefind=F;window.closePagefind=u;window.togglePagefind=P;g.style.marginTop="calc(var(--header-height, 72px) + 12px)";h();function I(){const e=document.getElementById("current-time");e&&(e.textContent=new Intl.DateTimeFormat(void 0,{hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date))}I();setInterval(I,1e3);</script>  <!-- =====================================================
-         DYNAMIC IMPORT FAILURE RECOVERY
-         (Astro / Vite / Dev Toolbar / Chunk Mismatch Guard)
-         ===================================================== --> <script>
-      const SHOULD_RELOAD = (msg) =>
-        msg.includes("Failed to fetch dynamically imported module") ||
-        msg.includes("Importing a module script failed");
-
-      window.addEventListener("error", (event) => {
-        const message = event?.error?.message || "";
-        if (SHOULD_RELOAD(message)) {
-          console.warn("[recovery] Dynamic import failed. Reloading page.");
-          window.location.reload();
-        }
-      });
-
-      window.addEventListener("unhandledrejection", (event) => {
-        const message = event?.reason?.message || "";
-        if (SHOULD_RELOAD(message)) {
-          console.warn("[recovery] Module mismatch detected. Reloading.");
-          window.location.reload();
-        }
-      });
-    </script>  </body> </html>
+shadow-xl"> <div id="search" class="pagefind-ui pagefind-init" data-pagefind-ui data-bundle-path="/pagefind/" data-ui-options="{&#34;showImages&#34;:true,&#34;excerptLength&#34;:16,&#34;resetStyles&#34;:false,&#34;filters&#34;:{&#34;nav&#34;:true}}"></div> <script type="module" src="/_astro/Search.astro_astro_type_script_index_0_lang.CQoP68ib.js"></script> <div class="mt-2 flex items-baseline justify-between text-xs"> <span id="current-time" class="font-mono tabular-nums"></span> <span>Press
+<kbd>Esc</kbd></span> </div> </div> </div> </div>  <script type="module">(function(){try{var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};e.SENTRY_RELEASE={id:"3bf00602cf7bab128f3262eb433e55a9e8dac6d2"}}catch{}})();try{(function(){var e=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{},t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]="9dc3b15e-acc3-4e92-8d2e-bf2b3efb95c0",e._sentryDebugIdIdentifier="sentry-dbid-9dc3b15e-acc3-4e92-8d2e-bf2b3efb95c0")})()}catch{}const l=document.getElementById("backdrop"),g=document.getElementById("pagefind-shell"),a=document.getElementById("pagefind-container"),i=document.documentElement;let s=!1,L=0,x=null,n=-14,c=0,d=-14,r=0,b=0;const k=38,A=1;function D(){const e=Math.max(0,Math.min(1,1-Math.abs(n)/14));i.style.setProperty("--search-proximity",e.toFixed(4)),i.style.setProperty("--search-lift",(e*1.2).toFixed(4))}function h(){const e=Math.max(0,Math.min(1,1-Math.abs(n)/14)),t=.985+.015*e;g.style.transform=`translateY(${n}px) scale(${t})`,g.style.opacity=String(.1+.9*e),D()}function v(){r||(b=performance.now(),r=requestAnimationFrame(_))}function E(){r&&(cancelAnimationFrame(r),r=0)}function _(e){const t=Math.min((e-b)/1e3,.033);if(b=e,document.hidden){E();return}const y=(-520*(n-d)-k*c)/A;if(c+=y*t,n+=c*t,Math.abs(c)<.02&&Math.abs(n-d)<.05){n=d,c=0,h(),E();return}h(),r=requestAnimationFrame(_)}let w=0,S=performance.now(),o=0,m=0;function q(e){return Math.max(0,Math.min(1,e))}function B(){m||(m=requestAnimationFrame(f))}function f(e){const t=Math.min((e-(f.last||e))/1e3,.05);if(f.last=e,o*=Math.pow(.06,t),o<.001){o=0,i.style.setProperty("--scroll-momentum","0"),m=0;return}i.style.setProperty("--scroll-momentum",o.toFixed(4)),m=requestAnimationFrame(f)}a.addEventListener("scroll",()=>{const e=performance.now(),t=Math.abs(a.scrollTop-w),M=Math.max(16,e-S),T=t/M,y=q(T*.9);o=Math.max(o,y),i.style.setProperty("--scroll-momentum",o.toFixed(4)),w=a.scrollTop,S=e,B(),s&&p()});function p(){window.__pulse?.touch?.(),s&&(window.__pulse?.setBoost?.(!0),clearTimeout(x),x=setTimeout(()=>{window.__pulse?.setBoost?.(!1)},2200))}function F(){p(),window.__pulse?.setBoost?.(!0),s=!0,l.classList.remove("invisible","pointer-events-none"),l.classList.add("visible"),i.classList.add("pagefind-open"),d=0,v(),requestAnimationFrame(()=>{a.scrollTop=L,w=a.scrollTop}),requestAnimationFrame(()=>{const e=document.querySelector("#search input");e?.focus({preventScroll:!0}),e?.classList.add("focus-enter"),setTimeout(()=>e?.classList.remove("focus-enter"),240)})}function u(){s=!1,L=a.scrollTop,window.__pulse?.setBoost?.(!1),d=-14,v(),l.classList.add("invisible","pointer-events-none"),l.classList.remove("visible"),i.classList.remove("pagefind-open");const e=document.querySelector("#search input");e&&(e.value="")}function P(){s?u():F()}document.addEventListener("keydown",e=>{if(e.key==="/"||(e.metaKey||e.ctrlKey)&&e.key==="k"){e.preventDefault(),P();return}e.key==="Escape"&&u(),s&&p()});l.addEventListener("pointermove",()=>{s&&p()});l.addEventListener("click",e=>{e.target.closest("#pagefind-container")||u()});document.addEventListener("visibilitychange",()=>{document.hidden||v()});window.addEventListener("astro:before-swap",u);window.openPagefind=F;window.closePagefind=u;window.togglePagefind=P;g.style.marginTop="calc(var(--header-height, 72px) + 12px)";h();function I(){const e=document.getElementById("current-time");e&&(e.textContent=new Intl.DateTimeFormat(void 0,{hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date))}I();setInterval(I,1e3);</script>  </body></html>

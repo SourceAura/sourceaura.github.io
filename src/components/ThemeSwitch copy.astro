@@ -1,9 +1,9 @@
 ---
-
+// src/components/ThemeSwitch.astro
 ---
 
-<div class="theme-buttons flex items-center">
-  <button type="button" data-theme-toggle aria-label="Toggle theme">
+<div class="theme-buttons flex flex-wrap items-center gap-1.5">
+  <button id="theme-toggle">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="1em"
@@ -103,35 +103,39 @@
 </div>
 
 <script is:inline>
-  const html = document.documentElement;
+  function setupThemeToggle() {
+    const html = document.documentElement;
+    const themeToggle = document.getElementById("theme-toggle");
+
+    // Check for saved theme preference or use the system preference
+    const savedTheme = localStorage.getItem("theme");
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      .matches
+      ? "dark"
+      : "light";
+    const initialTheme = savedTheme || systemTheme;
+
+    // Apply the initial theme
+    applyTheme(initialTheme);
+
+    // Theme toggle event listener
+    themeToggle?.addEventListener("click", () => {
+      const currentTheme = html.classList.contains("dark") ? "dark" : "light";
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(newTheme);
+    });
+  }
 
   function applyTheme(theme) {
-    html.classList.remove("light", "dark");
+    const html = document.documentElement;
+    html.classList.remove("dark", "light");
     html.classList.add(theme);
     localStorage.setItem("theme", theme);
   }
 
-  function initTheme() {
-    const saved = localStorage.getItem("theme");
-    if (saved) {
-      applyTheme(saved);
-    } else {
-      const system = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      applyTheme(system);
-    }
-  }
+  // Run the setup on initial load
+  setupThemeToggle();
 
-  // Initialize immediately (works on home + first load)
-  initTheme();
-
-  // One global click handler (survives Astro transitions)
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-theme-toggle]");
-    if (!btn) return;
-
-    const next = html.classList.contains("dark") ? "light" : "dark";
-    applyTheme(next);
-  });
+  // Re-run the setup when the content changes (for Astro page changes)
+  document.addEventListener("astro:page-load", setupThemeToggle);
 </script>

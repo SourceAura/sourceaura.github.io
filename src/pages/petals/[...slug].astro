@@ -1,14 +1,10 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import Layout from "@layouts/Layout.astro";
+import PetalLayout from "@layouts/PetalLayout.astro";
 import Container from "@components/Container.astro";
 import FormattedDate from "@components/FormattedDate.astro";
 import { readingTime } from "@lib/utils";
-import BackToPrevious from "@components/BackToPrevious.astro";
-import PostNavigation from "@components/PostNavigation.astro";
-import TableOfContents from "@components/TableOfContents.astro";
 import Giscus from "@components/Giscus.astro";
-import { Image } from "astro:assets";
 
 export async function getStaticPaths() {
   const posts = (await getCollection("petals"))
@@ -44,17 +40,32 @@ const nextPost = getAdjacentPost(1);
 const prevPost = getAdjacentPost(-1);
 
 const post = Astro.props;
-const { Content, headings } = await post.render();
+const { Content } = await post.render();
 ---
 
-<Layout title={post.data.title} description={post.data.description}>
+<PetalLayout
+  title={post.data.title}
+  description={post.data.description}
+  prevPost={prevPost
+    ? {
+        slug: `/${prevPost.collection}/${prevPost.slug}`,
+        title: prevPost.data.title,
+      }
+    : undefined}
+  nextPost={nextPost
+    ? {
+        slug: `/${nextPost.collection}/${nextPost.slug}`,
+        title: nextPost.data.title,
+      }
+    : undefined}
+>
   <Container>
     <div class="mx-auto max-w-3xl">
-      <BackToPrevious href="/petals">petals</BackToPrevious>
-
-      <!-- ✅ PAGEFIND FIX: mark the article as searchable -->
+      <!-- SEARCHABLE CONTENT -->
       <article class="mt-8" data-pagefind-body>
-        <h1 class="mb-4 text-3xl font-semibold">{post.data.title}</h1>
+        <h1 class="mb-4 text-3xl font-semibold">
+          {post.data.title}
+        </h1>
 
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
           <FormattedDate date={new Date(post.data.date)} />
@@ -68,12 +79,8 @@ const { Content, headings } = await post.render();
       </article>
 
       <div class="mt-12">
-        <PostNavigation prevPost={prevPost} nextPost={nextPost} />
-      </div>
-
-      <div class="mt-12">
         <Giscus />
       </div>
     </div>
   </Container>
-</Layout>
+</PetalLayout>
