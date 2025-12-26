@@ -64,4 +64,12 @@
 
 -------
 
+- 12212025 :: EndeavorOS - End4 - Ghostty 👾
+
+-------
+
+- 12232025 :: Resurrecting the Portfolio. 🫁
+
+-------
+
 ![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io?style=plastic)

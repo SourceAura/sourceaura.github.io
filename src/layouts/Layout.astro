@@ -3,49 +3,50 @@ import Head from "@components/Head.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import PageFind from "@components/PageFind.astro";
-import Quasar from "@components/Quasar.astro";
-import Qi from "@components/Qi.astro";
 import { SITE } from "@consts";
+import Qi from "@/components/Qi.astro";
+import Quasar from "@components/Quasar.astro";
+import Pulse from "@components/Pulse.astro";
 
 type Props = {
-  title?: string;
-  description?: string;
-  image?: string;
+  title: string;
+  description: string;
 };
 
-const { title, description, image } = Astro.props;
+const { title, description } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <Head title={`${title ?? SITE.TITLE}`} description={description} />
-
-    <!-- ✅ Pagefind metadata (THIS IS THE KEY) -->
-    {title && <meta data-pagefind-meta="title" content={title} />}
-
-    {
-      description && (
-        <meta data-pagefind-meta="description" content={description} />
-      )
-    }
-
-    {image && <meta data-pagefind-meta="image" content={image} />}
+    <Head title={`${title} | ${SITE.TITLE}`} description={description} />
   </head>
-
   <body>
-    <!-- Background layers -->
+    <Pulse />
     <Quasar />
     <Qi />
 
-    <!-- UI -->
     <Header />
     <main>
       <slot />
     </main>
     <Footer />
 
-    <!-- Search -->
     <PageFind />
+    <style>
+      body {
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .content-wrapper {
+        position: relative;
+        z-index: 1;
+      }
+    </style>
   </body>
 </html>

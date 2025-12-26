@@ -9,7 +9,6 @@ import Container from "@components/Container.astro";
     class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
     style="background-color: transparent; text-decoration: none;"
   >
-    <!-- ECG BACKGROUND -->
     <canvas
       id="heartbeat"
       width="180"
@@ -17,18 +16,14 @@ import Container from "@components/Container.astro";
       class="pointer-events-none absolute inset-0 m-auto"
       style="z-index: 0;"></canvas>
 
-    <!-- FOREGROUND CONTENT -->
     <div class="relative z-10 flex w-full items-center px-3">
-      <!-- Time (left) -->
       <span
         data-role="sysinfo-time"
         class="text-ghost-600 cursor-pointer text-sm"
         style="white-space: nowrap;"></span>
 
-      <!-- INVISIBLE SPACER (≈ 2/3 width) -->
       <span aria-hidden="true" class="block" style="width: 80px;"></span>
 
-      <!-- Indicator (right) -->
       <span
         class="glow-ring ml-auto h-1.5 w-1.5 rounded-full"
         title="System vitals"></span>
@@ -36,33 +31,27 @@ import Container from "@components/Container.astro";
   </a>
 
   <script type="module">
-    /* =========================
-       Time (Military, multi-mount safe)
-    ========================= */
+    // Time (military)
     function updateCurrentTime() {
       const timeEl = document.querySelector('[data-role="sysinfo-time"]');
       if (!timeEl) return;
-
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, "0");
       const minutes = String(now.getMinutes()).padStart(2, "0");
       const value = `${hours}:${minutes}`;
-
-      if (timeEl.textContent !== value) {
-        timeEl.textContent = value;
-      }
+      if (timeEl.textContent !== value) timeEl.textContent = value;
     }
 
-    if (window.__sysinfoTimeInterval) {
+    if (window.__sysinfoTimeInterval)
       clearInterval(window.__sysinfoTimeInterval);
-    }
-
     updateCurrentTime();
     window.__sysinfoTimeInterval = setInterval(updateCurrentTime, 1000);
 
-    /* =========================
-       ECG Simulation Engine
-    ========================= */
+    const reduceMotionMq = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    );
+    const reduced = () => !!reduceMotionMq?.matches;
+
     const canvas = document.getElementById("heartbeat");
     const ctx = canvas.getContext("2d");
 
@@ -73,8 +62,8 @@ import Container from "@components/Container.astro";
     let x = 0;
     let lastTime = performance.now();
     let nextBeatAt = 0;
-    let baselinePhase = 0;
-    let visible = true;
+    let visible = !document.hidden;
+    let raf = 0;
 
     let heartRate = 58 + Math.random() * 6;
     let beat = null;
@@ -82,14 +71,17 @@ import Container from "@components/Container.astro";
     const TRAIL_ALPHA_VISIBLE = 0.06;
     const TRAIL_ALPHA_HIDDEN = 0.085;
 
-    document.addEventListener("visibilitychange", () => {
-      visible = !document.hidden;
-    });
+    function readPulseVars() {
+      const styles = getComputedStyle(document.documentElement);
+      const phase = parseFloat(styles.getPropertyValue("--pulse-phase")) || 0;
+      const pulse = parseFloat(styles.getPropertyValue("--pulse")) || 0.5;
+      const decay = parseFloat(styles.getPropertyValue("--pulse-decay")) || 1;
+      return { phase, pulse, decay };
+    }
 
     function setThemeColor() {
       const isDark = document.documentElement.classList.contains("dark");
       const color = isDark ? "255,255,255" : "20,20,20";
-
       ctx.lineWidth = 1;
       ctx.strokeStyle = `rgba(${color},0.9)`;
       ctx.shadowColor = `rgba(${color},0.55)`;
@@ -104,7 +96,6 @@ import Container from "@components/Container.astro";
 
     function scheduleBeat(type = "normal") {
       let interval;
-
       if (type === "premature") interval = 420 + Math.random() * 240;
       else if (type === "pause") interval = 1800 + Math.random() * 700;
       else {
@@ -147,20 +138,74 @@ import Container from "@components/Container.astro";
       ctx.restore();
     }
 
+    function drawStaticBaseline() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.beginPath();
+      ctx.moveTo(0, MID);
+      ctx.lineTo(W, MID);
+      ctx.stroke();
+    }
+
+    function stop() {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    }
+
+    function start() {
+      stop();
+      raf = requestAnimationFrame(frame);
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      visible = !document.hidden;
+
+      // Hard CPU saver: stop animating when hidden
+      if (!visible) {
+        stop();
+      } else if (!reduced()) {
+        lastTime = performance.now();
+        start();
+      }
+    });
+
+    reduceMotionMq?.addEventListener?.("change", () => {
+      if (reduced()) {
+        stop();
+        drawStaticBaseline();
+      } else if (!document.hidden) {
+        lastTime = performance.now();
+        start();
+      }
+    });
+
     function frame(now) {
+      if (document.hidden) return;
+
+      // Reduced motion: static, no animation loop
+      if (reduced()) {
+        drawStaticBaseline();
+        return;
+      }
+
       const dt = now - lastTime;
       lastTime = now;
 
-      fade(visible ? TRAIL_ALPHA_VISIBLE : TRAIL_ALPHA_HIDDEN);
-      ctx.beginPath();
+      const { phase, pulse, decay } = readPulseVars();
 
+      // Phase-aligned baseline wander
+      const wander = Math.sin(phase) * 0.65;
+
+      // Pulse-linked intensity
+      const intensity = 0.75 + 0.25 * pulse * decay;
+      ctx.globalAlpha = intensity;
+
+      fade(visible ? TRAIL_ALPHA_VISIBLE : TRAIL_ALPHA_HIDDEN);
+
+      ctx.beginPath();
       const steps = visible ? 2 : 1;
 
       for (let i = 0; i < steps; i++) {
-        baselinePhase += 0.0022;
-        const wander = Math.sin(baselinePhase) * 0.65;
         const noise = (Math.random() - 0.5) * 0.22;
-
         let y = MID + wander + noise;
 
         if (beat) {
@@ -177,6 +222,7 @@ import Container from "@components/Container.astro";
       }
 
       ctx.stroke();
+      ctx.globalAlpha = 1;
 
       if (visible && now >= nextBeatAt) {
         const roll = Math.random();
@@ -190,10 +236,15 @@ import Container from "@components/Container.astro";
       heartRate += (Math.random() - 0.5) * 0.0025 * (dt / 16.67);
       heartRate = Math.min(68, Math.max(52, heartRate));
 
-      requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     }
 
-    requestAnimationFrame(frame);
+    // start
+    if (reduced()) {
+      drawStaticBaseline();
+    } else {
+      start();
+    }
   </script>
 
   <style>
@@ -202,11 +253,9 @@ import Container from "@components/Container.astro";
       background-color: currentColor;
       box-shadow: 0 0 6px currentColor;
     }
-
     .dark .glow-ring {
       color: white;
     }
-
     :root:not(.dark) .glow-ring {
       color: #111;
     }
@@ -226,13 +275,6 @@ import Container from "@components/Container.astro";
     #heartbeat {
       background: transparent;
       image-rendering: pixelated;
-    }
-
-    @media (max-width: 768px) {
-      .sysinfo-root {
-        position: absolute;
-        top: env(safe-area-inset-top);
-      }
     }
   </style>
 </Container>

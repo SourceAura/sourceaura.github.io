@@ -4,7 +4,7 @@ const { posts } = Astro.props;
 ---
 
 <div class="carousel-layer" id="petal-shell">
-  <div class="carousel-viewport">
+  <div class="carousel-viewport" id="petal-viewport">
     <div class="carousel-ring" id="petal-ring">
       {
         posts.map((post, i) => (
@@ -23,31 +23,30 @@ const { posts } = Astro.props;
     </div>
   </div>
 
-  <div class="carousel-hint" aria-hidden="true">
-    <span>Drag</span>
-    <span>Click</span>
-    <span>Double</span>
-    <span>Enter</span>
-  </div>
+  <div class="carousel-hint" aria-hidden="true"></div>
 </div>
 
 <script>
   const shell = document.getElementById("petal-shell");
+  const viewport = document.getElementById("petal-viewport");
   const ring = document.getElementById("petal-ring");
   const items = [...ring.querySelectorAll(".carousel-item")];
 
   const count = items.length;
   const step = 360 / count;
 
-  const autoSpeed = 0.025;
-  const friction = 0.96;
-  const velClamp = 3.2;
-  const snapStrength = 0.06;
-  const settleThreshold = 0.015;
+  /* ── TUNING ── */
+  const friction = 0.94;
+  const velClamp = 4.5;
+  const snapStrength = 0.08;
+  const settleThreshold = 0.012;
+  const wheelScale = 0.018;
+  const keyImpulse = 1.4;
 
   let angle = 0;
   let vel = 0;
   let isDragging = false;
+  let lastPointerX = 0;
 
   function getRadius() {
     return matchMedia("(max-width: 768px)").matches ? 220 : 300;
@@ -61,21 +60,34 @@ const { posts } = Astro.props;
     return Math.round(a / step) * step;
   }
 
+  function getActiveIndex() {
+    const normalized = ((angle % 360) + 360) % 360;
+    return ((Math.round(-normalized / step) % count) + count) % count;
+  }
+
+  function rotateToIndex(i) {
+    const target = -i * step;
+    vel += clamp((target - angle) * 0.08, -velClamp, velClamp);
+  }
+
   function applyTransforms() {
     const radius = getRadius();
     ring.style.transform = `rotateY(${angle}deg)`;
 
-    const normalized = ((angle % 360) + 360) % 360;
-    const active = ((Math.round(-normalized / step) % count) + count) % count;
+    const active = getActiveIndex();
 
     items.forEach((el, i) => {
-      el.style.transform = `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`;
+      el.style.transform = `
+        translate(-50%, -50%)
+        rotateY(${i * step}deg)
+        translateZ(${radius}px)
+      `;
 
       let dist = Math.abs(i - active);
       dist = Math.min(dist, count - dist);
       const depth = Math.min(1, dist / Math.floor(count / 2 || 1));
 
-      el.style.opacity = 1 - depth * 0.7;
+      el.style.opacity = 1 - depth * 0.6;
       el.style.filter = `blur(${depth * 6}px)`;
       el.style.setProperty("--panel-scale", 1 - depth * 0.12);
       el.classList.toggle("active", i === active);
@@ -99,27 +111,83 @@ const { posts } = Astro.props;
     requestAnimationFrame(tick);
   }
 
-  // Fully isolated input handling
-  shell.addEventListener("pointerdown", (e) => {
+  /* ──────────────────────────────
+     POINTER / TOUCH
+     ────────────────────────────── */
+  viewport.addEventListener("pointerdown", (e) => {
     isDragging = true;
-    shell.setPointerCapture?.(e.pointerId);
+    lastPointerX = e.clientX;
+    viewport.setPointerCapture(e.pointerId);
   });
 
-  shell.addEventListener("pointermove", (e) => {
+  viewport.addEventListener("pointermove", (e) => {
     if (!isDragging) return;
-    e.preventDefault();
-
-    vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
-    angle += e.movementX * 0.12;
+    const dx = e.clientX - lastPointerX;
+    lastPointerX = e.clientX;
+    vel = clamp(dx * 0.12, -velClamp, velClamp);
+    angle += dx * 0.12;
   });
 
-  shell.addEventListener("pointerup", () => {
+  viewport.addEventListener("pointerup", () => {
     isDragging = false;
   });
 
+  /* ──────────────────────────────
+     SCROLL WHEEL / TRACKPAD
+     ────────────────────────────── */
+  viewport.addEventListener(
+    "wheel",
+    (e) => {
+      if (isDragging) return;
+      e.preventDefault();
+      const delta =
+        Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      vel += clamp(delta * wheelScale, -velClamp, velClamp);
+    },
+    { passive: false },
+  );
+
+  /* ──────────────────────────────
+     KEYBOARD
+     ────────────────────────────── */
+  document.addEventListener("keydown", (e) => {
+    if (document.activeElement?.classList.contains("carousel-item")) {
+      switch (e.key) {
+        case "ArrowLeft":
+          vel += keyImpulse;
+          e.preventDefault();
+          break;
+        case "ArrowRight":
+          vel -= keyImpulse;
+          e.preventDefault();
+          break;
+        case "Home":
+          rotateToIndex(0);
+          break;
+        case "End":
+          rotateToIndex(count - 1);
+          break;
+      }
+    }
+  });
+
+  /* ──────────────────────────────
+     CLICK TO FOCUS
+     ────────────────────────────── */
   items.forEach((el) => {
     const href = el.dataset.href;
-    el.addEventListener("dblclick", () => (window.location.href = href));
+    const index = Number(el.dataset.index);
+
+    el.addEventListener("click", () => {
+      if (!el.classList.contains("active")) {
+        rotateToIndex(index);
+      }
+    });
+
+    el.addEventListener("dblclick", () => {
+      window.location.href = href;
+    });
+
     el.addEventListener("keydown", (e) => {
       if (e.key === "Enter") window.location.href = href;
     });
@@ -130,7 +198,9 @@ const { posts } = Astro.props;
 </script>
 
 <style>
-  /* ── ISOLATED LAYER ── */
+  /* ──────────────────────────────
+     LAYOUT
+     ────────────────────────────── */
   .carousel-layer {
     position: fixed;
     inset: 0;
@@ -139,7 +209,6 @@ const { posts } = Astro.props;
     isolation: isolate;
   }
 
-  /* Only the carousel itself is interactive */
   .carousel-viewport {
     pointer-events: auto;
     position: absolute;
@@ -149,6 +218,7 @@ const { posts } = Astro.props;
     width: min(100%, 900px);
     height: 360px;
     perspective: 1400px;
+    touch-action: pan-y;
   }
 
   .carousel-ring {
@@ -157,6 +227,9 @@ const { posts } = Astro.props;
     transform-style: preserve-3d;
   }
 
+  /* ──────────────────────────────
+     TRANSPARENT BASE
+     ────────────────────────────── */
   .carousel-item {
     position: absolute;
     left: 50%;
@@ -165,26 +238,52 @@ const { posts } = Astro.props;
     height: 130px;
     border-radius: 14px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(6px);
+
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+
     pointer-events: auto;
+
+    transition:
+      background 220ms ease,
+      border 220ms ease,
+      box-shadow 220ms ease,
+      backdrop-filter 220ms ease;
   }
 
   .parallax-layer {
     width: 100%;
     height: 100%;
     transform: scale(var(--panel-scale, 1));
-    transition: transform 0.15s ease;
+    transition: transform 150ms ease;
   }
 
-  .carousel-item.active {
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.18),
-      0 0 30px rgba(255, 255, 255, 0.14),
-      0 0 60px rgba(255, 255, 255, 0.06);
+  /* ──────────────────────────────
+     GLASS (HOVER / FOCUS / ACTIVE)
+     ────────────────────────────── */
+
+  :root:not(.light) .carousel-item:hover,
+  :root:not(.light) .carousel-item:focus-visible,
+  :root:not(.light) .carousel-item.active {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(10px) saturate(120%);
+    box-shadow: 0 0 28px rgba(255, 255, 255, 0.18);
   }
 
+  :root.light .carousel-item:hover,
+  :root.light .carousel-item:focus-visible,
+  :root.light .carousel-item.active {
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(10px) saturate(120%);
+    box-shadow: 0 0 28px rgba(0, 0, 0, 0.18);
+  }
+
+  /* ──────────────────────────────
+     HINT
+     ────────────────────────────── */
   .carousel-hint {
     pointer-events: none;
     position: absolute;
@@ -192,7 +291,7 @@ const { posts } = Astro.props;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 0.4rem;
+    gap: 0.5rem;
     opacity: 0.55;
     font-size: 0.7rem;
     letter-spacing: 0.08em;
