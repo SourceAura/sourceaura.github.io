@@ -1,10 +1,14 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import PetalLayout from "@layouts/PetalLayout.astro";
 import Container from "@components/Container.astro";
 import FormattedDate from "@components/FormattedDate.astro";
 import { readingTime } from "@lib/utils";
 import Giscus from "@components/Giscus.astro";
+import Layout from "@layouts/Layout.astro";
+
+/* ─────────────────────────────────────────────
+   Static paths
+   ───────────────────────────────────────────── */
 
 export async function getStaticPaths() {
   const posts = (await getCollection("petals"))
@@ -21,6 +25,10 @@ export async function getStaticPaths() {
 }
 
 type Props = CollectionEntry<"petals">;
+
+/* ─────────────────────────────────────────────
+   Adjacent post logic
+   ───────────────────────────────────────────── */
 
 const posts = await getCollection("petals");
 const sortedPosts = posts
@@ -39,26 +47,15 @@ function getAdjacentPost(offset: number) {
 const nextPost = getAdjacentPost(1);
 const prevPost = getAdjacentPost(-1);
 
-const post = Astro.props;
+/* ─────────────────────────────────────────────
+   Current post
+   ───────────────────────────────────────────── */
+
+const post = Astro.props as Props;
 const { Content } = await post.render();
 ---
 
-<PetalLayout
-  title={post.data.title}
-  description={post.data.description}
-  prevPost={prevPost
-    ? {
-        slug: `/${prevPost.collection}/${prevPost.slug}`,
-        title: prevPost.data.title,
-      }
-    : undefined}
-  nextPost={nextPost
-    ? {
-        slug: `/${nextPost.collection}/${nextPost.slug}`,
-        title: nextPost.data.title,
-      }
-    : undefined}
->
+<Layout title={post.data.title} description={post.data.excerpt ?? ""}>
   <Container>
     <div class="mx-auto max-w-3xl">
       <!-- SEARCHABLE CONTENT -->
@@ -83,4 +80,4 @@ const { Content } = await post.render();
       </div>
     </div>
   </Container>
-</PetalLayout>
+</Layout>

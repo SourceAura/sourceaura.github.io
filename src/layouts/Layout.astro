@@ -1,19 +1,14 @@
 ---
-import Head from "@components/Head.astro";
-import Header from "@components/Header.astro";
-import Footer from "@components/Footer.astro";
-import PageFind from "@components/PageFind.astro";
-import { SITE } from "@consts";
-import Qi from "@/components/Qi.astro";
-import Quasar from "@components/Quasar.astro";
+import Head from "@components/Head.astro"
+import Header from "@components/Header.astro"
+import Footer from "@components/Footer.astro"
+import PageFind from "@components/PageFind.astro"
+import Qi from "@/components/Qi.astro"
+import Quasar from "@components/Quasar.astro"
+import { SITE } from "@consts"
 
-type Props = {
-  title: string;
-  description: string;
-  bodyData?: Record<string, string>;
-};
-
-const { title, description, bodyData } = Astro.props;
+// 👇 optional navigation props
+const { title, description, prev, next } = Astro.props
 ---
 
 <!doctype html>
@@ -22,16 +17,28 @@ const { title, description, bodyData } = Astro.props;
     <Head title={`${title} | ${SITE.TITLE}`} description={description} />
   </head>
 
-  <body {...bodyData}>
+  <body>
     <Quasar />
     <Qi />
 
     <Header />
+
     <main>
       <slot />
     </main>
-    <Footer />
 
+    <Footer />
     <PageFind />
+
+    {prev || next ? (
+      <script
+        define:vars={{ prev, next }}
+        type="module"
+      >
+        import { attachPostNavigation } from "/src/utils/postNavigator"
+
+        attachPostNavigation({ prev, next })
+      </script>
+    ) : null}
   </body>
 </html>

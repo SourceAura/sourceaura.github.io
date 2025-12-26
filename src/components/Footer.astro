@@ -44,6 +44,7 @@ import ThemeSwitch from "@components/ThemeSwitch.astro";
     position: relative;
     width: 64px;
     height: 32px;
+    overflow: visible; /* ← allow arrow to render cleanly */
   }
 
   /* THEME SWITCH: always interactive */
@@ -55,11 +56,11 @@ import ThemeSwitch from "@components/ThemeSwitch.astro";
     will-change: transform;
   }
 
-  /* BACK TO TOP: sits under, only interactive when active */
+  /* BACK TO TOP: sits under but is visible */
   .back-to-top {
     position: absolute;
     right: 0;
-    z-index: 1;
+    z-index: 1; /* ← ensure it paints */
     pointer-events: none;
   }
 
