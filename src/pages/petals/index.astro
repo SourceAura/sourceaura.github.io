@@ -8,6 +8,9 @@ const posts = (await getCollection("petals")).filter((p) => !p.data.draft);
 ---
 
 <Layout title="Petals">
+  <head>
+    <meta name="pagefind:filter" content="nav" />
+  </head>
   <Container>
     <div class="game-container" data-pagefind-body>
       <PetalCarousel posts={posts} />

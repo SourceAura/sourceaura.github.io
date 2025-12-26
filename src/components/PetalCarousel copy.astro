@@ -39,7 +39,6 @@ const { posts } = Astro.props;
   const count = items.length;
   const step = 360 / count;
 
-  const autoSpeed = 0.025;
   const friction = 0.96;
   const velClamp = 3.2;
   const snapStrength = 0.06;
@@ -48,9 +47,6 @@ const { posts } = Astro.props;
   let angle = 0;
   let vel = 0;
   let isDragging = false;
-
-  // Harmonics received from Qi (additive)
-  const qi = { phase: 0, pulse: 0.5, wake: 0, navAngle: 0 };
 
   function getRadius() {
     return matchMedia("(max-width: 768px)").matches ? 220 : 300;
@@ -66,64 +62,40 @@ const { posts } = Astro.props;
 
   function applyTransforms() {
     const radius = getRadius();
-
-    // Harmonic locking: tiny entrainment wobble (additive)
-    // (Does not override input; it just breathes with Qi.)
-    const lock =
-      Math.sin(qi.phase) * (0.12 + qi.wake * 0.18) * (qi.pulse - 0.5);
-
-    ring.style.transform = `rotateY(${angle + lock}deg)`;
+    ring.style.transform = `rotateY(${angle}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
     const active = ((Math.round(-normalized / step) % count) + count) % count;
 
-    // Navigation attractor: publish active angle (radians) for Qi (additive)
-    const activeAngleRad = (active / count) * Math.PI * 2;
-    window.__qiNavAngle = activeAngleRad;
+    const maxDist = Math.floor(count / 2 || 1);
 
     items.forEach((el, i) => {
       el.style.transform = `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`;
 
       let dist = Math.abs(i - active);
       dist = Math.min(dist, count - dist);
-      const depth = Math.min(1, dist / Math.floor(count / 2 || 1));
+
+      const depth = Math.min(1, dist / maxDist); // 0 (active) -> 1 (far)
+      const prox = 1 - depth; // 1 (active) -> 0 (far)
 
       el.style.opacity = 1 - depth * 0.7;
       el.style.filter = `blur(${depth * 6}px)`;
-      el.style.setProperty("--panel-scale", 1 - depth * 0.12);
+
+      const panelScale = 1 - depth * 0.12;
+      el.style.setProperty("--panel-scale", panelScale);
+
+      // NEW: feed proximity into cards (consumed by PetalCard)
+      el.style.setProperty("--petal-depth", depth.toFixed(4));
+      el.style.setProperty("--petal-prox", prox.toFixed(4));
+
       el.classList.toggle("active", i === active);
     });
   }
 
-  // Listen for Qi harmonic broadcasts (additive)
-  window.addEventListener("qi-harmonics", (e) => {
-    const d = e.detail || {};
-    qi.phase = d.phase ?? qi.phase;
-    qi.pulse = d.pulse ?? qi.pulse;
-    qi.wake = d.wake ?? qi.wake;
-    qi.navAngle = d.navAngle ?? qi.navAngle;
-  });
-
   function tick() {
-    // Normal motion
     angle += vel;
     vel *= friction;
 
-    // Harmonic locking: gently entrain velocity when not dragging (additive)
-    if (!isDragging) {
-      const entrain = (qi.pulse - 0.5) * (0.004 + qi.wake * 0.004);
-      vel += entrain;
-
-      // Navigation attractor: when “settling”, bias snap toward current harmonic (additive)
-      // This keeps navigation feeling “magnetized” rather than forced.
-      if (Math.abs(vel) < settleThreshold * 1.25) {
-        const snapped = snapAngle(angle);
-        const bias = Math.sin(qi.phase * 0.5) * (0.18 + qi.wake * 0.22);
-        angle += (snapped - angle) * (snapStrength + bias * 0.01);
-      }
-    }
-
-    // Existing settle behavior (unchanged)
     if (Math.abs(vel) < settleThreshold) {
       const snapped = snapAngle(angle);
       angle += (snapped - angle) * snapStrength;
@@ -137,7 +109,7 @@ const { posts } = Astro.props;
     requestAnimationFrame(tick);
   }
 
-  // Fully isolated input handling
+  // Isolated input handling
   shell.addEventListener("pointerdown", (e) => {
     isDragging = true;
     shell.setPointerCapture?.(e.pointerId);
@@ -168,7 +140,6 @@ const { posts } = Astro.props;
 </script>
 
 <style>
-  /* ── ISOLATED LAYER ── */
   .carousel-layer {
     position: fixed;
     inset: 0;
@@ -177,7 +148,6 @@ const { posts } = Astro.props;
     isolation: isolate;
   }
 
-  /* Only the carousel itself is interactive */
   .carousel-viewport {
     pointer-events: auto;
     position: absolute;

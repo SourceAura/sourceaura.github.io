@@ -2,34 +2,36 @@
 import { SITE, HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
-
-// console.log("Number of petals:", petals.length);
-// console.log("Petals:", petals.map(p => ({ title: p.data.title, date: p.data.date })));
 ---
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
+  <head>
+    <meta name="pagefind:filter" content="nav" />
+  </head>
+
   <Container>
-    <div class="root space-y-16">
-      <section>
-        <article class="seed space-y-4">
-          <span class="animate">
-            <!-- <br /> -->
-            <h1
-              class="mt-4 text-3xl font-extrabold tracking-tight sm:mt-5 sm:leading-none lg:mt-6 lg:text-3xl xl:text-3xl"
-            >
-              <!-- <span class="animate">{SITE.ALIAS}</span>/ -->
-            </h1>
-          </span>
-          <span class="animate">
-            <span class="md:block">{SITE.DESCRIPTION}</span>
+    <!-- Root centers content, then lifts it above Qi -->
+    <div
+      class="root flex min-h-[60vh] flex-col items-center justify-center text-center"
+    >
+      <section
+        class="w-full max-w-2xl
+          -translate-y-20
+          sm:-translate-y-24
+          md:-translate-y-28"
+      >
+        <article class="seed space-y-6">
+          <!-- DESCRIPTION / DEFINITION -->
+          <span class="animate block text-base sm:text-lg">
+            <span class="block" style="color: var(--ui-muted);">
+              {SITE.DESCRIPTION}
+            </span>
             <br />
-            <span class="md:block">{SITE.DEFINITION}</span>
+            <span class="block" style="color: var(--ui-muted);">
+              {SITE.DEFINITION}
+            </span>
           </span>
-          <!--  -->
         </article>
-        <br />
-        <!-- connect -->
-        <!-- <Connect class="connect"/> -->
       </section>
     </div>
   </Container>

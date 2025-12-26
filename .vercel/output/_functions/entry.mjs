@@ -1,6 +1,6 @@
-!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"234e0a6083cefaa12da895f9cb8f90badc4ebfe3"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="15e03755-ae59-40be-a012-1dc462e4326d",e._sentryDebugIdIdentifier="sentry-dbid-15e03755-ae59-40be-a012-1dc462e4326d");})();}catch(e){}};import { renderers } from './renderers.mjs';
-import { c as createExports, s as serverEntrypointModule } from './chunks/_@astrojs-ssr-adapter_CCZfmToa.mjs';
-import { manifest } from './manifest_DjosxD43.mjs';
+!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"6498010bc47562afb2a9fe6629b85673e1045e9e"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="bd73ebb2-aea0-400e-84b4-d63fa2da4445",e._sentryDebugIdIdentifier="sentry-dbid-bd73ebb2-aea0-400e-84b4-d63fa2da4445");})();}catch(e){}};import { renderers } from './renderers.mjs';
+import { c as createExports, s as serverEntrypointModule } from './chunks/_@astrojs-ssr-adapter_DKGteJ-o.mjs';
+import { manifest } from './manifest_ulDTpJgY.mjs';
 
 const serverIslandMap = new Map();;
 
@@ -10,7 +10,7 @@ const _page2 = () => import('./pages/about.astro.mjs');
 const _page3 = () => import('./pages/api/spotify/now-playing.astro.mjs');
 const _page4 = () => import('./pages/api/spotify/now-playingv1.astro.mjs');
 const _page5 = () => import('./pages/euthymia.astro.mjs');
-const _page6 = () => import('./pages/petals/index copy.astro.mjs');
+const _page6 = () => import('./pages/euthymia copy.astro.mjs');
 const _page7 = () => import('./pages/petals.astro.mjs');
 const _page8 = () => import('./pages/petals/_---slug_.astro.mjs');
 const _page9 = () => import('./pages/rss.xml.astro.mjs');
@@ -22,7 +22,7 @@ const pageMap = new Map([
     ["src/pages/api/spotify/now-playing.ts", _page3],
     ["src/pages/api/spotify/now-playingV1.js", _page4],
     ["src/pages/euthymia.astro", _page5],
-    ["src/pages/petals/index copy.astro", _page6],
+    ["src/pages/euthymia copy.astro", _page6],
     ["src/pages/petals/index.astro", _page7],
     ["src/pages/petals/[...slug].astro", _page8],
     ["src/pages/rss.xml.js", _page9],
@@ -37,7 +37,7 @@ const _manifest = Object.assign(manifest, {
     middleware: () => import('./_noop-middleware.mjs')
 });
 const _args = {
-    "middlewareSecret": "83641f6e-a734-437d-b0a4-f1f24be15d9c",
+    "middlewareSecret": "59b00cc0-4f8b-4856-8943-88001d5c9340",
     "skewProtection": false
 };
 const _exports = createExports(_manifest, _args);

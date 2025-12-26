@@ -6,8 +6,21 @@
     inset: 0 !important;
     width: 100vw !important;
     height: 100dvh !important;
+    display: block !important;
     z-index: -1 !important;
     pointer-events: none !important;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  quasar-background canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
   }
 </style>
 
@@ -16,60 +29,45 @@
   const SPEED = 0.05;
   const MAX_DT = 2;
 
-  const reduceMotionMq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const reduced = () => reduceMotionMq.matches;
-
-  function readVars() {
-    const s = getComputedStyle(document.documentElement);
-    return {
-      pulse: parseFloat(s.getPropertyValue("--pulse")) || 0.5,
-      decay: parseFloat(s.getPropertyValue("--pulse-decay")) || 1,
-      proximity: parseFloat(s.getPropertyValue("--search-proximity")) || 0,
-    };
-  }
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 
   class Star {
-    constructor(cx, cy, spread) {
-      this.cx = cx;
-      this.cy = cy;
+    constructor(spread) {
       this.spread = spread;
-      this.reset();
+      this.reset(0, 0, spread);
     }
 
-    reset() {
-      this.x = this.cx + (Math.random() - 0.5) * this.spread;
-      this.y = this.cy + (Math.random() - 0.5) * this.spread;
+    reset(cx, cy, spread) {
+      this.x = cx + (Math.random() - 0.5) * spread;
+      this.y = cy + (Math.random() - 0.5) * spread;
       this.z = Math.random();
       this.xPrev = this.x;
       this.yPrev = this.y;
     }
 
-    update(speed, dt, compression) {
+    update(cx, cy, spread, speed, dt) {
       this.xPrev = this.x;
       this.yPrev = this.y;
+
       this.z += speed * 0.07 * dt;
+      this.x += (this.x - cx) * speed * this.z * dt;
+      this.y += (this.y - cy) * speed * this.z * dt;
 
-      // radial compression toward center
-      const dx = this.x - this.cx;
-      const dy = this.y - this.cy;
-      this.x += dx * speed * this.z * dt * compression;
-      this.y += dy * speed * this.z * dt * compression;
-
-      const half = this.spread / 2;
+      const half = spread / 2;
       if (
-        this.x < this.cx - half ||
-        this.x > this.cx + half ||
-        this.y < this.cy - half ||
-        this.y > this.cy + half
+        this.x < cx - half ||
+        this.x > cx + half ||
+        this.y < cy - half ||
+        this.y > cy + half
       ) {
-        this.reset();
+        this.reset(cx, cy, spread);
       }
     }
 
-    draw(ctx, light, alpha) {
-      ctx.strokeStyle = light
-        ? `rgba(0,0,0,${alpha})`
-        : `rgba(255,255,255,${alpha})`;
+    draw(ctx, light) {
+      const a = Math.min(this.z, 1);
+      ctx.strokeStyle = light ? `rgba(0,0,0,${a})` : `rgba(255,255,255,${a})`;
       ctx.lineWidth = Math.min(this.z * 0.6, 2);
       ctx.beginPath();
       ctx.moveTo(this.xPrev, this.yPrev);
@@ -86,32 +84,63 @@
       this.stars = [];
       this.lastTime = 0;
       this.isLight = false;
+
+      this.base = { cx: 0, cy: 0, spread: 0 };
+      this.influence = { x: 0.5, y: 0.5, a: 0, d: 0 }; // target (from PetalCards)
+      this.influenceLive = { x: 0.5, y: 0.5, a: 0, d: 0 }; // smoothed
     }
 
     connectedCallback() {
       this.appendChild(this.canvas);
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", this.resize);
+      } else {
+        window.addEventListener("resize", this.resize);
+      }
+      window.addEventListener("orientationchange", this.resize);
+
       this.resize();
       this.watchTheme();
+
+      // Listen to PetalCard lighting events
+      window.addEventListener("petal:light", (e) => {
+        const d = e.detail || {};
+        this.influence.x = clamp(d.x ?? 0.5, 0, 1);
+        this.influence.y = clamp(d.y ?? 0.5, 0, 1);
+        this.influence.a = clamp(d.a ?? 0, 0, 1);
+        this.influence.d = clamp(d.d ?? 0, 0, 1);
+      });
+
+      this.lastTime = performance.now();
       requestAnimationFrame(this.frame);
     }
 
     resize = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const width = window.visualViewport
+        ? window.visualViewport.width
+        : window.innerWidth;
+      const height = window.visualViewport
+        ? window.visualViewport.height
+        : window.innerHeight;
+
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      this.canvas.width = w * dpr;
-      this.canvas.height = h * dpr;
+      this.canvas.width = width * dpr;
+      this.canvas.height = height * dpr;
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const cx = w / 2;
-      const cy = h / 2;
-      const spread = Math.max(w, h) * 1.3;
+      this.base.cx = width / 2;
+      this.base.cy = height / 2;
+      this.base.spread = Math.max(width, height) * 1.3;
 
       this.stars = Array.from(
         { length: COUNT },
-        () => new Star(cx, cy, spread),
+        () => new Star(this.base.spread),
       );
+      // reset to base distribution
+      for (const s of this.stars)
+        s.reset(this.base.cx, this.base.cy, this.base.spread);
     };
 
     watchTheme() {
@@ -126,22 +155,40 @@
     }
 
     frame = (t) => {
-      if (document.hidden || reduced()) return;
-
       const dt = Math.min((t - this.lastTime) / 16.67, MAX_DT);
       this.lastTime = t;
 
-      const { pulse, decay, proximity } = readVars();
+      // Smooth influence so it feels like gravity, not a pointer
+      this.influenceLive.x = lerp(this.influenceLive.x, this.influence.x, 0.08);
+      this.influenceLive.y = lerp(this.influenceLive.y, this.influence.y, 0.08);
+      this.influenceLive.a = lerp(this.influenceLive.a, this.influence.a, 0.06);
+      this.influenceLive.d = lerp(this.influenceLive.d, this.influence.d, 0.06);
 
-      // compression factor (1 → 0.94 max)
-      const compression = 1 - 0.06 * proximity;
-      const alphaGain = 0.75 + 0.25 * pulse * decay;
+      const width = window.visualViewport
+        ? window.visualViewport.width
+        : window.innerWidth;
+      const height = window.visualViewport
+        ? window.visualViewport.height
+        : window.innerHeight;
 
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      // Shift center slightly toward petal pointer when influence rises
+      const shiftMax = 18; // pixels, subtle
+      const dx = (this.influenceLive.x - 0.5) * 2;
+      const dy = (this.influenceLive.y - 0.5) * 2;
+
+      const cx = this.base.cx + dx * shiftMax * this.influenceLive.a;
+      const cy = this.base.cy + dy * shiftMax * this.influenceLive.a;
+
+      // Compress field slightly (stars “gather” toward interaction)
+      const compress = 1 - 0.1 * this.influenceLive.a;
+      const spread = this.base.spread * compress;
+
+      // Clear
+      this.ctx.clearRect(0, 0, width, height);
 
       for (const s of this.stars) {
-        s.update(SPEED, dt, compression);
-        s.draw(this.ctx, this.isLight, Math.min(s.z, 1) * alphaGain);
+        s.update(cx, cy, spread, SPEED, dt);
+        s.draw(this.ctx, this.isLight);
       }
 
       requestAnimationFrame(this.frame);

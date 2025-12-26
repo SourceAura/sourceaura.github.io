@@ -4,9 +4,9 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import PageFind from "@components/PageFind.astro";
 import { SITE } from "@consts";
+import Om from "@components/Om.astro";
 import Qi from "@/components/Qi.astro";
 import Quasar from "@components/Quasar.astro";
-import Pulse from "@components/Pulse.astro";
 
 type Props = {
   title: string;
@@ -21,28 +21,58 @@ const { title, description } = Astro.props;
   <head>
     <Head title={`${title} | ${SITE.TITLE}`} description={description} />
   </head>
-  <body>
-    <Pulse />
-    <Quasar />
-    <Qi />
 
+  <body>
+    <!-- Persistent background layers -->
+    <Om />
+    <Qi />
+    <Quasar />
+
+    <!-- App chrome -->
     <Header />
-    <main>
+
+    <main class="content-wrapper">
       <slot />
     </main>
-    <Footer />
 
+    <Footer />
     <PageFind />
-    <style>
-      body {
-        html,
-        body {
-          margin: 0;
-          padding: 0;
-          width: 100%;
-          height: 100%;
+
+    <!-- =====================================================
+         DYNAMIC IMPORT FAILURE RECOVERY
+         (Astro / Vite / Dev Toolbar / Chunk Mismatch Guard)
+         ===================================================== -->
+    <script is:inline>
+      const SHOULD_RELOAD = (msg) =>
+        msg.includes("Failed to fetch dynamically imported module") ||
+        msg.includes("Importing a module script failed");
+
+      window.addEventListener("error", (event) => {
+        const message = event?.error?.message || "";
+        if (SHOULD_RELOAD(message)) {
+          console.warn("[recovery] Dynamic import failed. Reloading page.");
+          window.location.reload();
         }
+      });
+
+      window.addEventListener("unhandledrejection", (event) => {
+        const message = event?.reason?.message || "";
+        if (SHOULD_RELOAD(message)) {
+          console.warn("[recovery] Module mismatch detected. Reloading.");
+          window.location.reload();
+        }
+      });
+    </script>
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
       }
+
       .content-wrapper {
         position: relative;
         z-index: 1;

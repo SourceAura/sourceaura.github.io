@@ -5,16 +5,16 @@ import Search from "astro-pagefind/components/Search";
 <div
   transition:persist
   id="backdrop"
-  class="pointer-events-none invisible fixed
-inset-0 z-40 bg-transparent"
+  class="pointer-events-none invisible fixed inset-0 z-40 bg-transparent"
 >
-  <div id="pagefind-shell" class="flex
-justify-center">
+  <div id="pagefind-shell" class="flex justify-center">
     <div
       id="pagefind-container"
       class="relative flex max-h-[70vh]
-w-full max-w-screen-sm flex-col overflow-auto rounded border bg-transparent p-4
-shadow-xl"
+        w-full
+        max-w-screen-sm flex-col overflow-auto
+        rounded border border-white/20
+        bg-transparent p-4 shadow-xl"
     >
       <Search
         id="search"
@@ -23,83 +23,16 @@ shadow-xl"
           showImages: true,
           excerptLength: 16,
           resetStyles: false,
-          filters: { nav: true },
         }}
       />
-      <div class="mt-2 flex items-baseline justify-between text-xs">
+
+      <div class="mt-2 flex items-baseline justify-between text-xs text-white">
         <span id="current-time" class="font-mono tabular-nums"></span>
-        <span
-          >Press
-          <kbd>Esc</kbd></span
-        >
+        <span>Press <kbd>Esc</kbd></span>
       </div>
     </div>
   </div>
 </div>
-<style is:global>
-  /*
-===================================================== PAGEFIND — FULL THEME SYNC
-===================================================== */
-  .pagefind-ui,
-  .pagefind-ui * {
-    color: var(--ui-text);
-  }
-  .pagefind-ui__result-excerpt,
-  .pagefind-ui__result-meta {
-    color: var(--ui-muted) !important;
-  }
-  #search input {
-    background: transparent;
-    color: var(--ui-text);
-    caret-color: var(--ui-text);
-    outline: none !important;
-  } /*
-===================================================== CARET PULSE (THEME AWARE)
-===================================================== */
-  #search input {
-    animation: caret-pulse 2.4s infinite linear;
-  }
-  @keyframes caret-pulse {
-    0% {
-      caret-color: color-mix(in oklch, var(--ui-text) 55%, transparent);
-    }
-    50% {
-      caret-color: color-mix(
-        in oklch,
-        var(--ui-text) calc(55% + 45% * var(--pulse)),
-        transparent
-      );
-    }
-    100% {
-      caret-color: color-mix(in oklch, var(--ui-text) 55%, transparent);
-    }
-  } /* =====================================================
-SCROLLBAR (THEME AWARE) ===================================================== */
-  #pagefind-container {
-    scrollbar-width: thin;
-    scrollbar-color: var(--ui-text) transparent;
-  }
-  #pagefind-container::-webkit-scrollbar-thumb {
-    background-color: color-mix(in oklch, var(--ui-text) 75%, transparent);
-  } /*
-===================================================== SEARCH HIGHLIGHT
-===================================================== */
-  .pagefind-ui__result-excerpt mark {
-    background: transparent;
-    color: inherit;
-    outline: 1px solid var(--ui-border);
-    border-radius: 2px;
-    padding: 0 0.05em;
-  } /*
-===================================================== PAGEFIND VARS
-===================================================== */
-  :root {
-    --pagefind-ui-text: var(--ui-text);
-    --pagefind-ui-primary: var(--accent);
-    --pagefind-ui-background: transparent;
-    --pagefind-ui-border: var(--ui-border);
-  }
-</style>
 
 <script>
   const backdrop = document.getElementById("backdrop");

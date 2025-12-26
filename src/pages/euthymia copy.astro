@@ -1,0 +1,421 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import "../styles/404.css";
+---
+
+<Layout title="Euthymia" description="Awakened to a Dream">
+  <head>
+    <meta name="pagefind:filter" content="nav" />
+  </head>
+  <Container>
+    <div class="game-container">
+      <div id="hud" class="hud">
+        <div class="hud-stats short">
+          <div class="hud-item">
+            euthymia: <span id="euthymiaLevel">1</span>
+          </div>
+
+          <div class="hud-item">focus: <span id="focus">100</span></div>
+          <div class="hud-item">qi: <span id="qi">100</span></div>
+          <div class="hud-item">xp: <span id="experience">0</span></div>
+        </div>
+      </div>
+      <div id="log" class="log">
+        <!-- Game log will be dynamically inserted here -->
+      </div>
+      <div class="actions bordered">
+        <button id="cultivate">cultivate</button>
+        <button id="meditate">meditate</button>
+        <button id="toggleInnovate">innovate</button>
+        <button id="explore">explore</button>
+      </div>
+    </div>
+
+    <!-- Innovate Modal -->
+    <div id="innovateModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeInnovateModal">&times;</span>
+        <h2>Innovate:</h2>
+        <br />
+        <div class="innovation">
+          <div id="innovateHerbs" class="innovate-item"></div>
+          <div id="innovatePapyrus" class="innovate-item"></div>
+          <div id="innovateCrystals" class="innovate-item"></div>
+          <div id="innovateMateria" class="innovate-item"></div>
+          <div id="innovateWands" class="innovate-item"></div>
+          <div id="innovateTomes" class="innovate-item"></div>
+          <div id="innovateTea" class="innovate-item"></div>
+        </div>
+        <br />
+        <button id="toggleCrafting">Toggle Crafting Interface</button>
+
+        <div
+          id="craftingContainer"
+          class="crafting-list"
+          style="display: none;"
+        >
+          <!-- Crafting items will be dynamically inserted here -->
+        </div>
+      </div>
+      <div class="modal-background">
+        <h3>Log:</h3>
+        <div id="modalLog" class="modal-log">
+          <!-- Output log information displayed here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Cultivate Modal -->
+    <div id="cultivateModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeCultivateModal">&times;</span>
+        <h2>Cultivate:</h2>
+        <button id="performGarden" class="action">garden</button>
+        <button id="performMine" class="action">mine</button>
+      </div>
+      <div class="modal-background">
+        <div id="modalLogCultivate" class="modal-log">
+          <!-- Output log information displayed here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Explore Modal -->
+    <div id="exploreModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeExploreModal">&times;</span>
+        <h2>Explore Locations:</h2>
+        <div id="exploreOptions">
+          <!-- Locations will be dynamically inserted here -->
+        </div>
+      </div>
+      <div class="modal-background">
+        <div id="modalLogExplore" class="modal-log">
+          <!-- Output log information displayed here -->
+        </div>
+      </div>
+    </div>
+
+    <script is:inline>
+      document.addEventListener("DOMContentLoaded", function () {
+        let qi = 100;
+        let focus = 100;
+        let experience = 0;
+        let euthymiaLevel = 1;
+        let currentLocale = "einSof";
+
+        // collectable items
+        let herbs = {
+          amount: 0,
+          variations: { rosemary: 0, thyme: 0, sage: 0, basil: 0 },
+        };
+        let materia = {
+          amount: 0,
+          variations: { earth: 0, fire: 0, wind: 0, water: 0 },
+        };
+        let papyrus = { amount: 0, variations: { old: 0, new: 0 } };
+        let crystals = {
+          amount: 0,
+          variations: { amethyst: 0, opal: 0, citrine: 0, quartz: 0 },
+        };
+
+        // the adept/user's bag of items: inventory
+        let innovate = {
+          tea: { amount: 0, rarity: "common" },
+          wand: { amount: 0, rarity: "common" },
+          tome: { amount: 0, rarity: "common" },
+        };
+
+        // craftable items
+        const craftRecipes = {
+          tea: { herbs: 1, papyrus: 1, materia: 1, rarity: "common" },
+          wand: {
+            herbs: 3,
+            papyrus: 2,
+            crystals: 1,
+            materia: 1,
+            rarity: "common",
+          },
+          tome: {
+            herbs: 2,
+            papyrus: 3,
+            crystals: 1,
+            materia: 1,
+            rarity: "common",
+          },
+        };
+
+        // available locales the adept/user can astral project to
+        const locales = {
+          einSof: { name: "Ein Sof", unlocked: true },
+          1: { name: "Locale I: Tiphereth", unlocked: false },
+          2: { name: "Locale II: Binah", unlocked: false },
+          3: { name: "Locale III: Kether", unlocked: false },
+        };
+
+        // html constants
+        const log = document.getElementById("log");
+        const modalLog = document.getElementById("modalLog");
+        const modalLogCultivate = document.getElementById("modalLogCultivate");
+        const modalLogExplore = document.getElementById("modalLogExplore");
+        const focusDisplay = document.getElementById("focus");
+        const xpDisplay = document.getElementById("experience");
+        const euthymiaLevelDisplay = document.getElementById("euthymiaLevel");
+        const qiDisplay = document.getElementById("qi");
+        const meditateBtn = document.getElementById("meditate");
+        const cultivateBtn = document.getElementById("cultivate");
+        const toggleInnovateButton = document.getElementById("toggleInnovate");
+        const innovateModal = document.getElementById("innovateModal");
+        const cultivateModal = document.getElementById("cultivateModal");
+        const closeInnovateModal =
+          document.getElementById("closeInnovateModal");
+        const closeCultivateModal = document.getElementById(
+          "closeCultivateModal",
+        );
+        const performGardenButton = document.getElementById("performGarden");
+        const performMineButton = document.getElementById("performMine");
+        const toggleCraftingButton = document.getElementById("toggleCrafting");
+        const craftingContainer = document.getElementById("craftingContainer");
+        const exploreModal = document.getElementById("exploreModal");
+        const closeExploreModal = document.getElementById("closeExploreModal");
+        const exploreBtn = document.getElementById("explore");
+        const exploreOptions = document.getElementById("exploreOptions");
+
+        // initializations
+        let initialLog = true;
+
+        function updateHUD() {
+          focusDisplay.textContent = focus;
+          xpDisplay.textContent = experience;
+          euthymiaLevelDisplay.textContent = euthymiaLevel;
+          qiDisplay.textContent = qi;
+        }
+
+        function logMessage(message, logElement = log) {
+          if (initialLog) {
+            logElement.innerHTML = "";
+            initialLog = false;
+          }
+          const entry = document.createElement("div");
+          entry.className = "log-entry";
+          entry.textContent = message;
+          logElement.insertBefore(entry, logElement.firstChild);
+
+          const entries = Array.from(logElement.children);
+          if (entries.length > 3) {
+            entries.slice(3).forEach((e) => e.classList.add("fade-out"));
+            setTimeout(() => {
+              entries.slice(3).forEach((e) => {
+                if (e.parentElement === logElement) {
+                  logElement.removeChild(e);
+                }
+              });
+            }, 5000);
+          }
+        }
+
+        function updateCraftingInterface() {
+          // Update crafting items in innovate modal
+          document.getElementById("innovateHerbs").innerHTML =
+            `Herbs: ${herbs.amount}`;
+          document.getElementById("innovatePapyrus").innerHTML =
+            `Papyrus: ${papyrus.amount}`;
+          document.getElementById("innovateCrystals").innerHTML =
+            `Crystals: ${crystals.amount}`;
+          document.getElementById("innovateMateria").innerHTML =
+            `Materia: ${materia.amount}`;
+
+          // Clear crafting container
+          craftingContainer.innerHTML = "";
+
+          Object.keys(craftRecipes).forEach((item) => {
+            const recipe = craftRecipes[item];
+            const canCraft =
+              herbs.amount >= recipe.herbs &&
+              papyrus.amount >= recipe.papyrus &&
+              crystals.amount >= recipe.crystals &&
+              materia.amount >= recipe.materia;
+            if (canCraft) {
+              const craftButton = document.createElement("button");
+              craftButton.textContent = `Craft ${item}`;
+              craftButton.onclick = () => {
+                herbs.amount -= recipe.herbs;
+                papyrus.amount -= recipe.papyrus;
+                crystals.amount -= recipe.crystals;
+                materia.amount -= recipe.materia;
+                innovate[item].amount += 1;
+                logMessage(`You have crafted a ${item}!`, modalLog);
+                updateHUD();
+                updateCraftingInterface();
+              };
+              craftingContainer.appendChild(craftButton);
+            }
+          });
+        }
+
+        cultivateBtn.addEventListener("click", () => {
+          cultivateModal.style.display = "block";
+          modalLogCultivate.innerHTML = ""; // Clear previous messages
+        });
+
+        performGardenButton.addEventListener("click", () => {
+          if (
+            updateResources("qi", 10) &&
+            updateResources("focus", -Math.floor(focus * 0.1))
+          ) {
+            herbs.amount += 1;
+            experience += euthymiaLevel;
+            herbs.variations[getRandomHerb()] += 1;
+            updateHUD();
+            logMessage(
+              "You cultivated in the garden and found some herbs!",
+              modalLogCultivate,
+            );
+            checkLevelUp();
+          }
+        });
+
+        performMineButton.addEventListener("click", () => {
+          if (
+            updateResources("qi", 10) &&
+            updateResources("focus", -Math.floor(focus * 0.1))
+          ) {
+            crystals.amount += 1;
+            experience += euthymiaLevel;
+            crystals.variations[getRandomCrystal()] += 1;
+            updateHUD();
+            logMessage(
+              "You cultivated in the mine and found some crystals!",
+              modalLogCultivate,
+            );
+            checkLevelUp();
+          }
+        });
+
+        meditateBtn.addEventListener("click", () => {
+          if (
+            updateResources("qi", -Math.floor(qi * 0.1)) &&
+            updateResources("focus", 10)
+          ) {
+            materia.amount += 1;
+            experience += euthymiaLevel;
+            materia.variations[getRandomMateria()] += 1;
+            updateHUD();
+            logMessage("You meditated and found some materia!");
+            checkLevelUp();
+          }
+        });
+
+        toggleInnovateButton.addEventListener("click", () => {
+          innovateModal.style.display = "block";
+          updateCraftingInterface();
+        });
+
+        closeInnovateModal.addEventListener("click", () => {
+          innovateModal.style.display = "none";
+        });
+
+        closeCultivateModal.addEventListener("click", () => {
+          cultivateModal.style.display = "none";
+        });
+
+        toggleCraftingButton.addEventListener("click", () => {
+          craftingContainer.style.display =
+            craftingContainer.style.display === "none" ? "block" : "none";
+          updateCraftingInterface();
+        });
+
+        exploreBtn.addEventListener("click", () => {
+          exploreModal.style.display = "block";
+          exploreOptions.innerHTML = "";
+          Object.keys(locales).forEach((key) => {
+            const locale = locales[key];
+            if (locale.unlocked) {
+              const localeButton = document.createElement("button");
+              localeButton.textContent = locale.name;
+              localeButton.onclick = () => {
+                currentLocale = key;
+                logMessage(
+                  `You have traveled to ${locale.name}`,
+                  modalLogExplore,
+                );
+                exploreModal.style.display = "none";
+              };
+              exploreOptions.appendChild(localeButton);
+            }
+          });
+        });
+
+        closeExploreModal.addEventListener("click", () => {
+          exploreModal.style.display = "none";
+        });
+
+        function getRandomHerb() {
+          const herbKeys = Object.keys(herbs.variations);
+          return herbKeys[Math.floor(Math.random() * herbKeys.length)];
+        }
+
+        function getRandomMateria() {
+          const materiaKeys = Object.keys(materia.variations);
+          return materiaKeys[Math.floor(Math.random() * materiaKeys.length)];
+        }
+
+        function getRandomCrystal() {
+          const crystalKeys = Object.keys(crystals.variations);
+          return crystalKeys[Math.floor(Math.random() * crystalKeys.length)];
+        }
+
+        function updateResources(type, amount) {
+          if (type === "qi" && qi + amount < 0) {
+            logMessage("Not enough qi!");
+            return false;
+          }
+          if (type === "focus" && focus + amount < 0) {
+            logMessage("Not enough focus!");
+            return false;
+          }
+          // Add similar checks for other resources
+
+          // If checks pass, update the resource
+          window[type] += amount;
+          return true;
+        }
+
+        function checkLevelUp() {
+          const nextLevel = euthymiaLevel + 1;
+          const requiredXP = nextLevel * 100; // Simple formula, adjust as needed
+          if (experience >= requiredXP) {
+            euthymiaLevel++;
+            logMessage(
+              `Congratulations! You've reached Euthymia level ${euthymiaLevel}!`,
+            );
+            updateHUD();
+          }
+        }
+
+        window.onclick = function (event) {
+          if (event.target == innovateModal) {
+            innovateModal.style.display = "none";
+          }
+          if (event.target == cultivateModal) {
+            cultivateModal.style.display = "none";
+          }
+          if (event.target == exploreModal) {
+            exploreModal.style.display = "none";
+          }
+        };
+
+        // Initial HUD update
+        updateHUD();
+      });
+    </script>
+
+    <style>
+      .log,
+      .modal-log {
+        text-align: center;
+      }
+    </style>
+  </Container>
+</Layout>

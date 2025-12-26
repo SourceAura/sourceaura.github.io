@@ -31,27 +31,39 @@ import Container from "@components/Container.astro";
   </a>
 
   <script type="module">
-    // Time (military)
+    /* ===============================
+       TIME + TEMPORAL FLARES
+    =============================== */
+    let flare = 0;
+    let lastSecond = null;
+
     function updateCurrentTime() {
-      const timeEl = document.querySelector('[data-role="sysinfo-time"]');
-      if (!timeEl) return;
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const value = `${hours}:${minutes}`;
-      if (timeEl.textContent !== value) timeEl.textContent = value;
+      const el = document.querySelector("[data-role='sysinfo-time']");
+      if (!el) return;
+
+      const d = new Date();
+      const h = String(d.getHours()).padStart(2, "0");
+      const m = String(d.getMinutes()).padStart(2, "0");
+      const s = d.getSeconds();
+
+      el.textContent = `${h}:${m}`;
+
+      if (s !== lastSecond) {
+        lastSecond = s;
+
+        if (s === 0) flare = 1.2;
+        else if (s === 15) flare = 0.7;
+        else if (s === 30) flare = 0.9;
+        else if (s === 45) flare = 0.6;
+      }
     }
 
-    if (window.__sysinfoTimeInterval)
-      clearInterval(window.__sysinfoTimeInterval);
     updateCurrentTime();
-    window.__sysinfoTimeInterval = setInterval(updateCurrentTime, 1000);
+    setInterval(updateCurrentTime, 1000);
 
-    const reduceMotionMq = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    );
-    const reduced = () => !!reduceMotionMq?.matches;
-
+    /* ===============================
+       CANVAS SETUP
+    =============================== */
     const canvas = document.getElementById("heartbeat");
     const ctx = canvas.getContext("2d");
 
@@ -59,160 +71,117 @@ import Container from "@components/Container.astro";
     const H = canvas.height;
     const MID = H / 2;
 
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     let x = 0;
-    let lastTime = performance.now();
-    let nextBeatAt = 0;
-    let visible = !document.hidden;
-    let raf = 0;
+    let t = 0;
 
-    let heartRate = 58 + Math.random() * 6;
-    let beat = null;
+    /* ===============================
+       PAGEFIND COMPRESSION
+    =============================== */
+    let compression = 1;
 
-    const TRAIL_ALPHA_VISIBLE = 0.06;
-    const TRAIL_ALPHA_HIDDEN = 0.085;
+    window.addEventListener("open-pagefind", () => {
+      compression = 0.6;
+    });
+    window.addEventListener("close-pagefind", () => {
+      compression = 1;
+    });
 
-    function readPulseVars() {
+    /* ===============================
+       COLOR + QI PHASE
+    =============================== */
+    function getRGB() {
+      return document.documentElement.classList.contains("dark")
+        ? "255,255,255"
+        : "20,20,20";
+    }
+
+    function getQiPhase() {
       const styles = getComputedStyle(document.documentElement);
-      const phase = parseFloat(styles.getPropertyValue("--pulse-phase")) || 0;
-      const pulse = parseFloat(styles.getPropertyValue("--pulse")) || 0.5;
-      const decay = parseFloat(styles.getPropertyValue("--pulse-decay")) || 1;
-      return { phase, pulse, decay };
+      return parseFloat(styles.getPropertyValue("--pulse-phase")) || 0;
     }
 
-    function setThemeColor() {
-      const isDark = document.documentElement.classList.contains("dark");
-      const color = isDark ? "255,255,255" : "20,20,20";
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = `rgba(${color},0.9)`;
-      ctx.shadowColor = `rgba(${color},0.55)`;
-      ctx.shadowBlur = 5;
-    }
+    /* ===============================
+       PARTICLES
+    =============================== */
+    const particles = Array.from({ length: 28 }, () => ({
+      x: Math.random() * W,
+      y: MID,
+      v: 0.4 + Math.random() * 0.6,
+      life: Math.random(),
+      glyphLock: 0,
+    }));
 
-    setThemeColor();
-    new MutationObserver(setThemeColor).observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
+    function drawParticles(rgb, waveY, phase) {
+      for (const p of particles) {
+        p.x -= p.v;
+        p.life -= 0.008;
 
-    function scheduleBeat(type = "normal") {
-      let interval;
-      if (type === "premature") interval = 420 + Math.random() * 240;
-      else if (type === "pause") interval = 1800 + Math.random() * 700;
-      else {
-        interval = 60000 / heartRate;
-        interval *= 0.94 + Math.random() * 0.12;
-      }
-
-      nextBeatAt = performance.now() + interval;
-
-      const rBase = 10 + Math.random() * 4;
-      const isPAC = type === "premature";
-
-      beat = {
-        age: 0,
-        duration: (isPAC ? 120 : 145) + Math.random() * 55,
-        q: -(1.8 + Math.random() * 1.2),
-        r: rBase * (isPAC ? 0.85 : 1.0),
-        s: -(4 + Math.random() * 2.5),
-        t: (2 + Math.random() * 1.8) * (isPAC ? 0.75 : 1.0),
-      };
-    }
-
-    scheduleBeat("normal");
-
-    function beatValue(b) {
-      const p = b.age / b.duration;
-      if (p < 0.08) return 0;
-      if (p < 0.11) return b.q * ((p - 0.08) / 0.03);
-      if (p < 0.135) return b.r;
-      if (p < 0.19) return b.s;
-      if (p < 0.48) return b.t * Math.sin((p - 0.19) * Math.PI * 2.1);
-      return 0;
-    }
-
-    function fade(alpha) {
-      ctx.save();
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.fillStyle = `rgba(0,0,0,${alpha})`;
-      ctx.fillRect(0, 0, W, H);
-      ctx.restore();
-    }
-
-    function drawStaticBaseline() {
-      ctx.clearRect(0, 0, W, H);
-      ctx.beginPath();
-      ctx.moveTo(0, MID);
-      ctx.lineTo(W, MID);
-      ctx.stroke();
-    }
-
-    function stop() {
-      if (raf) cancelAnimationFrame(raf);
-      raf = 0;
-    }
-
-    function start() {
-      stop();
-      raf = requestAnimationFrame(frame);
-    }
-
-    document.addEventListener("visibilitychange", () => {
-      visible = !document.hidden;
-
-      // Hard CPU saver: stop animating when hidden
-      if (!visible) {
-        stop();
-      } else if (!reduced()) {
-        lastTime = performance.now();
-        start();
-      }
-    });
-
-    reduceMotionMq?.addEventListener?.("change", () => {
-      if (reduced()) {
-        stop();
-        drawStaticBaseline();
-      } else if (!document.hidden) {
-        lastTime = performance.now();
-        start();
-      }
-    });
-
-    function frame(now) {
-      if (document.hidden) return;
-
-      // Reduced motion: static, no animation loop
-      if (reduced()) {
-        drawStaticBaseline();
-        return;
-      }
-
-      const dt = now - lastTime;
-      lastTime = now;
-
-      const { phase, pulse, decay } = readPulseVars();
-
-      // Phase-aligned baseline wander
-      const wander = Math.sin(phase) * 0.65;
-
-      // Pulse-linked intensity
-      const intensity = 0.75 + 0.25 * pulse * decay;
-      ctx.globalAlpha = intensity;
-
-      fade(visible ? TRAIL_ALPHA_VISIBLE : TRAIL_ALPHA_HIDDEN);
-
-      ctx.beginPath();
-      const steps = visible ? 2 : 1;
-
-      for (let i = 0; i < steps; i++) {
-        const noise = (Math.random() - 0.5) * 0.22;
-        let y = MID + wander + noise;
-
-        if (beat) {
-          y -= beatValue(beat);
-          beat.age += 1;
-          if (beat.age > beat.duration + 12) beat = null;
+        if (p.x < 0 || p.life <= 0) {
+          p.x = W + Math.random() * 40;
+          p.life = 1;
+          p.glyphLock = 0;
         }
+
+        // Qi-biased attraction
+        const phaseBias = Math.sin(phase * Math.PI * 2) * 2;
+        const targetY = waveY + phaseBias;
+        p.y += (targetY - p.y) * 0.08;
+
+        // Glyph constellation lock during strong flares
+        if (flare > 0.9 && p.glyphLock === 0) {
+          p.glyphLock = Math.random() < 0.4 ? 1 : 0;
+        }
+
+        if (p.glyphLock) {
+          p.y += Math.sign(MID - p.y) * 0.6;
+          p.x += Math.sin(t * 2) * 0.2;
+        }
+
+        ctx.globalAlpha = p.life * 0.7;
+        ctx.fillStyle = `rgba(${rgb},0.85)`;
+        ctx.fillRect(p.x, p.y, 1, 1);
+      }
+
+      ctx.globalAlpha = 1;
+    }
+
+    /* ===============================
+       FRAME LOOP
+    =============================== */
+    function frame() {
+      const rgb = getRGB();
+      const phase = getQiPhase();
+
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,0.08)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "source-over";
+
+      ctx.strokeStyle = `rgba(${rgb},0.9)`;
+      ctx.lineWidth = 1;
+      ctx.shadowColor = `rgba(${rgb},0.55)`;
+      ctx.shadowBlur = 6 + flare * 6;
+
+      ctx.beginPath();
+
+      let lastWaveY = MID;
+
+      for (let i = 0; i < 2; i++) {
+        const nx = x / W;
+
+        let wave =
+          Math.sin(nx * Math.PI * 4 + t) * 3 +
+          Math.sin(nx * Math.PI * 12 - t * 1.3) * 1.2;
+
+        if (flare > 0) {
+          wave += Math.sin(nx * Math.PI * 24 + t * 2) * flare * 2;
+        }
+
+        wave *= compression;
+        const y = MID + wave;
+        lastWaveY = y;
 
         ctx.moveTo(x, y);
         ctx.lineTo(x + 1, y);
@@ -222,29 +191,28 @@ import Container from "@components/Container.astro";
       }
 
       ctx.stroke();
-      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
 
-      if (visible && now >= nextBeatAt) {
-        const roll = Math.random();
-        if (roll < 0.04) scheduleBeat("premature");
-        else if (roll < 0.06) scheduleBeat("pause");
-        else scheduleBeat("normal");
-      } else if (!visible && now >= nextBeatAt) {
-        scheduleBeat("normal");
-      }
+      drawParticles(rgb, lastWaveY, phase);
 
-      heartRate += (Math.random() - 0.5) * 0.0025 * (dt / 16.67);
-      heartRate = Math.min(68, Math.max(52, heartRate));
+      flare *= 0.9;
+      compression += (1 - compression) * 0.05;
 
-      raf = requestAnimationFrame(frame);
+      t += 0.04;
+      requestAnimationFrame(frame);
     }
 
-    // start
-    if (reduced()) {
-      drawStaticBaseline();
-    } else {
-      start();
+    function drawStatic() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.beginPath();
+      ctx.moveTo(0, MID);
+      ctx.lineTo(W, MID);
+      ctx.strokeStyle = `rgba(${getRGB()},0.6)`;
+      ctx.stroke();
     }
+
+    if (reduceMotion) drawStatic();
+    else frame();
   </script>
 
   <style>
@@ -253,9 +221,11 @@ import Container from "@components/Container.astro";
       background-color: currentColor;
       box-shadow: 0 0 6px currentColor;
     }
+
     .dark .glow-ring {
       color: white;
     }
+
     :root:not(.dark) .glow-ring {
       color: #111;
     }
@@ -274,7 +244,6 @@ import Container from "@components/Container.astro";
 
     #heartbeat {
       background: transparent;
-      image-rendering: pixelated;
     }
   </style>
 </Container>

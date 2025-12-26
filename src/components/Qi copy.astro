@@ -7,7 +7,7 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
   }
 
   #qi-vis {
@@ -167,117 +167,56 @@
     ctx.restore();
   }
 
-  /* ───────────────── MERKABA (VISIBILITY FIX ONLY) ───────────────── */
+  /* ───────────────── MERKABA ───────────────── */
   function drawMerkaba(radius) {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    ctx.globalAlpha = 1; // ensure no inherited dimming
 
     const pulse = getOmPulse();
-    const t = performance.now() * 0.001;
-
-    const navAngle = Number(window.__qiNavAngle ?? 0);
     const polarity = Math.sin(performance.now() * 0.00008) * wake;
-    const baseRot =
-      performance.now() * 0.00015 * (0.6 + pulse) * (1 + polarity);
-    const wob = prefersReduced ? 0 : Math.sin(t * 0.9) * 0.25 * wake;
-    const attract = (navAngle - (sessionPhase % (Math.PI * 2))) * 0.02 * wake;
+    const rot = performance.now() * 0.00015 * (0.6 + pulse) * (1 + polarity);
 
-    const rx = 0.25 + wob * 0.25;
-    const ry = baseRot + attract;
-    const rz = 0.15 + Math.sin(t * 0.6) * 0.06 * (0.35 + wake);
-
-    function rotX([x, y, z], a) {
-      const c = Math.cos(a),
-        s = Math.sin(a);
-      return [x, y * c - z * s, y * s + z * c];
-    }
-    function rotY([x, y, z], a) {
-      const c = Math.cos(a),
-        s = Math.sin(a);
-      return [x * c + z * s, y, -x * s + z * c];
-    }
-    function rotZ([x, y, z], a) {
-      const c = Math.cos(a),
-        s = Math.sin(a);
-      return [x * c - y * s, x * s + y * c, z];
-    }
-
-    function tetra(r, up) {
-      const h = r;
-      const b = r * 0.86;
-      const s = up ? 1 : -1;
-      return [
-        [0, up ? -h : h, 0],
-        [-b, h * 0.5 * s, -b * 0.25],
-        [b, h * 0.5 * s, -b * 0.25],
-        [0, h * 0.5 * s, b * 0.95],
-      ];
-    }
-
-    const edges = [
-      [0, 1],
-      [0, 2],
-      [0, 3],
-      [1, 2],
-      [2, 3],
-      [3, 1],
-    ];
-
-    const verts = [
-      ...tetra(radius * 1.08, true).map((v) => ({ v, s: 1 })),
-      ...tetra(radius * 1.08, false).map((v) => ({ v, s: -0.92 })),
-    ];
-
-    const lines = [];
-    const persp = 2.4;
-    const zBias = radius * 1.8;
-
-    for (let g = 0; g < 2; g++) {
-      const base = g * 4;
-      for (const [a, b] of edges) {
-        const A = verts[base + a];
-        const B = verts[base + b];
-
-        function project(p) {
-          let q = rotX(p, rx * A.s);
-          q = rotY(q, ry * A.s);
-          q = rotZ(q, rz * A.s);
-          const z = q[2] + zBias;
-          const k = persp / (persp + z / radius);
-          return { x: q[0] * k, y: q[1] * k, z };
-        }
-
-        const p1 = project(A.v);
-        const p2 = project(B.v);
-
-        lines.push({
-          x1: p1.x,
-          y1: p1.y,
-          x2: p2.x,
-          y2: p2.y,
-          z: (p1.z + p2.z) * 0.5,
-        });
-      }
-    }
-
-    lines.sort((a, b) => a.z - b.z);
-
-    const strokeBase = isLight ? 0 : 255;
     const fireBoost = FIRINGS.length ? 0.5 : 0;
-    const baseAlpha = 0.28 + wake * 0.25 + fireBoost * 0.15;
-    const baseWidth = 1.7;
+    const strokeBase = isLight ? 0 : 255;
+    const alpha = 0.12 + wake * 0.18 + fireBoost * 0.1;
 
-    for (const l of lines) {
-      const depth = Math.max(0.4, Math.min(1, l.z / (zBias + radius)));
-      ctx.strokeStyle = `rgba(${strokeBase},${strokeBase},${strokeBase},${baseAlpha * depth})`;
-      ctx.lineWidth = baseWidth * (0.9 + depth * 0.4);
+    ctx.strokeStyle = `rgba(${strokeBase},${strokeBase},${strokeBase},${alpha})`;
+    ctx.lineWidth = 1.4;
 
+    const wobble = Math.sin(performance.now() * 0.001) * 0.04 * wake;
+
+    const up = [
+      [0, -radius * (1 + wobble)],
+      [-radius * 0.86, radius * 0.5],
+      [radius * 0.86, radius * 0.5],
+    ];
+
+    const down = [
+      [0, radius * (1 + wobble)],
+      [-radius * 0.86, -radius * 0.5],
+      [radius * 0.86, -radius * 0.5],
+    ];
+
+    function drawTetra(points, r) {
+      ctx.save();
+      ctx.rotate(r);
       ctx.beginPath();
-      ctx.moveTo(l.x1, l.y1);
-      ctx.lineTo(l.x2, l.y2);
+      for (let i = 0; i < points.length; i++) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[(i + 1) % points.length];
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      }
+      for (const [x, y] of points) {
+        ctx.moveTo(0, 0);
+        ctx.lineTo(x, y);
+      }
       ctx.stroke();
+      ctx.restore();
     }
+
+    drawTetra(up, rot);
+    drawTetra(down, -rot * 0.92);
 
     ctx.restore();
   }
