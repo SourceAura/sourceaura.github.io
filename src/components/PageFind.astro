@@ -1,5 +1,7 @@
 ---
+// import { Calendar } from "@/components/ui/calendar";
 import Search from "astro-pagefind/components/Search";
+// import NowPlaying from "@/components/NowPlaying.astro";
 
 const navigationPages = [
   { title: "Home", url: "/" },
@@ -9,14 +11,19 @@ const navigationPages = [
 ];
 ---
 
+<!-- PAGEFIND BACKDROP -->
 <div
   transition:persist
   id="backdrop"
-  class="invisible fixed left-0 top-0 z-50 flex h-screen w-full justify-center p-6 backdrop-blur-sm"
+  class="pointer-events-none invisible fixed left-0
+    top-0 z-40 flex h-screen w-full
+    justify-center bg-black/60
+    p-6 backdrop-blur-sm"
 >
   <div
     id="pagefind-container"
-    class="relative m-0 flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto rounded border border-black/15 bg-neutral-100 p-2 px-4 py-3 shadow-lg dark:border-white/20 dark:bg-neutral-900"
+    class="relative flex h-fit max-h-[80%] w-full max-w-screen-sm flex-col overflow-auto
+      rounded border border-white/20 bg-transparent p-4 shadow-xl"
   >
     <Search
       id="search"
@@ -28,44 +35,49 @@ const navigationPages = [
       }}
     />
 
-    <div class="mt-2 text-right text-xs dark:prose-invert">
-      Press <kbd>Esc</kbd> to close
+    <div class="mt-2 flex justify-between">
+      <!-- <Calendar /> -->
+      <!-- <NowPlaying /> -->
     </div>
 
-    <div id="time-display" class="mb-4 text-left">
-      <p>time: <span id="current-time"></span></p>
+    <!-- FOOTER -->
+    <div class="mt-2 flex items-baseline justify-between text-xs text-white">
+      <span id="current-time" class="font-mono tabular-nums"></span>
+      <span>Press <kbd class="align-baseline">Esc</kbd></span>
     </div>
   </div>
 </div>
 
-<script define:vars={{ navigationPages }}>
+<script>
+  const ase = document.getElementById("ase");
   const backdrop = document.getElementById("backdrop");
 
   function openPagefind() {
-    const input = document.querySelector(".pagefind-ui__search-input");
-    backdrop?.classList.remove("invisible");
+    const input = document.querySelector("#search input");
+    backdrop?.classList.remove("invisible", "pointer-events-none");
     backdrop?.classList.add("visible");
-    requestAnimationFrame(() => input?.focus());
+    input?.focus();
   }
 
   function closePagefind() {
-    const input = document.querySelector(".pagefind-ui__search-input");
+    const input = document.querySelector("#search input");
     if (input) input.value = "";
+    backdrop?.classList.add("invisible", "pointer-events-none");
     backdrop?.classList.remove("visible");
-    backdrop?.classList.add("invisible");
   }
 
-  // ✅ EXPOSE GLOBAL FUNCTION (this is the missing piece)
-  window.openPagefind = openPagefind;
-
-  // ✅ ALSO LISTEN FOR EVENT
-  window.addEventListener("open-pagefind", openPagefind);
+  ase?.addEventListener("click", (e) => {
+    e.preventDefault();
+    openPagefind();
+  });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closePagefind();
     if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {
       e.preventDefault();
       openPagefind();
+    }
+    if (e.key === "Escape") {
+      closePagefind();
     }
   });
 
@@ -75,125 +87,143 @@ const navigationPages = [
     }
   });
 
+  /* CLOCK */
   function updateTime() {
-    document.getElementById("current-time").textContent =
-      new Date().toLocaleTimeString();
+    const el = document.getElementById("current-time");
+    if (!el) return;
+    el.textContent = new Intl.DateTimeFormat(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    }).format(new Date());
   }
   updateTime();
   setInterval(updateTime, 1000);
 </script>
 
 <style is:global>
+  /* Enable clicks only when open */
+  #backdrop.visible {
+    pointer-events: auto;
+  }
+
+  /* =====================================================
+     PAGEFIND: FORCE WHITE TEXT (ALL MODES)
+     ===================================================== */
+
   :root {
-    --pagefind-ui-scale: 0.75;
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-border-radius: 6px;
-    --pagefind-ui-font: "Geist", sans-serif;
-
-    /* Transparent theme */
-    --pagefind-ui-primary: transparent;
+    --pagefind-ui-text: #ffffff;
+    --pagefind-ui-primary: #ffffff;
     --pagefind-ui-background: transparent;
-    --pagefind-ui-text: rgba(255, 255, 255, 0.85);
-    --pagefind-ui-border: rgba(255, 255, 255, 0.15);
-    --pagefind-ui-tag: transparent;
+    --pagefind-ui-border: rgba(255, 255, 255, 0.2);
   }
 
-  .light {
-    --pagefind-ui-text: rgba(0, 0, 0, 0.75);
-    --pagefind-ui-border: rgba(0, 0, 0, 0.15);
+  .pagefind-ui__result-title,
+  .pagefind-ui__result-title a {
+    color: white;
+    font-weight: 600;
   }
 
-  /* Container stays invisible */
-  #pagefind-container {
-    background: transparent !important;
-    box-shadow: none !important;
-    backdrop-filter: none;
+  .pagefind-ui__result-excerpt {
+    color: white;
+    opacity: 0.85;
   }
 
-  /* Input */
+  .pagefind-ui__message,
+  .pagefind-ui__search-clear {
+    color: white;
+    opacity: 0.7;
+  }
+
   #search input {
-    background: transparent !important;
-    color: inherit;
-    font-weight: normal;
-  }
-
-  /* Results */
-  .pagefind-ui__result {
     background: transparent;
+    color: white;
   }
 
-  .pagefind-ui__result-title {
-    font-weight: 500;
+  /* =====================================================
+     SCROLLBAR: ALWAYS TRANSPARENT BACKGROUND
+     ===================================================== */
+
+  /* Firefox */
+  #pagefind-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
   }
 
-  .pagefind-ui__message {
-    padding-bottom: 0.75rem;
+  /* WebKit (Chrome, Safari, Edge) */
+  #pagefind-container::-webkit-scrollbar {
+    width: 8px;
   }
 
-  /* Highlight effect */
-  #search .pagefind-ui__result-excerpt mark {
-    background-color: transparent;
+  #pagefind-container::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+
+  #pagefind-container::-webkit-scrollbar-corner {
+    background: transparent !important;
+  }
+
+  #pagefind-container::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  #pagefind-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.55);
+  }
+
+  /* =====================================================
+     INTERACTION POLISH
+     ===================================================== */
+
+  .pagefind-ui__result {
+    animation: result-fade-in 220ms ease-out both;
+  }
+
+  @keyframes result-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .pagefind-ui__result:hover,
+  .pagefind-ui__result:focus-within {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+  }
+
+  .pagefind-ui__result[aria-selected="true"] {
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+  }
+
+  .pagefind-ui__result-excerpt mark {
+    background: transparent;
     outline: 1px solid currentColor;
-    outline-offset: 1px;
-    border-radius: 3px;
-    color: inherit;
+    border-radius: 2px;
     mix-blend-mode: difference;
   }
 
-  /* ============================= */
-  /* Pagefind result readability   */
-  /* ============================= */
-
-  .pagefind-ui__result {
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--pagefind-ui-border);
+  @media (prefers-reduced-motion: reduce) {
+    .pagefind-ui__result {
+      animation: none;
+    }
   }
 
-  /* Title */
-  .pagefind-ui__result-title {
-    font-size: 0.95rem;
-    font-weight: 500;
-    line-height: 1.35;
-    margin-bottom: 0.25rem;
+  kbd {
+    line-height: 1;
   }
 
-  /* Meta row (read time, etc) */
-  .pagefind-ui__result-meta {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 0.7rem;
-    opacity: 0.65;
-    margin-bottom: 0.35rem;
+  #current-time {
     letter-spacing: 0.02em;
-  }
-
-  /* Individual meta items */
-  .pagefind-ui__result-meta-item::after {
-    content: "·";
-    margin-left: 0.5rem;
-  }
-
-  .pagefind-ui__result-meta-item:last-child::after {
-    content: "";
-  }
-
-  /* Snippet */
-  .pagefind-ui__result-excerpt {
-    font-size: 0.8rem;
-    line-height: 1.55;
-    opacity: 0.85;
-    max-width: 65ch;
-  }
-
-  /* Highlighted terms */
-  .pagefind-ui__result-excerpt mark {
-    font-weight: 500;
-    padding: 0 0.1em;
-  }
-
-  /* Remove last divider */
-  .pagefind-ui__result:last-child {
-    border-bottom: none;
   }
 </style>

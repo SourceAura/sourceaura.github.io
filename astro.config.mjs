@@ -17,6 +17,9 @@ export default defineConfig({
   output: 'static',
  adapter: vercel(),
  site: "https://sourceaura.vercel.app",
+ redirects: {
+
+ },
   integrations: [
     tailwind(),
     icon(),

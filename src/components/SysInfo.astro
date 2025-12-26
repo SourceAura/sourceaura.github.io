@@ -1,188 +1,231 @@
 ---
-// src/components/SysInfo.astro
 import Container from "@components/Container.astro";
-// import NowPlaying from "@components/NowPlaying.astro";
 ---
 
-<Container style="width: 210px; overflow: hidden; padding: 0 10px;">
-  <button
-    id="sys-info-btn"
+<Container style="width: 260px; overflow: hidden; padding: 0 10px;">
+  <a
+    href="/euthymia"
     aria-label="System information"
-    class="group relative flex w-full items-center justify-between overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
-    style="background-size: cover; background-position: center; background-color: rgba(0, 0, 0, 0.5);"
+    class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
+    style="background-color: transparent; text-decoration: none;"
   >
-    <span
-      id="current-time"
-      class="text-ghost-600 cursor-pointer text-sm"
-      style="white-space: nowrap; padding-left: 11px;"></span>
+    <!-- ECG BACKGROUND -->
+    <canvas
+      id="heartbeat"
+      width="180"
+      height="18"
+      class="pointer-events-none absolute inset-0 m-auto"
+      style="z-index: 0;"></canvas>
 
-    <span
-      id="track-info"
-      class="text-ghost-600 marquee max-w-full cursor-pointer truncate text-sm"
-      >Loading…</span
-    >
+    <!-- FOREGROUND CONTENT -->
+    <div class="relative z-10 flex w-full items-center px-3">
+      <!-- Time (left) -->
+      <span
+        data-role="sysinfo-time"
+        class="text-ghost-600 cursor-pointer text-sm"
+        style="white-space: nowrap;"></span>
 
-    <span
-      id="online-indicator"
-      class="glow-ring h-1 w-1 rounded-full"
-      data-state="loading"
-      title="Spotify status"
-      style="padding-right: 11px;"></span>
-  </button>
+      <!-- INVISIBLE SPACER (≈ 2/3 width) -->
+      <span aria-hidden="true" class="block" style="width: 80px;"></span>
 
-  <div
-    id="now-playing-popover"
-    class="absolute left-1/2 z-50 mt-2 hidden w-[310px] -translate-x-1/2 transform rounded bg-white shadow-lg"
-  >
-    <!-- Popover content -->
-    <!-- <NowPlaying class="w-full" /> -->
-  </div>
+      <!-- Indicator (right) -->
+      <span
+        class="glow-ring ml-auto h-1.5 w-1.5 rounded-full"
+        title="System vitals"></span>
+    </div>
+  </a>
 
   <script type="module">
-    const ENDPOINT = "/api/spotify/now-playing";
-    const POLL_MS = 7000;
-
-    let playbackState = "loading";
-    let trackInfo = "Loading…";
-    let coverArt = "";
-
-    function updateIndicatorState() {
-      const indicator = document.getElementById("online-indicator");
-      const trackInfoElement = document.getElementById("track-info");
-      const sysInfoBtn = document.getElementById("sys-info-btn");
-
-      if (!indicator || !trackInfoElement || !sysInfoBtn) return;
-
-      switch (playbackState) {
-        case "playing":
-          indicator.className =
-            "glow-ring h-1.5 w-1.5 rounded-full bg-green-600";
-          indicator.setAttribute("title", "Spotify: Playing");
-          indicator.style.boxShadow = "0 0 5px green, 0 0 10px lime";
-          break;
-        case "paused":
-          indicator.className =
-            "glow-ring h-1.5 w-1.5 rounded-full bg-yellow-600";
-          indicator.setAttribute("title", "Spotify: Paused");
-          indicator.style.boxShadow = "0 0 5px yellow, 0 0 10px orange";
-          break;
-        default:
-          indicator.className = "glow-ring h-1.5 w-1.5 rounded-full bg-red-600";
-          indicator.setAttribute("title", "Spotify: Not playing or offline");
-          indicator.style.boxShadow = "0 0 5px red, 0 0 10px crimson";
-          break;
-      }
-
-      trackInfoElement.textContent = trackInfo;
-      sysInfoBtn.style.backgroundImage = coverArt ? `url(${coverArt})` : "";
-    }
-
+    /* =========================
+       Time (Military, multi-mount safe)
+    ========================= */
     function updateCurrentTime() {
-      const timeElement = document.getElementById("current-time");
-      if (!timeElement) return;
+      const timeEl = document.querySelector('[data-role="sysinfo-time"]');
+      if (!timeEl) return;
 
       const now = new Date();
-      timeElement.textContent = now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const value = `${hours}:${minutes}`;
 
-    // time
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
-
-    // popover toggle
-    document
-      .getElementById("track-info")
-      ?.addEventListener("click", (event) => {
-        event.stopPropagation();
-        const pop = document.getElementById("now-playing-popover");
-        if (!pop) return;
-
-        pop.classList.toggle("hidden");
-        const rect = event.target.getBoundingClientRect();
-        pop.style.top = `${rect.bottom}px`;
-        pop.style.left = `${rect.left}px`;
-      });
-
-    document.getElementById("sys-info-btn")?.addEventListener("click", () => {
-      window.location.href = "/euthymia";
-    });
-
-    async function poll() {
-      try {
-        const res = await fetch(ENDPOINT, { cache: "no-store" });
-        if (!res.ok) throw new Error("API not ok");
-
-        const data = await res.json();
-
-        if (data?.isPlaying) {
-          playbackState = "playing";
-        } else if (data?.title) {
-          playbackState = "paused";
-        } else {
-          playbackState = "not_playing";
-        }
-
-        trackInfo = data?.title
-          ? `${data.title} - ${data.artist || ""}`.trim()
-          : "😴 afk 💤";
-        coverArt = data?.albumImageUrl || "";
-
-        updateIndicatorState();
-      } catch (e) {
-        playbackState = "offline";
-        trackInfo = "Spotify offline";
-        coverArt = "";
-        updateIndicatorState();
+      if (timeEl.textContent !== value) {
+        timeEl.textContent = value;
       }
     }
 
-    // start polling
-    poll();
-    setInterval(poll, POLL_MS);
+    if (window.__sysinfoTimeInterval) {
+      clearInterval(window.__sysinfoTimeInterval);
+    }
+
+    updateCurrentTime();
+    window.__sysinfoTimeInterval = setInterval(updateCurrentTime, 1000);
+
+    /* =========================
+       ECG Simulation Engine
+    ========================= */
+    const canvas = document.getElementById("heartbeat");
+    const ctx = canvas.getContext("2d");
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const MID = H / 2;
+
+    let x = 0;
+    let lastTime = performance.now();
+    let nextBeatAt = 0;
+    let baselinePhase = 0;
+    let visible = true;
+
+    let heartRate = 58 + Math.random() * 6;
+    let beat = null;
+
+    const TRAIL_ALPHA_VISIBLE = 0.06;
+    const TRAIL_ALPHA_HIDDEN = 0.085;
+
+    document.addEventListener("visibilitychange", () => {
+      visible = !document.hidden;
+    });
+
+    function setThemeColor() {
+      const isDark = document.documentElement.classList.contains("dark");
+      const color = isDark ? "255,255,255" : "20,20,20";
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(${color},0.9)`;
+      ctx.shadowColor = `rgba(${color},0.55)`;
+      ctx.shadowBlur = 5;
+    }
+
+    setThemeColor();
+    new MutationObserver(setThemeColor).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    function scheduleBeat(type = "normal") {
+      let interval;
+
+      if (type === "premature") interval = 420 + Math.random() * 240;
+      else if (type === "pause") interval = 1800 + Math.random() * 700;
+      else {
+        interval = 60000 / heartRate;
+        interval *= 0.94 + Math.random() * 0.12;
+      }
+
+      nextBeatAt = performance.now() + interval;
+
+      const rBase = 10 + Math.random() * 4;
+      const isPAC = type === "premature";
+
+      beat = {
+        age: 0,
+        duration: (isPAC ? 120 : 145) + Math.random() * 55,
+        q: -(1.8 + Math.random() * 1.2),
+        r: rBase * (isPAC ? 0.85 : 1.0),
+        s: -(4 + Math.random() * 2.5),
+        t: (2 + Math.random() * 1.8) * (isPAC ? 0.75 : 1.0),
+      };
+    }
+
+    scheduleBeat("normal");
+
+    function beatValue(b) {
+      const p = b.age / b.duration;
+      if (p < 0.08) return 0;
+      if (p < 0.11) return b.q * ((p - 0.08) / 0.03);
+      if (p < 0.135) return b.r;
+      if (p < 0.19) return b.s;
+      if (p < 0.48) return b.t * Math.sin((p - 0.19) * Math.PI * 2.1);
+      return 0;
+    }
+
+    function fade(alpha) {
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    function frame(now) {
+      const dt = now - lastTime;
+      lastTime = now;
+
+      fade(visible ? TRAIL_ALPHA_VISIBLE : TRAIL_ALPHA_HIDDEN);
+      ctx.beginPath();
+
+      const steps = visible ? 2 : 1;
+
+      for (let i = 0; i < steps; i++) {
+        baselinePhase += 0.0022;
+        const wander = Math.sin(baselinePhase) * 0.65;
+        const noise = (Math.random() - 0.5) * 0.22;
+
+        let y = MID + wander + noise;
+
+        if (beat) {
+          y -= beatValue(beat);
+          beat.age += 1;
+          if (beat.age > beat.duration + 12) beat = null;
+        }
+
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 1, y);
+
+        x += 1;
+        if (x >= W) x = 0;
+      }
+
+      ctx.stroke();
+
+      if (visible && now >= nextBeatAt) {
+        const roll = Math.random();
+        if (roll < 0.04) scheduleBeat("premature");
+        else if (roll < 0.06) scheduleBeat("pause");
+        else scheduleBeat("normal");
+      } else if (!visible && now >= nextBeatAt) {
+        scheduleBeat("normal");
+      }
+
+      heartRate += (Math.random() - 0.5) * 0.0025 * (dt / 16.67);
+      heartRate = Math.min(68, Math.max(52, heartRate));
+
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
   </script>
 
   <style>
     .glow-ring {
-      position: relative;
-      border: 1px solid transparent;
-      border-radius: 50%;
-      animation: pulsate 2s infinite;
-      margin-left: 8px;
+      animation: pulse 3s infinite;
+      background-color: currentColor;
+      box-shadow: 0 0 6px currentColor;
     }
 
-    @keyframes pulsate {
+    .dark .glow-ring {
+      color: white;
+    }
+
+    :root:not(.dark) .glow-ring {
+      color: #111;
+    }
+
+    @keyframes pulse {
       0% {
-        transform: scale(0.9);
-        box-shadow: 0 0 0 0px rgba(255, 255, 255, 0.7);
+        opacity: 0.6;
       }
       50% {
-        transform: scale(1);
-        box-shadow: 0 0 0 5px rgba(255, 255, 255, 0);
+        opacity: 1;
       }
       100% {
-        transform: scale(0.9);
-        box-shadow: 0 0 0 0px rgba(255, 255, 255, 0);
+        opacity: 0.6;
       }
     }
 
-    #track-info {
-      display: inline-block;
-      white-space: nowrap;
-      overflow: hidden;
-      width: 100%;
-      animation: marquee 10s linear infinite;
-    }
-
-    @keyframes marquee {
-      0% {
-        transform: translateX(100%);
-      }
-      100% {
-        transform: translateX(-100%);
-      }
+    #heartbeat {
+      background: transparent;
+      image-rendering: pixelated;
     }
   </style>
 </Container>
