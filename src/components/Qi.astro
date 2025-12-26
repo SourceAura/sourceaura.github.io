@@ -1,71 +1,24 @@
 <div id="qi-root">
-  <div class="qi-core">
-    <canvas id="qi-vis"></canvas>
-  </div>
+  <canvas id="qi-vis"></canvas>
 </div>
 
 <style>
   #qi-root {
     position: fixed;
     inset: 0;
-
-    /* robust viewport anchoring (mobile + iframe safe) */
-    width: var(--qi-vw, 100vw);
-    height: var(--qi-vh, 100dvh);
-
-    display: grid;
-    place-items: center;
-
     pointer-events: none;
     z-index: 0;
   }
 
-  .qi-core {
-    position: relative;
-    width: 180px;
-    height: 180px;
-    border-radius: 9999px;
-    /* NOTE: no overflow hidden */
-  }
-
   #qi-vis {
     position: absolute;
-    width: 200%;
-    height: 200%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 </style>
 
 <script>
-  /* =====================================================
-     VIEWPORT SYNC (mobile + iframe safe)
-     ===================================================== */
-
-  function syncViewport() {
-    const vw = window.visualViewport?.width || window.innerWidth;
-    const vh = window.visualViewport?.height || window.innerHeight;
-
-    document.documentElement.style.setProperty("--qi-vw", `${vw}px`);
-    document.documentElement.style.setProperty("--qi-vh", `${vh}px`);
-  }
-
-  syncViewport();
-
-  window.visualViewport?.addEventListener("resize", syncViewport);
-  window.addEventListener("resize", syncViewport);
-  window.addEventListener("orientationchange", syncViewport);
-
-  /* =====================================================
-     REDUCED MOTION
-     ===================================================== */
-
-  const prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)",
-  ).matches;
-
-  /* =====================================================
-     QI VISUALIZER (UNCHANGED)
-     ===================================================== */
-
   const canvas = document.getElementById("qi-vis");
   const ctx = canvas.getContext("2d");
 
@@ -79,7 +32,6 @@
   }
 
   updateTheme();
-
   new MutationObserver(updateTheme).observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["class"],
@@ -87,16 +39,17 @@
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const size = canvas.clientWidth;
+    const rect = canvas.getBoundingClientRect();
 
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
 
-    ctx.setTransform(dpr, 0, 0, dpr, size / 2, size / 2);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   resize();
   window.addEventListener("resize", resize);
+  window.addEventListener("orientationchange", resize);
 
   function updateAudio() {
     for (let i = 0; i < audio.length; i++) {
@@ -108,22 +61,24 @@
   }
 
   function draw() {
-    ctx.clearRect(
-      -canvas.width,
-      -canvas.height,
-      canvas.width * 2,
-      canvas.height * 2,
-    );
+    const rect = canvas.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(cx, cy);
 
     ctx.fillStyle = isLight ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)";
 
     const step = (Math.PI * 2) / audio.length;
 
-    ctx.save();
     for (let i = 0; i < audio.length; i++) {
       ctx.rotate(step);
       ctx.fillRect(-1, 60, 2, audio[i] * 42);
     }
+
     ctx.restore();
   }
 
@@ -133,14 +88,5 @@
     requestAnimationFrame(frame);
   }
 
-  /* =====================================================
-     STARTUP
-     ===================================================== */
-
-  if (prefersReducedMotion) {
-    updateAudio();
-    draw(); // render once, no animation
-  } else {
-    frame();
-  }
+  frame();
 </script>
