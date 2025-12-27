@@ -1,121 +1,111 @@
 ---
-/* Om - The Oscillator
- *
- * One global oscillator for:
- * - SysInfo ECG drift + shimmer
- * - PageFind pill glow + decay
- * - PageFind result breathing
- * - Quasar star brightness modulation
- */
+/* Om – The Oscillator * * Global temporal field. * Adds: * - Circadian drift
+(local time bias) * - Long-idle sigh * - Route-change harmonic spike * - Lunar
+28-day modulation * - Weather-based micro variance (Open-Meteo) * - Keyboard
+cadence entrainment */
 ---
-
-<script is:inline>
-  (() => {
-    const root = document.documentElement;
-
-    // If user prefers reduced motion, keep everything steady.
-    const reduceMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    );
-    const isReduced = () => !!reduceMotion?.matches;
-
-    // Guard: avoid double-mount on Astro client navigation.
-    if (window.__pulse?.__mounted) return;
-
-    let lastInteraction = performance.now();
-    let baseHz = 0.9; // calm baseline
-    let boostHz = 1.6; // "alert" / search-open
-    let boosted = false;
-
-    let phase = 0;
-    let raf = 0;
-    let running = false;
-
-    // Utility: write CSS vars
-    function writeVars(pulse, decay, ph) {
-      root.style.setProperty("--pulse-phase", String(ph));
-      root.style.setProperty("--pulse", String(pulse));
-      root.style.setProperty("--pulse-decay", String(decay));
-    }
-
-    function touch() {
-      lastInteraction = performance.now();
-    }
-
-    function setBoost(on) {
-      boosted = !!on;
-      touch();
-    }
-
-    function stop() {
-      running = false;
-      if (raf) cancelAnimationFrame(raf);
-      raf = 0;
-    }
-
-    function start() {
-      if (running) return;
-      running = true;
-      raf = requestAnimationFrame(loop);
-    }
-
-    function loop(t) {
-      if (!running) return;
-
-      // Background tab CPU saver
-      if (document.hidden) {
-        // Put vars into a calm, steady state while hidden
-        writeVars("0.5", "0.0", phase);
-        stop();
-        return;
-      }
-
-      // Reduced motion: keep stable, no oscillation
-      if (isReduced()) {
-        writeVars("0.5", "0.0", phase);
-        raf = requestAnimationFrame(loop); // still lightweight; could also stop entirely
-        return;
-      }
-
-      const dt = Math.min((t - (loop.last || t)) / 1000, 0.05);
-      loop.last = t;
-
-      const idle = (t - lastInteraction) / 1000;
-      const decay = Math.exp(-idle / 6); // glow decay curve
-
-      const hz = boosted ? boostHz : baseHz;
-      const speed = hz * (0.5 + decay * 0.8);
-
-      phase += dt * speed * Math.PI * 2;
-
-      const pulse = (Math.sin(phase) + 1) / 2;
-
-      writeVars(pulse.toFixed(4), decay.toFixed(4), phase.toFixed(4));
-
-      raf = requestAnimationFrame(loop);
-    }
-
-    // Resume on tab focus
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) start();
-    });
-
-    // React to reduced-motion changes
-    reduceMotion?.addEventListener?.("change", () => {
-      // If entering reduced mode, reset to calm
-      if (isReduced()) writeVars("0.5", "0.0", phase.toFixed(4));
-      touch();
-    });
-
-    // Public API
-    window.__pulse = {
-      __mounted: true,
-      touch,
-      setBoost,
-    };
-
-    // Initialize vars
-    writeVars("0.5", "1.0", "0");
-    start();
-  })();
+<script is:inline> (() => { const root = document.documentElement; const
+reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)"); const
+isReduced = () => !!reduceMotion?.matches; // Guard: avoid double-mount on Astro
+client navigation. if (window.__pulse?.__mounted) return; let lastInteraction =
+performance.now(); let lastRoute = location.pathname; /* ── TEMPO TARGETS ── */
+const BASE_DAY_HZ = 0.68; const BASE_NIGHT_HZ = 0.50; const BOOST_HZ = 1.18;
+const SIGH_HZ = 0.42; let boosted = false; let sighing = false; let phase = 0;
+let raf = 0; let running = false; /* ── LUNAR (28-day aesthetic cycle) ── */ //
+Smooth 0..1..0 wave over 28 days. function getLunar28() { const msPerDay =
+86400000; const epoch = Date.UTC(2000, 0, 1); // stable anchor const now =
+Date.now(); const days = (now - epoch) / msPerDay; const p = (days % 28) / 28;
+// 0..1 const lunar = 0.5 - 0.5 * Math.cos(p * Math.PI * 2); // 0..1 return
+lunar; } /* ── CIRCADIAN ── */ function getCircadianHz() { const now = new
+Date(); const hour = now.getHours() + now.getMinutes() / 60; // 0 at midnight, 1
+at noon (smooth) const daylight = Math.cos(((hour - 12) / 24) * Math.PI * 2) *
+-0.5 + 0.5; return BASE_NIGHT_HZ + daylight * (BASE_DAY_HZ - BASE_NIGHT_HZ); }
+/* ── WEATHER MICRO VARIANCE ── */ // Value 0..1 (calm..energetic) let
+weatherEnergy = 0.12; // default gentle bias let lastWeatherFetch = 0; // Try to
+remember location const FALLBACK = { lat: 40.7128, lon: -74.0060 }; // NYC
+fallback function getStoredCoords() { try { const raw =
+localStorage.getItem("__om_coords"); if (!raw) return null; const obj =
+JSON.parse(raw); if (typeof obj?.lat === "number" && typeof obj?.lon ===
+"number") return obj; } catch {} return null; } function storeCoords(lat, lon) {
+try { localStorage.setItem("__om_coords", JSON.stringify({ lat, lon })); } catch
+{} } async function fetchWeather(lat, lon) { // Open-Meteo current weather and
+cloud cover const url =
+`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`
++ `&current=temperature_2m,precipitation,cloud_cover,wind_speed_10m` +
+`&timezone=auto`; const res = await fetch(url, { cache: "no-store" }); if
+(!res.ok) throw new Error("weather fetch failed"); const json = await
+res.json(); const cur = json?.current || {}; const wind =
+Number(cur.wind_speed_10m ?? 0); // km/h const precip = Number(cur.precipitation
+?? 0); // mm const cloud = Number(cur.cloud_cover ?? 0); // % // Normalize into
+a tiny 0..1 "energy" const windN = Math.min(wind / 35, 1); // 35km/h ~ high
+const precipN = Math.min(precip / 6, 1); // 6mm ~ high const cloudN =
+Math.min(cloud / 100, 1); // Weighted: storms matter more than clouds const e =
+0.08 + windN * 0.18 + precipN * 0.34 + cloudN * 0.10; weatherEnergy =
+Math.max(0, Math.min(1, e)); root.style.setProperty("--pulse-weather",
+weatherEnergy.toFixed(4)); } function scheduleWeatherFetch(t) { // fetch at most
+every 30 min const THIRTY_MIN = 30 * 60 * 1000; if (t - lastWeatherFetch <
+THIRTY_MIN) return; lastWeatherFetch = t; const stored = getStoredCoords();
+const run = async (lat, lon) => { storeCoords(lat, lon); try { await
+fetchWeather(lat, lon); } catch {} }; if (stored) { run(stored.lat, stored.lon);
+return; } if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(
+(pos) => { run(pos.coords.latitude, pos.coords.longitude); }, () => { // no
+permission or error run(FALLBACK.lat, FALLBACK.lon); }, { maximumAge: 6 * 60 *
+60 * 1000, timeout: 2500 }, ); } else { run(FALLBACK.lat, FALLBACK.lon); } } /*
+── KEYBOARD CADENCE ENTRAINMENT ── */ // cadenceEnergy 0..1, decays quickly let
+cadenceEnergy = 0; let cadenceHz = 0.9; const intervals = []; let lastKeyTime =
+0; function onKeydown() { const now = performance.now(); if (lastKeyTime) {
+const dt = now - lastKeyTime; if (dt > 30 && dt < 900) { intervals.push(dt); if
+(intervals.length > 10) intervals.shift(); // Rolling mean interval const avg =
+intervals.reduce((a, b) => a + b, 0) / intervals.length; const keysPerSec = 1000
+/ avg; // Map to a pleasant entrainment range cadenceHz = Math.max(0.6,
+Math.min(1.8, keysPerSec * 0.65)); cadenceEnergy = Math.min(1, cadenceEnergy +
+0.18); root.style.setProperty("--pulse-cadence", cadenceEnergy.toFixed(4)); } }
+lastKeyTime = now; touch(); } window.addEventListener("keydown", onKeydown, {
+passive: true }); /* ── CSS VAR WRITER ── */ function writeVars(pulse, decay,
+ph, spike, lunar) { root.style.setProperty("--pulse", pulse);
+root.style.setProperty("--pulse-decay", decay);
+root.style.setProperty("--pulse-phase", ph);
+root.style.setProperty("--pulse-spike", spike);
+root.style.setProperty("--pulse-lunar", lunar); // --pulse-weather and
+--pulse-cadence are written elsewhere too; keep stable defaults: if
+(!root.style.getPropertyValue("--pulse-weather")) {
+root.style.setProperty("--pulse-weather", weatherEnergy.toFixed(4)); } if
+(!root.style.getPropertyValue("--pulse-cadence")) {
+root.style.setProperty("--pulse-cadence", cadenceEnergy.toFixed(4)); } }
+function touch() { lastInteraction = performance.now(); sighing = false; }
+function setBoost(on) { boosted = !!on; touch(); } function stop() { running =
+false; if (raf) cancelAnimationFrame(raf); raf = 0; } function start() { if
+(running) return; running = true; raf = requestAnimationFrame(loop); } function
+loop(t) { if (!running) return; if (document.hidden) { writeVars("0.5", "0.0",
+phase.toFixed(4), "0", getLunar28().toFixed(4)); stop(); return; } if
+(isReduced()) { writeVars("0.5", "0.0", phase.toFixed(4), "0",
+getLunar28().toFixed(4)); raf = requestAnimationFrame(loop); return; }
+scheduleWeatherFetch(t); const dt = Math.min((t - (loop.last || t)) / 1000,
+0.05); loop.last = t; const idle = (t - lastInteraction) / 1000; // Long idle
+triggers sigh mode if (idle > 22 && !sighing) sighing = true; const decay =
+Math.exp(-idle / 8); // Lunar 28-day tide affects calm tempo very subtly const
+lunar = getLunar28(); // 0..1 const lunarBias = (lunar - 0.5) * 0.10; // ±0.05
+Hz-ish influence when scaled // Weather adds micro-variance (tiny) const
+weatherBias = (weatherEnergy - 0.12) * 0.18; // small push/pull // Cadence
+decays quickly cadenceEnergy *= Math.pow(0.001, dt / 3.2); // ~3.2s to fade
+root.style.setProperty("--pulse-cadence", cadenceEnergy.toFixed(4)); const
+circadianHz = getCircadianHz(); const calmHz = Math.max(0.35, circadianHz +
+lunarBias + weatherBias); const hz = boosted ? BOOST_HZ : sighing ? SIGH_HZ : //
+If typing, nudge toward cadenceHz, but only while energy exists (calmHz * (1 -
+cadenceEnergy) + cadenceHz * cadenceEnergy); // Speed curve: calm + interaction
+decay const speed = hz * (0.45 + decay * 0.7); phase += dt * speed * Math.PI *
+2; // Base pulse let pulse = (Math.sin(phase) + 1) / 2; // Tiny amplitude
+seasoning from lunar/weather/cadence const amp = 0.96 + lunar * 0.02 +
+weatherEnergy * 0.01 + cadenceEnergy * 0.03; pulse = 0.5 + (pulse - 0.5) * amp;
+// Route-change harmonic spike let spike = 0; if (location.pathname !==
+lastRoute) { spike = 1; lastRoute = location.pathname; touch(); } writeVars(
+pulse.toFixed(4), decay.toFixed(4), phase.toFixed(4), spike.toFixed(2),
+lunar.toFixed(4), ); raf = requestAnimationFrame(loop); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden)
+start(); }); reduceMotion?.addEventListener?.("change", () => { if (isReduced())
+writeVars("0.5", "0.0", phase.toFixed(4), "0", getLunar28().toFixed(4));
+touch(); }); window.__pulse = { __mounted: true, touch, setBoost, }; //
+Initialize with safe fallbacks root.style.setProperty("--pulse-weather",
+weatherEnergy.toFixed(4)); root.style.setProperty("--pulse-cadence", "0");
+writeVars("0.5", "1.0", "0", "0", getLunar28().toFixed(4)); start(); })();
 </script>

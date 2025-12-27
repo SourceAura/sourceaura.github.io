@@ -2,20 +2,6 @@
 import Ase from "@components/Ase.astro";
 import SysInfo from "@components/SysInfo.astro";
 import Container from "@components/Container.astro";
-
-interface PostLink {
-  slug: string;
-  title: string;
-}
-
-interface Props {
-  title: string;
-  description: string;
-  prevPost?: PostLink;
-  nextPost?: PostLink;
-}
-
-const { title, description, prevPost, nextPost } = Astro.props;
 ---
 
 <header transition:persist class="py-4" data-role="app-header">
