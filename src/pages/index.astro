@@ -30,18 +30,137 @@ const posts = (await getCollection("petals"))
       >
         <article class="seed space-y-6">
           <!-- DESCRIPTION / DEFINITION -->
-          <span class="animate block text-base sm:text-lg">
-            <span class="block" style="color: var(--ui-muted);">
-              {SITE.DESCRIPTION}
-            </span>
-            <br />
-            <span class="block" style="color: var(--ui-muted);">
-              {SITE.DEFINITION}
-            </span>
-          </span>
+          <div id="intro-log" class="log intro-log">
+            <div class="log-entry">
+              <span
+                class="log-line log-line-primary"
+                style="color: var(--ui-muted);"
+              >
+                {SITE.DESCRIPTION}
+              </span>
+              <br />
+              <span
+                class="log-line log-line-secondary"
+                style="color: var(--ui-muted);"
+              >
+                {SITE.DEFINITION}
+              </span>
+            </div>
+          </div>
         </article>
       </section>
       <PetalCarousel posts={posts} />
     </div>
   </Container>
 </Layout>
+
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+    const lines = document.querySelectorAll("#intro-log .log-line");
+    lines.forEach((l) => l.classList.add("shimmer-once"));
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    const entry = document.querySelector("#intro-log .log-entry");
+    if (!entry) return;
+
+    const secondary = entry.querySelector(".log-line-secondary");
+    const primary = entry.querySelector(".log-line-primary");
+
+    // Bottom line fades first (definition releases)
+    setTimeout(() => {
+      secondary?.classList.add("fade-out");
+    }, 2200);
+
+    // Top line fades later (description lingers)
+    setTimeout(() => {
+      primary?.classList.add("fade-out");
+    }, 3600);
+
+    // Remove only after both have fully dissolved
+    setTimeout(() => {
+      entry.remove();
+    }, 8200);
+  });
+</script>
+
+<style is:global>
+  .intro-log {
+    text-align: center;
+  }
+
+  .intro-log .log-line {
+    display: block;
+    opacity: 1;
+
+    text-shadow:
+      0 0 10px rgba(255, 255, 255, 0.16),
+      0 0 22px rgba(255, 255, 255, 0.08),
+      0 0 36px rgba(255, 255, 255, 0.045);
+
+    animation: log-shimmer 9.5s ease-in-out infinite;
+
+    transition:
+      opacity 5.2s ease,
+      text-shadow 5.2s ease,
+      filter 5.2s ease;
+  }
+
+  .intro-log .log-line-secondary {
+    transition-duration: 4.2s;
+    text-shadow:
+      0 0 8px rgba(255, 255, 255, 0.12),
+      0 0 18px rgba(255, 255, 255, 0.065),
+      0 0 30px rgba(255, 255, 255, 0.04);
+  }
+
+  .intro-log .log-line.fade-out {
+    opacity: 0;
+    text-shadow: none;
+    animation: none;
+    filter: none;
+  }
+
+  /* Light mode inversion */
+  html.light .intro-log .log-line {
+    text-shadow:
+      0 0 8px rgba(0, 0, 0, 0.14),
+      0 0 18px rgba(0, 0, 0, 0.08),
+      0 0 30px rgba(0, 0, 0, 0.045);
+  }
+
+  /* One-time shimmer swell */
+  .intro-log .log-line.shimmer-once {
+    animation:
+      log-swell 2.8s ease-out 1,
+      log-shimmer 9.5s ease-in-out infinite 2.8s;
+  }
+
+  @keyframes log-shimmer {
+    0%,
+    100% {
+      filter: brightness(1);
+    }
+    50% {
+      filter: brightness(1.06);
+    }
+  }
+
+  @keyframes log-swell {
+    0% {
+      filter: brightness(1);
+    }
+    40% {
+      filter: brightness(1.22);
+    }
+    100% {
+      filter: brightness(1.04);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intro-log .log-line {
+      animation: none;
+      filter: none;
+    }
+  }
+</style>
