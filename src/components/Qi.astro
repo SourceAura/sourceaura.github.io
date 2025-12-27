@@ -6,8 +6,13 @@
   #qi-root {
     position: fixed;
     inset: 0;
+    z-index: 4;
+    pointer-events: auto;
+  }
+
+  /* When petals are open, Qi becomes non-interactive */
+  body:has(#petal-shell[data-petals-open]) #qi-root {
     pointer-events: none;
-    z-index: -3;
   }
 
   #qi-vis {
@@ -15,29 +20,63 @@
     inset: 0;
     width: 100%;
     height: 100%;
+    pointer-events: none;
   }
 </style>
 
 <script>
+  const qiRoot = document.getElementById("qi-root");
   const canvas = document.getElementById("qi-vis");
   const ctx = canvas.getContext("2d", { alpha: true });
 
-  const BINS = 240;
-  const audio = new Float32Array(BINS);
-
-  // FFT smoothing buffer (additive)
-  const smooth = new Float32Array(BINS);
+  // ───────────────── CORE STATE (REQUIRED) ─────────────────
 
   let isLight = false;
-  let cssW = 0;
-  let cssH = 0;
-
-  const prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  const isMobile =
+  let isMobile =
     matchMedia("(max-width: 768px)").matches ||
     /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+  let prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let cssW = 0;
+  let cssH = 0;
+  // Debug
+  function emitPetalToggle() {
+    window.dispatchEvent(new CustomEvent("qi:toggle-petals"));
+    window.__pulse?.touch?.();
+  }
+
+  function isInsideQiCore(e) {
+    const rect = qiRoot.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    const x = e.clientX - rect.left - cx;
+    const y = e.clientY - rect.top - cy;
+
+    const CORE_RADIUS = 72;
+    return x * x + y * y <= CORE_RADIUS * CORE_RADIUS;
+  }
+
+  qiRoot.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (!isInsideQiCore(e)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      emitPetalToggle();
+    },
+    { passive: false },
+  );
+
+  /* ───────── PETAL TOGGLE (CORE-LIMITED) ───────── */
+
+  const BINS = 240;
+  const audio = new Float32Array(BINS);
+  const smooth = new Float32Array(BINS);
   /* ───────────────── THEME ───────────────── */
   function updateTheme() {
     isLight = document.documentElement.classList.contains("light");
@@ -57,18 +96,19 @@
     const dpr = Math.min(devicePixelRatio || 1, isMobile ? 1.6 : 2);
     const rect = canvas.getBoundingClientRect();
 
-    const w = Math.round(rect.width);
-    const h = Math.round(rect.height);
+    const width = Math.round(rect.width) || window.innerWidth;
+    const height = Math.round(rect.height) || window.innerHeight;
 
-    if (!force && w === lastW && h === lastH) return;
-    lastW = w;
-    lastH = h;
+    if (!force && width === lastW && height === lastH) return;
+    lastW = width;
+    lastH = height;
 
-    cssW = w;
-    cssH = h;
+    cssW = width;
+    cssH = height;
 
     canvas.width = Math.max(1, Math.floor(cssW * dpr));
     canvas.height = Math.max(1, Math.floor(cssH * dpr));
+
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
@@ -82,6 +122,8 @@
   }
 
   resize(true);
+  requestAnimationFrame(() => resize(true));
+
   addEventListener("resize", queueResize, { passive: true });
   addEventListener("orientationchange", queueResize, { passive: true });
 
@@ -337,7 +379,8 @@
     ctx.lineWidth = 0.6;
 
     const base = isLight ? 0 : 255;
-    const alpha = 0.06 + wake * 0.08 + pulse * 0.06;
+    const alpha = 0.12 + wake * 0.08 + pulse * 0.06;
+
     ctx.strokeStyle = `rgba(${base},${base},${base},${alpha})`;
 
     for (let i = 0; i < cephalon.length; i++) {

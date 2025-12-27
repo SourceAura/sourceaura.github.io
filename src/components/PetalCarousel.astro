@@ -35,6 +35,58 @@ const { posts } = Astro.props;
 
   const count = items.length;
   const step = 360 / count;
+  // E.T. Phone Home
+  const onHome = location.pathname === "/";
+  if (onHome) {
+    shell.addEventListener(
+      "click",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      true,
+    );
+  }
+
+  /* ───────── VISIBILITY STATE ───────── */
+
+  let petalsOpen = false;
+
+  function updatePetalVisibility() {
+    shell.toggleAttribute("data-petals-open", petalsOpen);
+  }
+  // Debug
+  window.addEventListener("qi:toggle-petals", () => {
+    console.log("[PetalCarousel] toggle received");
+    petalsOpen = !petalsOpen;
+    updatePetalVisibility();
+  });
+
+  // Esc to Close
+  window.addEventListener("keydown", (e) => {
+    if (!petalsOpen) return;
+    if (e.key !== "Escape") return;
+
+    petalsOpen = false;
+    updatePetalVisibility();
+  });
+  // Outside Touch/Click
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (!petalsOpen) return;
+      if (!onHome) return;
+
+      const viewport = shell.querySelector(".carousel-viewport");
+      if (!viewport) return;
+
+      if (viewport.contains(e.target)) return;
+
+      petalsOpen = false;
+      updatePetalVisibility();
+    },
+    { passive: true },
+  );
 
   /* ───────────────── BASE PHYSICS ───────────────── */
   const BASE_FRICTION = 0.96;
@@ -185,6 +237,7 @@ const { posts } = Astro.props;
 
   /* ───────────────── INIT ───────────────── */
   applyTransforms();
+  updatePetalVisibility();
 
   /* ───────────────── CLEANUP (ASTRO ROUTES) ───────────────── */
   function cleanup() {
@@ -269,5 +322,23 @@ const { posts } = Astro.props;
       top: 62%;
       height: 320px;
     }
+  }
+
+  /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
+  /* Home page: carousel is display-only */
+  body[data-route="home"] #petal-shell {
+    pointer-events: none;
+  }
+
+  #petal-shell {
+    transition:
+      opacity 420ms ease,
+      transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  #petal-shell:not([data-petals-open]) {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px) scale(0.98);
   }
 </style>

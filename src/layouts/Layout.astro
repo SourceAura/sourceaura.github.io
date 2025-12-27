@@ -17,7 +17,8 @@ const { title, description, prev, next } = Astro.props
     <Head title={`${title} | ${SITE.TITLE}`} description={description} />
   </head>
 
-  <body>
+  <body data-route={Astro.props["data-route"]}>
+
     <Quasar />
     <Qi />
 

@@ -2,6 +2,14 @@
 import { SITE, HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
+import PetalCarousel from "@components/PetalCarousel.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("petals"))
+  .filter((p) => !p.data.draft)
+  .sort(
+    (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  );
 ---
 
 <Layout title={HOME.TITLE} description={HOME.DESCRIPTION}>
@@ -33,6 +41,7 @@ import Container from "@components/Container.astro";
           </span>
         </article>
       </section>
+      <PetalCarousel posts={posts} />
     </div>
   </Container>
 </Layout>
