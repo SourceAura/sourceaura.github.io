@@ -80,81 +80,184 @@
     constructor() {
       super();
       this.canvas = document.createElement("canvas");
-      this.ctx = this.canvas.getContext("2d");
+      this.ctx = this.canvas.getContext("2d", { alpha: true });
+
       this.stars = [];
       this.lastTime = 0;
+      this.lastDraw = 0;
       this.isLight = false;
 
       this.base = { cx: 0, cy: 0, spread: 0 };
-      this.influence = { x: 0.5, y: 0.5, a: 0, d: 0 }; // target (from PetalCards)
-      this.influenceLive = { x: 0.5, y: 0.5, a: 0, d: 0 }; // smoothed
-    }
+      this.influence = { x: 0.5, y: 0.5, a: 0, d: 0 };
+      this.influenceLive = { x: 0.5, y: 0.5, a: 0, d: 0 };
 
-    connectedCallback() {
-      this.appendChild(this.canvas);
+      this._mounted = false;
+      this._raf = 0;
 
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", this.resize);
-      } else {
-        window.addEventListener("resize", this.resize);
-      }
-      window.addEventListener("orientationchange", this.resize);
+      this._w = 0;
+      this._h = 0;
 
-      this.resize();
-      this.watchTheme();
+      this._isMobile =
+        matchMedia("(max-width: 768px)").matches ||
+        /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      // Listen to PetalCard lighting events
-      window.addEventListener("petal:light", (e) => {
+      // Cap DPR a bit harder on mobile to reduce fill-rate
+      this._dprCap = this._isMobile ? 1.6 : 2;
+
+      // FPS cap: mobile gets calmer updates, desktop stays smooth
+      this._fps = this._isMobile ? 30 : 60;
+      this._minFrameMs = 1000 / this._fps;
+
+      this._resizeQueued = false;
+      this._themeMO = null;
+
+      this._onPetalLight = (e) => {
         const d = e.detail || {};
         this.influence.x = clamp(d.x ?? 0.5, 0, 1);
         this.influence.y = clamp(d.y ?? 0.5, 0, 1);
         this.influence.a = clamp(d.a ?? 0, 0, 1);
         this.influence.d = clamp(d.d ?? 0, 0, 1);
-      });
+      };
 
-      this.lastTime = performance.now();
-      requestAnimationFrame(this.frame);
+      this._onVisibility = () => {
+        if (document.hidden) {
+          if (this._raf) cancelAnimationFrame(this._raf);
+          this._raf = 0;
+          return;
+        }
+        // resume
+        this.lastTime = performance.now();
+        this.lastDraw = 0;
+        if (!this._raf) this._raf = requestAnimationFrame(this.frame);
+      };
+
+      this._onResize = () => this.queueResize();
     }
 
-    resize = () => {
+    connectedCallback() {
+      // Guard against double-mount
+      if (this._mounted) return;
+      this._mounted = true;
+
+      this.appendChild(this.canvas);
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", this._onResize, {
+          passive: true,
+        });
+      } else {
+        window.addEventListener("resize", this._onResize, { passive: true });
+      }
+      window.addEventListener("orientationchange", this._onResize, {
+        passive: true,
+      });
+
+      window.addEventListener("petal:light", this._onPetalLight, {
+        passive: true,
+      });
+
+      document.addEventListener("visibilitychange", this._onVisibility, {
+        passive: true,
+      });
+
+      this.resize(true);
+      this.watchTheme();
+
+      this.lastTime = performance.now();
+      this._raf = requestAnimationFrame(this.frame);
+    }
+
+    disconnectedCallback() {
+      // Cleanup (prevents leaks on Astro swaps)
+      if (this._raf) cancelAnimationFrame(this._raf);
+      this._raf = 0;
+
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", this._onResize);
+      } else {
+        window.removeEventListener("resize", this._onResize);
+      }
+      window.removeEventListener("orientationchange", this._onResize);
+
+      window.removeEventListener("petal:light", this._onPetalLight);
+      document.removeEventListener("visibilitychange", this._onVisibility);
+
+      this._themeMO?.disconnect?.();
+      this._themeMO = null;
+
+      this._mounted = false;
+    }
+
+    queueResize() {
+      if (this._resizeQueued) return;
+      this._resizeQueued = true;
+      requestAnimationFrame(() => {
+        this._resizeQueued = false;
+        this.resize(false);
+      });
+    }
+
+    resize(force) {
       const width = window.visualViewport
-        ? window.visualViewport.width
-        : window.innerWidth;
+        ? Math.round(window.visualViewport.width)
+        : Math.round(window.innerWidth);
       const height = window.visualViewport
-        ? window.visualViewport.height
-        : window.innerHeight;
+        ? Math.round(window.visualViewport.height)
+        : Math.round(window.innerHeight);
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Prevent thrash: only re-layout if size truly changed
+      if (!force && width === this._w && height === this._h) return;
 
-      this.canvas.width = width * dpr;
-      this.canvas.height = height * dpr;
+      this._w = width;
+      this._h = height;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, this._dprCap);
+
+      this.canvas.width = Math.max(1, Math.floor(width * dpr));
+      this.canvas.height = Math.max(1, Math.floor(height * dpr));
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       this.base.cx = width / 2;
       this.base.cy = height / 2;
       this.base.spread = Math.max(width, height) * 1.3;
 
-      this.stars = Array.from(
-        { length: COUNT },
-        () => new Star(this.base.spread),
-      );
-      // reset to base distribution
+      // Keep the same “field”, but lighten density on mobile a bit.
+      const targetCount = this._isMobile ? Math.round(COUNT * 0.72) : COUNT;
+
+      // Only rebuild stars when needed
+      if (this.stars.length !== targetCount) {
+        this.stars = Array.from(
+          { length: targetCount },
+          () => new Star(this.base.spread),
+        );
+      }
+
       for (const s of this.stars)
         s.reset(this.base.cx, this.base.cy, this.base.spread);
-    };
+    }
 
     watchTheme() {
       const update = () => {
         this.isLight = document.documentElement.classList.contains("light");
       };
       update();
-      new MutationObserver(update).observe(document.documentElement, {
+      this._themeMO = new MutationObserver(update);
+      this._themeMO.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ["class"],
       });
     }
 
     frame = (t) => {
+      if (document.hidden) return; // extra safety
+
+      // FPS cap (mobile)
+      if (this.lastDraw && t - this.lastDraw < this._minFrameMs) {
+        this._raf = requestAnimationFrame(this.frame);
+        return;
+      }
+      this.lastDraw = t;
+
       const dt = Math.min((t - this.lastTime) / 16.67, MAX_DT);
       this.lastTime = t;
 
@@ -164,26 +267,28 @@
       this.influenceLive.a = lerp(this.influenceLive.a, this.influence.a, 0.06);
       this.influenceLive.d = lerp(this.influenceLive.d, this.influence.d, 0.06);
 
-      const width = window.visualViewport
-        ? window.visualViewport.width
-        : window.innerWidth;
-      const height = window.visualViewport
-        ? window.visualViewport.height
-        : window.innerHeight;
+      const width =
+        this._w ||
+        (window.visualViewport
+          ? window.visualViewport.width
+          : window.innerWidth);
+      const height =
+        this._h ||
+        (window.visualViewport
+          ? window.visualViewport.height
+          : window.innerHeight);
 
-      // Shift center slightly toward petal pointer when influence rises
-      const shiftMax = 18; // pixels, subtle
+      const shiftMax = 18;
       const dx = (this.influenceLive.x - 0.5) * 2;
       const dy = (this.influenceLive.y - 0.5) * 2;
 
       const cx = this.base.cx + dx * shiftMax * this.influenceLive.a;
       const cy = this.base.cy + dy * shiftMax * this.influenceLive.a;
 
-      // Compress field slightly (stars “gather” toward interaction)
       const compress = 1 - 0.1 * this.influenceLive.a;
       const spread = this.base.spread * compress;
 
-      // Clear
+      // Clear (use cached width/height)
       this.ctx.clearRect(0, 0, width, height);
 
       for (const s of this.stars) {
@@ -191,7 +296,7 @@
         s.draw(this.ctx, this.isLight);
       }
 
-      requestAnimationFrame(this.frame);
+      this._raf = requestAnimationFrame(this.frame);
     };
   }
 

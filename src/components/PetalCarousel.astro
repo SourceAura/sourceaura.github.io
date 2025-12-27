@@ -24,10 +24,7 @@ const { posts } = Astro.props;
   </div>
 
   <div class="carousel-hint" aria-hidden="true">
-    <span>Drag</span>
-    <span>Click</span>
-    <span>Double</span>
-    <span>Enter</span>
+    <!--  -->
   </div>
 </div>
 
@@ -39,10 +36,10 @@ const { posts } = Astro.props;
   const count = items.length;
   const step = 360 / count;
 
-  /* ───────────────── CONFIG ───────────────── */
-  const friction = 0.96;
+  /* ───────────────── BASE PHYSICS ───────────────── */
+  const BASE_FRICTION = 0.96;
+  const BASE_SNAP = 0.06;
   const velClamp = 3.2;
-  const snapStrength = 0.06;
   const settleThreshold = 0.015;
 
   /* ───────────────── STATE ───────────────── */
@@ -55,6 +52,15 @@ const { posts } = Astro.props;
 
   let rafId = 0;
   let running = false;
+
+  /* ───────────────── OM PULSE (GLOBAL) ───────────────── */
+  function getOmPulse() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(
+      "--pulse",
+    );
+    const p = Number(v);
+    return Number.isFinite(p) ? p : 0.5;
+  }
 
   /* ───────────────── RADIUS (CACHED) ───────────────── */
   let radius = 300;
@@ -97,16 +103,22 @@ const { posts } = Astro.props;
       el.style.opacity = 1 - depth * 0.7;
       el.style.setProperty("--petal-depth", depth.toFixed(4));
       el.style.setProperty("--petal-prox", prox.toFixed(4));
-
-      // Scale handles “depth” instead of blur (GPU-safe)
       el.style.setProperty("--panel-scale", (1 - depth * 0.12).toFixed(4));
+
       el.style.transform = `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`;
     });
   }
 
-  /* ───────────────── RAF LOOP (IDLE-AWARE) ───────────────── */
+  /* ───────────────── RAF LOOP (IDLE-AWARE + OM-SYNCED) ───────────────── */
   function tick() {
     if (!running) return;
+
+    // Om pulse coupling (subtle, symmetric)
+    const pulse = getOmPulse(); // 0..1
+    const breath = (pulse - 0.5) * 2; // -1..+1
+
+    const friction = BASE_FRICTION * (1 - breath * 0.015); // ±1.5%
+    const snapStrength = BASE_SNAP * (1 + breath * 0.06); // ±6%
 
     angle += vel;
     vel *= friction;

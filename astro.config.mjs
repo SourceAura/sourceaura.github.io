@@ -9,7 +9,6 @@ import icon from "astro-icon";
 import preact from '@astrojs/preact';
 import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
-import react from "@astrojs/react";
 import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
@@ -39,7 +38,7 @@ export default defineConfig({
     vue(),
     sentry(),
     spotlightjs(),
-    react(),
+
   ],
   markdown: {
     shikiConfig: {

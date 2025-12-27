@@ -42,3 +42,10 @@ const { title, description, prev, next } = Astro.props
     ) : null}
   </body>
 </html>
+
+<script is:inline>
+  // Compatibility shim for persisted client scripts
+  if (typeof window !== "undefined" && !("locales" in window)) {
+    window.locales = undefined;
+  }
+</script>

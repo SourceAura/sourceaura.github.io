@@ -1,17 +1,15 @@
-!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"438bd48f23bc572bac8a30e7117a24b482c52bf4"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="39c2998b-c055-4d9a-b2a8-37cf738ab209",e._sentryDebugIdIdentifier="sentry-dbid-39c2998b-c055-4d9a-b2a8-37cf738ab209");})();}catch(e){}};import { h, Component } from 'preact';
+!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"bb3ba3970cd8d37b8e215972f27dee3762bdf01e"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="d43c3eee-5b4a-4965-9b6e-ba4790298f27",e._sentryDebugIdIdentifier="sentry-dbid-d43c3eee-5b4a-4965-9b6e-ba4790298f27");})();}catch(e){}};import { h, Component } from 'preact';
 import { renderToStringAsync } from 'preact-render-to-string';
 import { defineComponent, h as h$1, createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import React, { createElement } from 'react';
-import ReactDOM from 'react-dom/server';
-import { o as renderJSX, p as createVNode, q as AstroJSX, t as AstroUserError } from './chunks/astro/server_D8rUq2fj.mjs';
+import { o as renderJSX, p as createVNode, q as AstroJSX, t as AstroUserError } from './chunks/astro/server_zKQ7NDq3.mjs';
 import 'piccolore';
 import 'clsx';
 
-const contexts$2 = /* @__PURE__ */ new WeakMap();
-function getContext$2(result) {
-  if (contexts$2.has(result)) {
-    return contexts$2.get(result);
+const contexts$1 = /* @__PURE__ */ new WeakMap();
+function getContext$1(result) {
+  if (contexts$1.has(result)) {
+    return contexts$1.get(result);
   }
   let ctx = {
     c: 0,
@@ -21,10 +19,10 @@ function getContext$2(result) {
     signals: /* @__PURE__ */ new Map(),
     propsToSignals: /* @__PURE__ */ new Map()
   };
-  contexts$2.set(result, ctx);
+  contexts$1.set(result, ctx);
   return ctx;
 }
-function incrementId$2(ctx) {
+function incrementId$1(ctx) {
   let id = ctx.id;
   ctx.c++;
   return id;
@@ -79,24 +77,24 @@ function serializeSignals(ctx, props, attrs, map) {
 function getSignalId(ctx, item) {
   let id = ctx.signals.get(item);
   if (!id) {
-    id = incrementId$2(ctx);
+    id = incrementId$1(ctx);
     ctx.signals.set(item, id);
   }
   return id;
 }
 
-const StaticHtml$2 = ({ value, name, hydrate = true }) => {
+const StaticHtml$1 = ({ value, name, hydrate = true }) => {
   if (!value) return null;
   const tagName = hydrate ? "astro-slot" : "astro-static-slot";
   return h(tagName, { name, dangerouslySetInnerHTML: { __html: value } });
 };
-StaticHtml$2.shouldComponentUpdate = () => false;
-var static_html_default$2 = StaticHtml$2;
+StaticHtml$1.shouldComponentUpdate = () => false;
+var static_html_default$1 = StaticHtml$1;
 
-const slotName$2 = (str) => str.trim().replace(/[-_]([a-z])/g, (_, w) => w.toUpperCase());
+const slotName$1 = (str) => str.trim().replace(/[-_]([a-z])/g, (_, w) => w.toUpperCase());
 let originalConsoleError;
 let consoleFilterRefs = 0;
-async function check$3(Component$1, props, children) {
+async function check$2(Component$1, props, children) {
   if (typeof Component$1 !== "function") return false;
   if (Component$1.name === "QwikComponent") return false;
   if (Component$1.prototype != null && typeof Component$1.prototype.render === "function") {
@@ -104,7 +102,7 @@ async function check$3(Component$1, props, children) {
   }
   useConsoleFilter();
   try {
-    const { html } = await renderToStaticMarkup$3.call(this, Component$1, props, children, void 0);
+    const { html } = await renderToStaticMarkup$2.call(this, Component$1, props, children, void 0);
     if (typeof html !== "string") {
       return false;
     }
@@ -118,12 +116,12 @@ async function check$3(Component$1, props, children) {
 function shouldHydrate(metadata) {
   return metadata?.astroStaticSlot ? !!metadata.hydrate : true;
 }
-async function renderToStaticMarkup$3(Component, props, { default: children, ...slotted }, metadata) {
-  const ctx = getContext$2(this.result);
+async function renderToStaticMarkup$2(Component, props, { default: children, ...slotted }, metadata) {
+  const ctx = getContext$1(this.result);
   const slots = {};
   for (const [key, value] of Object.entries(slotted)) {
-    const name = slotName$2(key);
-    slots[name] = h(static_html_default$2, {
+    const name = slotName$1(key);
+    slots[name] = h(static_html_default$1, {
       hydrate: shouldHydrate(metadata),
       value,
       name
@@ -136,7 +134,7 @@ async function renderToStaticMarkup$3(Component, props, { default: children, ...
   const vNode = h(
     Component,
     newProps,
-    children != null ? h(static_html_default$2, {
+    children != null ? h(static_html_default$1, {
       hydrate: shouldHydrate(metadata),
       value: children
     }) : children
@@ -164,91 +162,18 @@ function filteredConsoleError(msg, ...rest) {
   }
   originalConsoleError(msg, ...rest);
 }
-const renderer$3 = {
-  name: "@astrojs/preact",
-  check: check$3,
-  renderToStaticMarkup: renderToStaticMarkup$3,
-  supportsAstroStaticSlot: true
-};
-var server_default$3 = renderer$3;
-
-const setup = () => {};
-
-const contexts$1 = /* @__PURE__ */ new WeakMap();
-const ID_PREFIX$1 = "s";
-function getContext$1(rendererContextResult) {
-  if (contexts$1.has(rendererContextResult)) {
-    return contexts$1.get(rendererContextResult);
-  }
-  const ctx = {
-    currentIndex: 0,
-    get id() {
-      return ID_PREFIX$1 + this.currentIndex.toString();
-    }
-  };
-  contexts$1.set(rendererContextResult, ctx);
-  return ctx;
-}
-function incrementId$1(rendererContextResult) {
-  const ctx = getContext$1(rendererContextResult);
-  const id = ctx.id;
-  ctx.currentIndex++;
-  return id;
-}
-
-const StaticHtml$1 = defineComponent({
-  props: {
-    value: String,
-    name: String,
-    hydrate: {
-      type: Boolean,
-      default: true
-    }
-  },
-  setup({ name, value, hydrate }) {
-    if (!value) return () => null;
-    let tagName = hydrate ? "astro-slot" : "astro-static-slot";
-    return () => h$1(tagName, { name, innerHTML: value });
-  }
-});
-var static_html_default$1 = StaticHtml$1;
-
-async function check$2(Component) {
-  return !!Component["ssrRender"] || !!Component["__ssrInlineRender"];
-}
-async function renderToStaticMarkup$2(Component, inputProps, slotted, metadata) {
-  let prefix;
-  if (this && this.result) {
-    prefix = incrementId$1(this.result);
-  }
-  const attrs = { prefix };
-  const slots = {};
-  const props = { ...inputProps };
-  delete props.slot;
-  for (const [key, value] of Object.entries(slotted)) {
-    slots[key] = () => h$1(static_html_default$1, {
-      value,
-      name: key === "default" ? void 0 : key,
-      // Adjust how this is hydrated only when the version of Astro supports `astroStaticSlot`
-      hydrate: metadata?.astroStaticSlot ? !!metadata.hydrate : true
-    });
-  }
-  const app = createSSRApp({ render: () => h$1(Component, props, slots) });
-  app.config.idPrefix = prefix;
-  await setup();
-  const html = await renderToString(app);
-  return { html, attrs };
-}
 const renderer$2 = {
-  name: "@astrojs/vue",
+  name: "@astrojs/preact",
   check: check$2,
   renderToStaticMarkup: renderToStaticMarkup$2,
   supportsAstroStaticSlot: true
 };
 var server_default$2 = renderer$2;
 
+const setup = () => {};
+
 const contexts = /* @__PURE__ */ new WeakMap();
-const ID_PREFIX = "r";
+const ID_PREFIX = "s";
 function getContext(rendererContextResult) {
   if (contexts.has(rendererContextResult)) {
     return contexts.get(rendererContextResult);
@@ -269,174 +194,51 @@ function incrementId(rendererContextResult) {
   return id;
 }
 
-const StaticHtml = ({
-  value,
-  name,
-  hydrate = true
-}) => {
-  if (!value) return null;
-  const tagName = hydrate ? "astro-slot" : "astro-static-slot";
-  return createElement(tagName, {
-    name,
-    suppressHydrationWarning: true,
-    dangerouslySetInnerHTML: { __html: value }
-  });
-};
-StaticHtml.shouldComponentUpdate = () => false;
+const StaticHtml = defineComponent({
+  props: {
+    value: String,
+    name: String,
+    hydrate: {
+      type: Boolean,
+      default: true
+    }
+  },
+  setup({ name, value, hydrate }) {
+    if (!value) return () => null;
+    let tagName = hydrate ? "astro-slot" : "astro-static-slot";
+    return () => h$1(tagName, { name, innerHTML: value });
+  }
+});
 var static_html_default = StaticHtml;
 
-const slotName$1 = (str) => str.trim().replace(/[-_]([a-z])/g, (_, w) => w.toUpperCase());
-const reactTypeof = Symbol.for("react.element");
-const reactTransitionalTypeof = Symbol.for("react.transitional.element");
-async function check$1(Component, props, children) {
-  if (typeof Component === "object") {
-    return Component["$$typeof"].toString().slice("Symbol(".length).startsWith("react");
-  }
-  if (typeof Component !== "function") return false;
-  if (Component.name === "QwikComponent") return false;
-  if (typeof Component === "function" && Component["$$typeof"] === Symbol.for("react.forward_ref"))
-    return false;
-  if (Component.prototype != null && typeof Component.prototype.render === "function") {
-    return React.Component.isPrototypeOf(Component) || React.PureComponent.isPrototypeOf(Component);
-  }
-  let isReactComponent = false;
-  function Tester(...args) {
-    try {
-      const vnode = Component(...args);
-      if (vnode && (vnode["$$typeof"] === reactTypeof || vnode["$$typeof"] === reactTransitionalTypeof)) {
-        isReactComponent = true;
-      }
-    } catch {
-    }
-    return React.createElement("div");
-  }
-  await renderToStaticMarkup$1.call(this, Tester, props, children);
-  return isReactComponent;
+async function check$1(Component) {
+  return !!Component["ssrRender"] || !!Component["__ssrInlineRender"];
 }
-async function getNodeWritable() {
-  let nodeStreamBuiltinModuleName = "node:stream";
-  let { Writable } = await import(
-    /* @vite-ignore */
-    nodeStreamBuiltinModuleName
-  );
-  return Writable;
-}
-function needsHydration(metadata) {
-  return metadata?.astroStaticSlot ? !!metadata.hydrate : true;
-}
-async function renderToStaticMarkup$1(Component, props, { default: children, ...slotted }, metadata) {
+async function renderToStaticMarkup$1(Component, inputProps, slotted, metadata) {
   let prefix;
   if (this && this.result) {
     prefix = incrementId(this.result);
   }
   const attrs = { prefix };
-  delete props["class"];
   const slots = {};
+  const props = { ...inputProps };
+  delete props.slot;
   for (const [key, value] of Object.entries(slotted)) {
-    const name = slotName$1(key);
-    slots[name] = React.createElement(static_html_default, {
-      hydrate: needsHydration(metadata),
+    slots[key] = () => h$1(static_html_default, {
       value,
-      name
+      name: key === "default" ? void 0 : key,
+      // Adjust how this is hydrated only when the version of Astro supports `astroStaticSlot`
+      hydrate: metadata?.astroStaticSlot ? !!metadata.hydrate : true
     });
   }
-  const newProps = {
-    ...props,
-    ...slots
-  };
-  const newChildren = children ?? props.children;
-  if (newChildren != null) {
-    newProps.children = React.createElement(static_html_default, {
-      hydrate: needsHydration(metadata),
-      value: newChildren
-    });
-  }
-  const formState = this ? await getFormState(this) : void 0;
-  if (formState) {
-    attrs["data-action-result"] = JSON.stringify(formState[0]);
-    attrs["data-action-key"] = formState[1];
-    attrs["data-action-name"] = formState[2];
-  }
-  const vnode = React.createElement(Component, newProps);
-  const renderOptions = {
-    identifierPrefix: prefix,
-    formState
-  };
-  let html;
-  if ("renderToReadableStream" in ReactDOM) {
-    html = await renderToReadableStreamAsync(vnode, renderOptions);
-  } else {
-    html = await renderToPipeableStreamAsync(vnode, renderOptions);
-  }
+  const app = createSSRApp({ render: () => h$1(Component, props, slots) });
+  app.config.idPrefix = prefix;
+  await setup();
+  const html = await renderToString(app);
   return { html, attrs };
 }
-async function getFormState({
-  result
-}) {
-  const { request, actionResult } = result;
-  if (!actionResult) return void 0;
-  if (!isFormRequest(request.headers.get("content-type"))) return void 0;
-  const { searchParams } = new URL(request.url);
-  const formData = await request.clone().formData();
-  const actionKey = formData.get("$ACTION_KEY")?.toString();
-  const actionName = searchParams.get("_action");
-  if (!actionKey || !actionName) return void 0;
-  return [actionResult, actionKey, actionName];
-}
-async function renderToPipeableStreamAsync(vnode, options) {
-  const Writable = await getNodeWritable();
-  let html = "";
-  return new Promise((resolve, reject) => {
-    let error = void 0;
-    let stream = ReactDOM.renderToPipeableStream(vnode, {
-      ...options,
-      onError(err) {
-        error = err;
-        reject(error);
-      },
-      onAllReady() {
-        stream.pipe(
-          new Writable({
-            write(chunk, _encoding, callback) {
-              html += chunk.toString("utf-8");
-              callback();
-            },
-            destroy() {
-              resolve(html);
-            }
-          })
-        );
-      }
-    });
-  });
-}
-async function readResult(stream) {
-  const reader = stream.getReader();
-  let result = "";
-  const decoder = new TextDecoder("utf-8");
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      if (value) {
-        result += decoder.decode(value);
-      } else {
-        decoder.decode(new Uint8Array());
-      }
-      return result;
-    }
-    result += decoder.decode(value, { stream: true });
-  }
-}
-async function renderToReadableStreamAsync(vnode, options) {
-  return await readResult(await ReactDOM.renderToReadableStream(vnode, options));
-}
-const formContentTypes = ["application/x-www-form-urlencoded", "multipart/form-data"];
-function isFormRequest(contentType) {
-  const type = contentType?.split(";")[0].toLowerCase();
-  return formContentTypes.some((t) => type === t);
-}
 const renderer$1 = {
-  name: "@astrojs/react",
+  name: "@astrojs/vue",
   check: check$1,
   renderToStaticMarkup: renderToStaticMarkup$1,
   supportsAstroStaticSlot: true
@@ -489,6 +291,6 @@ const renderer = {
 };
 var server_default = renderer;
 
-const renderers = [Object.assign({"name":"@astrojs/preact","clientEntrypoint":"@astrojs/preact/client.js","serverEntrypoint":"@astrojs/preact/server.js"}, { ssr: server_default$3 }),Object.assign({"name":"@astrojs/vue","clientEntrypoint":"@astrojs/vue/client.js","serverEntrypoint":"@astrojs/vue/server.js"}, { ssr: server_default$2 }),Object.assign({"name":"@astrojs/react","clientEntrypoint":"@astrojs/react/client.js","serverEntrypoint":"@astrojs/react/server.js"}, { ssr: server_default$1 }),Object.assign({"name":"astro:jsx","serverEntrypoint":"file:///home/sourceaura/Documents/GitHub/sourceaura.github.io/node_modules/@astrojs/mdx/dist/server.js"}, { ssr: server_default }),];
+const renderers = [Object.assign({"name":"@astrojs/preact","clientEntrypoint":"@astrojs/preact/client.js","serverEntrypoint":"@astrojs/preact/server.js"}, { ssr: server_default$2 }),Object.assign({"name":"@astrojs/vue","clientEntrypoint":"@astrojs/vue/client.js","serverEntrypoint":"@astrojs/vue/server.js"}, { ssr: server_default$1 }),Object.assign({"name":"astro:jsx","serverEntrypoint":"file:///home/sourceaura/Documents/GitHub/sourceaura.github.io/node_modules/@astrojs/mdx/dist/server.js"}, { ssr: server_default }),];
 
 export { renderers };

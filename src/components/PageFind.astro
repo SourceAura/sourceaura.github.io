@@ -3,20 +3,16 @@ import Search from "astro-pagefind/components/Search";
 ---
 
 <div
-  transition:persist
   id="backdrop"
-  class="pointer-events-none invisible fixed
-inset-0 z-40 bg-transparent"
+  class="pointer-events-none invisible fixed inset-0 z-40 bg-transparent"
 >
-  <div id="pagefind-shell" class="flex
-justify-center">
+  <div id="pagefind-shell" class="flex justify-center">
     <div
       id="pagefind-container"
-      class="relative flex max-h-[70vh]
-w-full max-w-screen-sm flex-col overflow-auto rounded border bg-transparent p-4
-shadow-xl"
+      class="relative flex max-h-[70vh] w-full max-w-screen-sm flex-col overflow-auto rounded border bg-transparent p-4 shadow-xl"
     >
       <Search
+        client:only="preact"
         id="search"
         className="pagefind-ui"
         uiOptions={{
@@ -26,20 +22,16 @@ shadow-xl"
           filters: { nav: true },
         }}
       />
+
       <div class="mt-2 flex items-baseline justify-between text-xs">
         <span id="current-time" class="font-mono tabular-nums"></span>
-        <span
-          >Press
-          <kbd>Esc</kbd></span
-        >
+        <span>Press <kbd>Esc</kbd></span>
       </div>
     </div>
   </div>
 </div>
+
 <style is:global>
-  /*
-===================================================== PAGEFIND — FULL THEME SYNC
-===================================================== */
   .pagefind-ui,
   .pagefind-ui * {
     color: var(--ui-text);
@@ -53,10 +45,6 @@ shadow-xl"
     color: var(--ui-text);
     caret-color: var(--ui-text);
     outline: none !important;
-  } /*
-===================================================== CARET PULSE (THEME AWARE)
-===================================================== */
-  #search input {
     animation: caret-pulse 2.4s infinite linear;
   }
   @keyframes caret-pulse {
@@ -73,31 +61,6 @@ shadow-xl"
     100% {
       caret-color: color-mix(in oklch, var(--ui-text) 55%, transparent);
     }
-  } /* =====================================================
-SCROLLBAR (THEME AWARE) ===================================================== */
-  #pagefind-container {
-    scrollbar-width: thin;
-    scrollbar-color: var(--ui-text) transparent;
-  }
-  #pagefind-container::-webkit-scrollbar-thumb {
-    background-color: color-mix(in oklch, var(--ui-text) 75%, transparent);
-  } /*
-===================================================== SEARCH HIGHLIGHT
-===================================================== */
-  .pagefind-ui__result-excerpt mark {
-    background: transparent;
-    color: inherit;
-    outline: 1px solid var(--ui-border);
-    border-radius: 2px;
-    padding: 0 0.05em;
-  } /*
-===================================================== PAGEFIND VARS
-===================================================== */
-  :root {
-    --pagefind-ui-text: var(--ui-text);
-    --pagefind-ui-primary: var(--accent);
-    --pagefind-ui-background: transparent;
-    --pagefind-ui-border: var(--ui-border);
   }
 </style>
 
@@ -108,42 +71,28 @@ SCROLLBAR (THEME AWARE) ===================================================== */
   const root = document.documentElement;
 
   let isOpen = false;
-
-  // per-session memory only
   let scrollMemory = 0;
-
-  // heartbeat boost relaxes even while open
   let inactivityTimer = null;
 
-  // ---------------------------
-  // Spring physics (velocity-driven)
-  // ---------------------------
-  // state: y offset (px) relative to "open" position (0)
-  let y = -14; // start slightly above
-  let v = 0; // velocity px/s
-  let target = -14; // closed target
+  let y = -14;
+  let v = 0;
+  let target = -14;
   let rafSpring = 0;
   let lastT = 0;
 
-  // spring params (tuned for "elastic, not bouncy")
-  const STIFFNESS = 520; // higher = snappier
-  const DAMPING = 38; // higher = less oscillation
+  const STIFFNESS = 520;
+  const DAMPING = 38;
   const MASS = 1;
 
-  // proximity (0..1) used by header + glow logic
   function setProximity() {
-    // map y [-14..0] -> [0..1]
     const p = Math.max(0, Math.min(1, 1 - Math.abs(y) / 14));
     root.style.setProperty("--search-proximity", p.toFixed(4));
-    // lift header subtly as the panel approaches
     root.style.setProperty("--search-lift", (p * 1.2).toFixed(4));
   }
 
   function applySpringStyles() {
-    // Slight scale coupling, feels "coming out of header"
     const p = Math.max(0, Math.min(1, 1 - Math.abs(y) / 14));
-    const scale = 0.985 + 0.015 * p;
-    shell.style.transform = `translateY(${y}px) scale(${scale})`;
+    shell.style.transform = `translateY(${y}px) scale(${0.985 + 0.015 * p})`;
     shell.style.opacity = String(0.1 + 0.9 * p);
     setProximity();
   }
@@ -154,36 +103,23 @@ SCROLLBAR (THEME AWARE) ===================================================== */
     rafSpring = requestAnimationFrame(tickSpring);
   }
 
-  function stopSpring() {
-    if (!rafSpring) return;
-    cancelAnimationFrame(rafSpring);
-    rafSpring = 0;
-  }
-
   function tickSpring(t) {
     const dt = Math.min((t - lastT) / 1000, 0.033);
     lastT = t;
 
-    // If hidden, stop (CPU saver)
-    if (document.hidden) {
-      stopSpring();
-      return;
-    }
+    if (document.hidden) return;
 
-    // spring force: F = -k(x - target) - c*v
-    const x = y;
-    const F = -STIFFNESS * (x - target) - DAMPING * v;
+    const F = -STIFFNESS * (y - target) - DAMPING * v;
     const a = F / MASS;
 
     v += a * dt;
     y += v * dt;
 
-    // stop when settled
     if (Math.abs(v) < 0.02 && Math.abs(y - target) < 0.05) {
       y = target;
       v = 0;
       applySpringStyles();
-      stopSpring();
+      rafSpring = 0;
       return;
     }
 
@@ -191,404 +127,41 @@ SCROLLBAR (THEME AWARE) ===================================================== */
     rafSpring = requestAnimationFrame(tickSpring);
   }
 
-  // ---------------------------
-  // Scroll momentum -> results fade
-  // ---------------------------
-  let lastScrollTop = 0;
-  let lastScrollTime = performance.now();
-  let momentum = 0; // smoothed 0..1
-  let rafMomentum = 0;
-
-  function clamp01(n) {
-    return Math.max(0, Math.min(1, n));
-  }
-
-  function startMomentumDecay() {
-    if (rafMomentum) return;
-    rafMomentum = requestAnimationFrame(tickMomentum);
-  }
-
-  function tickMomentum(t) {
-    // exponential decay
-    const dt = Math.min((t - (tickMomentum.last || t)) / 1000, 0.05);
-    tickMomentum.last = t;
-
-    momentum *= Math.pow(0.06, dt); // fast-ish fade
-    if (momentum < 0.001) {
-      momentum = 0;
-      root.style.setProperty("--scroll-momentum", "0");
-      rafMomentum = 0;
-      return;
-    }
-
-    root.style.setProperty("--scroll-momentum", momentum.toFixed(4));
-    rafMomentum = requestAnimationFrame(tickMomentum);
-  }
-
-  container.addEventListener("scroll", () => {
-    const now = performance.now();
-    const dy = Math.abs(container.scrollTop - lastScrollTop);
-    const dt = Math.max(16, now - lastScrollTime);
-
-    // velocity-ish (px per ms) -> normalize
-    const vel = dy / dt;
-    const m = clamp01(vel * 0.9); // tuned
-
-    // smooth in
-    momentum = Math.max(momentum, m);
-    root.style.setProperty("--scroll-momentum", momentum.toFixed(4));
-
-    lastScrollTop = container.scrollTop;
-    lastScrollTime = now;
-
-    startMomentumDecay();
-    if (isOpen) pulseTouch();
-  });
-
-  // ---------------------------
-  // Helpers
-  // ---------------------------
-  function pulseTouch() {
-    window.__pulse?.touch?.();
-
-    if (isOpen) {
-      window.__pulse?.setBoost?.(true);
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        window.__pulse?.setBoost?.(false);
-      }, 2200);
-    }
-  }
-
   function openPagefind() {
-    pulseTouch();
-    window.__pulse?.setBoost?.(true);
-
+    window.__pulse?.touch?.();
     isOpen = true;
-
     backdrop.classList.remove("invisible", "pointer-events-none");
-    backdrop.classList.add("visible");
     root.classList.add("pagefind-open");
-
-    // spring target: open
     target = 0;
     startSpring();
-
-    // restore scroll position
-    requestAnimationFrame(() => {
-      container.scrollTop = scrollMemory;
-      lastScrollTop = container.scrollTop;
-    });
-
-    // focus handoff
-    requestAnimationFrame(() => {
-      const input = document.querySelector("#search input");
-      input?.focus({ preventScroll: true });
-      input?.classList.add("focus-enter");
-      setTimeout(() => input?.classList.remove("focus-enter"), 240);
-    });
   }
 
   function closePagefind() {
     isOpen = false;
-
-    // remember scroll
     scrollMemory = container.scrollTop;
-
-    window.__pulse?.setBoost?.(false);
-
-    // spring target: closed (slightly tucked)
     target = -14;
     startSpring();
-
     backdrop.classList.add("invisible", "pointer-events-none");
-    backdrop.classList.remove("visible");
     root.classList.remove("pagefind-open");
-
-    const input = document.querySelector("#search input");
-    if (input) input.value = "";
   }
 
-  function togglePagefind() {
-    if (isOpen) closePagefind();
-    else openPagefind();
-  }
+  window.togglePagefind = () => (isOpen ? closePagefind() : openPagefind());
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {
-      e.preventDefault();
-      togglePagefind();
-      return;
-    }
-    if (e.key === "Escape") closePagefind();
-    if (isOpen) pulseTouch();
-  });
-
-  backdrop.addEventListener("pointermove", () => {
-    if (isOpen) pulseTouch();
-  });
-
-  backdrop.addEventListener("click", (e) => {
-    if (!e.target.closest("#pagefind-container")) closePagefind();
-  });
-
-  // CPU saver: pause spring when hidden; resume when visible
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      // restart spring if open/closed state needs it
-      startSpring();
-    }
-  });
-
-  window.addEventListener("astro:before-swap", closePagefind);
-
-  window.openPagefind = openPagefind;
-  window.closePagefind = closePagefind;
-  window.togglePagefind = togglePagefind;
-
-  // Initialize layout position (closed)
-  shell.style.marginTop = "calc(var(--header-height, 72px) + 12px)";
-  applySpringStyles();
-
-  /* CLOCK */
+  /* CLOCK — SAFE, INLINE, NO IDENTIFIERS */
   function updateTime() {
     const el = document.getElementById("current-time");
     if (!el) return;
-    el.textContent = new Intl.DateTimeFormat(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(new Date());
+
+    el.textContent = new Intl.DateTimeFormat(
+      navigator.languages || [navigator.language],
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      },
+    ).format(new Date());
   }
+
   updateTime();
   setInterval(updateTime, 1000);
 </script>
-
-<style is:global>
-  /* =====================================================
-     BASE THEME + PULSE + LAYOUT
-  ===================================================== */
-  :root {
-    --accent: oklch(0.32 0.03 255);
-    --pulse: 0.5;
-    --pulse-decay: 1;
-    --scroll-momentum: 0;
-    --header-height: 72px;
-    --search-proximity: 0;
-    --search-lift: 0;
-  }
-
-  html.dark {
-    --accent: oklch(0.92 0.02 255);
-  }
-
-  #backdrop.visible {
-    pointer-events: auto;
-  }
-
-  /* shell uses JS-driven transform; marginTop set in JS too */
-  #pagefind-shell {
-    will-change: transform, opacity;
-  }
-
-  /* =========================
-     TEXT COLOR — THEME AWARE
-  ========================= */
-
-  .pagefind-ui,
-  .pagefind-ui * {
-    color: black;
-  }
-
-  html.dark .pagefind-ui,
-  html.dark .pagefind-ui * {
-    color: white;
-  }
-
-  /* input caret already pulses, but text follows theme */
-  #search input {
-    color: black;
-    caret-color: black;
-  }
-
-  html.dark #search input {
-    color: white;
-    caret-color: white;
-  }
-
-  .pagefind-ui__result-title,
-  .pagefind-ui__result-excerpt,
-  .pagefind-ui__result-meta {
-    color: inherit !important;
-  }
-
-  #pagefind-container {
-    scrollbar-width: thin;
-    scrollbar-color: black transparent;
-  }
-
-  html.dark #pagefind-container {
-    scrollbar-color: white transparent;
-  }
-
-  #pagefind-container::-webkit-scrollbar {
-    width: 10px;
-    opacity: 0;
-    transition: opacity 200ms ease;
-  }
-
-  /* macOS thin */
-  @supports (-webkit-touch-callout: none) {
-    #pagefind-container::-webkit-scrollbar {
-      width: 6px;
-    }
-  }
-
-  #pagefind-container:hover::-webkit-scrollbar {
-    opacity: 1;
-  }
-
-  #pagefind-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  #pagefind-container::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.75);
-    border-radius: 8px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  #pagefind-container::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(0, 0, 0, 1);
-  }
-
-  /* Dark mode override */
-  html.dark #pagefind-container::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.75);
-  }
-
-  html.dark #pagefind-container::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 1);
-  }
-
-  /* =====================================================
-     CARET PULSE
-  ===================================================== */
-  #search input {
-    background: transparent;
-    color: white;
-    outline: none !important;
-    box-shadow: none !important;
-    caret-color: white;
-    animation: caret-pulse 2.4s infinite linear;
-  }
-
-  @keyframes caret-pulse {
-    0% {
-      caret-color: rgba(255, 255, 255, 0.55);
-    }
-    50% {
-      caret-color: rgba(255, 255, 255, calc(0.55 + 0.45 * var(--pulse)));
-    }
-    100% {
-      caret-color: rgba(255, 255, 255, 0.55);
-    }
-  }
-
-  /* =====================================================
-     SEARCH PILL GLOW
-  ===================================================== */
-  .pagefind-open header [data-role="search-pill"] {
-    box-shadow:
-      0 0 calc(16px * var(--pulse) * var(--pulse-decay))
-        color-mix(in oklch, var(--accent) 55%, transparent),
-      0 0 0 1px color-mix(in oklch, var(--accent) 70%, transparent);
-  }
-
-  /* =====================================================
-     RESULT BREATHING + SCROLL MOMENTUM FADE
-     - "momentum" makes results slightly dim during fast scroll, then recover
-  ===================================================== */
-  .pagefind-ui__result {
-    transform: translateY(calc(-0.75px * var(--pulse) * var(--pulse-decay)));
-    opacity: calc(
-      (0.92 + (0.08 * var(--pulse) * var(--pulse-decay))) -
-        (0.18 * var(--scroll-momentum))
-    );
-    transition:
-      transform 0.14s ease-out,
-      opacity 0.12s ease-out;
-  }
-
-  /* =====================================================
-     SEARCH HIGHLIGHT
-  ===================================================== */
-  .pagefind-ui__result-excerpt mark {
-    background: transparent !important;
-    color: inherit;
-    font-weight: 600;
-    outline: 1px solid rgba(255, 255, 255, 0.25);
-    outline-offset: 1px;
-    border-radius: 2px;
-    padding: 0 0.05em;
-  }
-
-  /* =====================================================
-     SCROLLBAR (macOS THIN + FADE)
-  ===================================================== */
-  #pagefind-container {
-    scrollbar-width: thin;
-    scrollbar-color: white transparent;
-  }
-
-  #pagefind-container::-webkit-scrollbar {
-    width: 10px;
-    opacity: 0;
-    transition: opacity 200ms ease;
-  }
-
-  @supports (-webkit-touch-callout: none) {
-    #pagefind-container::-webkit-scrollbar {
-      width: 6px;
-    }
-  }
-
-  #pagefind-container:hover::-webkit-scrollbar {
-    opacity: 1;
-  }
-
-  #pagefind-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  #pagefind-container::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.75);
-    border-radius: 8px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  #pagefind-container::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 1);
-  }
-
-  /* =====================================================
-     PAGEFIND UI VARS
-  ===================================================== */
-  :root {
-    --pagefind-ui-text: #ffffff;
-    --pagefind-ui-primary: var(--accent);
-    --pagefind-ui-background: transparent;
-    --pagefind-ui-border: rgba(255, 255, 255, 0.2);
-  }
-
-  kbd {
-    line-height: 1;
-  }
-
-  #backdrop {
-    background: transparent !important;
-    backdrop-filter: none !important;
-  }
-</style>
