@@ -6,68 +6,67 @@ import { readingTime } from "@lib/utils";
 
 interface Props {
   post: CollectionEntry<"petals">;
+  // Optional, future-proof, defaults to "text"
+  type?: "text" | "audio" | "video" | "photo" | "project";
 }
 
-const { post } = Astro.props;
+const { post, type = "text" } = Astro.props;
 const { title, description, date } = post.data;
 
+/* Extract first image (optional) */
 let imageSrc: string | null = null;
-const imageRegex = /!\[.*?\]\((.*?)\)/;
-const match = post.body.match(imageRegex);
-if (match && match[1]) {
+const match = post.body.match(/!\[.*?\]\((.*?)\)/);
+if (match?.[1]) {
   imageSrc = match[1].startsWith("http") ? match[1] : `/src/assets/${match[1]}`;
 }
 ---
 
-<div
-  class="petal-card group relative h-full overflow-hidden rounded-lg shadow-lg transition-all duration-300"
-  data-petal-card
->
-  <a href={`/petals/${post.slug}/`} class="block h-full w-full">
-    <div class="absolute inset-0 h-full w-full bg-transparent">
+<article class="petal-card" data-petal data-type={type}>
+  <a href={`/petals/${post.slug}/`} class="petal-link">
+    <div class="petal-surface">
+      <div class="petal-light"></div>
+
+      <!-- IMAGE: desktop + large screens only -->
       {
-        imageSrc ? (
-          <Image
-            src={imageSrc}
-            alt={`Image for ${title}`}
-            width={300}
-            height={200}
-            class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110 group-active:scale-110"
-          />
-        ) : (
-          <div class="h-full w-full bg-transparent" />
+        imageSrc && (
+          <picture class="petal-media">
+            <source media="(max-width: 768px)" />
+            <Image
+              src={imageSrc}
+              alt=""
+              width={480}
+              height={300}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
         )
       }
-    </div>
 
-    <div
-      class="relative flex h-full flex-col justify-between bg-black bg-opacity-50 p-1 text-white transition-opacity duration-300 group-hover:bg-opacity-70 group-active:bg-opacity-70"
-    >
-      <div>
-        <h2 class="mb-0.5 line-clamp-1 text-xs font-bold">{title}</h2>
-        <p class="mb-1 line-clamp-2 text-xs">{description}</p>
-      </div>
-      <div
-        class="text-xs opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100"
-      >
-        <FormattedDate date={new Date(date)} />
-        <span class="mx-0.5">•</span>
-        <span>{readingTime(post.body)}</span>
+      <div class="petal-content">
+        <h2>{title}</h2>
+        {description && <p>{description}</p>}
+        <footer>
+          <FormattedDate date={new Date(date)} />
+          <span>•</span>
+          <span>{readingTime(post.body)}</span>
+        </footer>
       </div>
     </div>
   </a>
-</div>
+</article>
 
 <style>
-  .petal-card {
-    transition: box-shadow 0.3s ease;
-    touch-action: manipulation; /* ✅ allows taps without breaking scroll/gestures */
-    user-select: none;
+  .petal-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
   }
 
-  .petal-card:hover,
-  .petal-card:active {
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-    z-index: 10;
+  /* Mobile: media never paints */
+  @media (max-width: 768px) {
+    .petal-media {
+      display: none;
+    }
   }
 </style>
