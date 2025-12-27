@@ -1,53 +1,252 @@
 ---
 import Link from "./Link.astro";
 import { HERO, SITE } from "@consts";
-import Container from "./Container.astro";
 ---
 
-<Container>
-    <!-- connect -->
-    <section class="footer-links">
-        <!-- <h2 class="font-semibold text-black dark:text-white">let's link</h2> -->
-        <article>
-            <!-- <p>link</p> -->
-        </article>
-        <ul class="">
-            <li class="line-clamp-1">
-                {HERO.GITHUB && (
-                    <Link href={`https://${HERO.GITHUB}`}>
-                        <!-- SVG for GitHub -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><mask id="lineMdGithubLoop0" width="24" height="24" x="0" y="0"><g fill="#fff"><ellipse cx="9.5" cy="9" rx="1.5" ry="1"/><ellipse cx="14.5" cy="9" rx="1.5" ry="1"/></g></mask><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="32" stroke-dashoffset="32" d="M12 4c1.67 0 2.61 0.4 3 0.5c0.53 -0.43 1.94 -1.5 3.5 -1.5c0.34 1 0.29 2.22 0 3c0.75 1 1 2 1 3.5c0 2.19 -0.48 3.58 -1.5 4.5c-1.02 0.92 -2.11 1.37 -3.5 1.5c0.65 0.54 0.5 1.87 0.5 2.5c0 0.73 0 3 0 3M12 4c-1.67 0 -2.61 0.4 -3 0.5c-0.53 -0.43 -1.94 -1.5 -3.5 -1.5c-0.34 1 -0.29 2.22 0 3c-0.75 1 -1 2 -1 3.5c0 2.19 0.48 3.58 1.5 4.5c1.02 0.92 2.11 1.37 3.5 1.5c-0.65 0.54 -0.5 1.87 -0.5 2.5c0 0.73 0 3 0 3"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.7s" values="32;0"/></path><path stroke-dasharray="10" stroke-dashoffset="10" d="M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5;M9 19c-1.406 0-3-.5-4-.5-.532 0-1 0-2-.5;M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5"/><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.2s" values="10;0"/></path></g><rect width="8" height="4" x="8" y="11" fill="currentColor" mask="url(#lineMdGithubLoop0)"><animate attributeName="y" dur="10s" keyTimes="0;0.45;0.46;0.54;0.55;1" repeatCount="indefinite" values="11;11;7;7;11;11"/></rect></svg>
-                    </Link>
-                )}
-                {HERO.GITHUB && "/"}
-                {HERO.MASTODON && (
-                    <Link href={`https://${HERO.MASTODON}`}>
-                        <!-- SVG for Mastodon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="88" stroke-dashoffset="88" d="M15.5 21.5c-10.5 2.5 -12.5 -2.5 -12.5 -8.5v-3c0 -6 2.5 -7 7 -7h4c4.5 0 7 1.5 7 5.5v4c0 6.5 -10 4 -13.5 4c-1 0 -1.5 7 8 5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="88;0"/></path><path stroke-dasharray="32" stroke-dashoffset="32" d="M7 13.5l0 -5.5c0 0 0.5 -2 2.5 -2c2 0 2.5 2 2.5 2l0 2.5l0 -2.5c0 0 0.5 -2 2.5 -2c2 0 2.5 2 2.5 2l0 5.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.7s" values="32;0"/></path></g></svg>
-                    </Link>
-                )}
-                {HERO.MASTODON && "/"}
-                {HERO.TWITTER && (
-                    <Link href={`https://${HERO.TWITTER}`}>
-                        <!-- SVG for Twitter -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><path d="M1 2h2.5L3.5 2h-2.5zM5.5 2h2.5L7.2 2h-2.5z"><animate fill="freeze" attributeName="d" dur="0.4s" values="M1 2h2.5L3.5 2h-2.5zM5.5 2h2.5L7.2 2h-2.5z;M1 2h2.5L18.5 22h-2.5zM5.5 2h2.5L23 22h-2.5z"/></path><path d="M3 2h5v0h-5zM16 22h5v0h-5z"><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.4s" values="M3 2h5v0h-5zM16 22h5v0h-5z;M3 2h5v2h-5zM16 22h5v-2h-5z"/></path><path d="M18.5 2h3.5L22 2h-3.5z"><animate fill="freeze" attributeName="d" begin="0.5s" dur="0.4s" values="M18.5 2h3.5L22 2h-3.5z;M18.5 2h3.5L5 22h-3.5z"/></path></g></svg>
-                    </Link>
-                )}
-                {HERO.TWITTER && "/"}
-                <Link
-                    href={`mailto:${SITE.EMAIL}`}
-                    aria-label={`Email ${SITE.TITLE}`}
-                >
-                    <!-- SVG for Email -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><mask id="lineMdEmailArrowRight0"><g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="64" stroke-dashoffset="64" d="M4 5h16c0.55 0 1 0.45 1 1v12c0 0.55 -0.45 1 -1 1h-16c-0.55 0 -1 -0.45 -1 -1v-12c0 -0.55 0.45 -1 1 -1Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="64;0"/></path><path stroke-dasharray="24" stroke-dashoffset="24" d="M3 6.5l9 5.5l9 -5.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="24;0"/></path><path fill="#000" fill-opacity="0" stroke="none" d="M19 13c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z"><set fill="freeze" attributeName="fill-opacity" begin="0.8s" to="1"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M16 19h5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.2s" values="6;0"/></path><path stroke-dasharray="4" stroke-dashoffset="4" d="M21 19l-2 2M21 19l-2 -2"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1s" dur="0.2s" values="4;0"/></path></g></mask><rect width="24" height="24" fill="currentColor" mask="url(#lineMdEmailArrowRight0)"/></svg>
-                </Link>
-                {"/"}
-                <Link href="/petals">
-                    <!-- SVG for Petals -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="72" stroke-dashoffset="72" d="M3 19.5v-15.5c0 -0.55 0.45 -1 1 -1h16c0.55 0 1 0.45 1 1v12c0 0.55 -0.45 1 -1 1h-14.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="72;0"/></path><path stroke-dasharray="10" stroke-dashoffset="10" d="M8 7h8"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="10;0"/></path><path stroke-dasharray="10" stroke-dashoffset="10" d="M8 10h8"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1s" dur="0.2s" values="10;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M8 13h4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="1.3s" dur="0.2s" values="6;0"/></path></g></svg>
-                </Link>
-            </li>
-        </ul>
-    </section>
-    <!-- connect end -->
-</Container>
+<div class="connect" id="connectRoot">
+  <!-- Default text -->
+  <button
+    id="connectToggle"
+    class="connect-trigger is-visible text-sm opacity-80"
+    aria-expanded="false"
+  >
+    {SITE.TITLE} | 🫀 • 🫁 • 🧠 | © {new Date().getFullYear()}
+  </button>
+
+  <!-- Links -->
+  <div id="connectCenter" class="connect-center">
+    <ul>
+      <li class="connect-row">
+        {HERO.GITHUB && (
+          <Link href={`https://${HERO.GITHUB}`} aria-label="GitHub">
+            <!-- GitHub (original animated) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+              <mask id="lineMdGithubLoop0">
+                <g fill="#fff">
+                  <ellipse cx="9.5" cy="9" rx="1.5" ry="1" />
+                  <ellipse cx="14.5" cy="9" rx="1.5" ry="1" />
+                </g>
+              </mask>
+              <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  stroke-dasharray="32"
+                  stroke-dashoffset="32"
+                  d="M12 4c-4.4 0-8 3-8 7c0 3.1 1.6 5.7 4 6.5">
+                  <animate attributeName="stroke-dashoffset" dur="0.7s" values="32;0" fill="freeze" />
+                </path>
+              </g>
+              <rect
+                x="8"
+                y="11"
+                width="8"
+                height="4"
+                fill="currentColor"
+                mask="url(#lineMdGithubLoop0)">
+                <animate
+                  attributeName="y"
+                  dur="10s"
+                  repeatCount="indefinite"
+                  values="11;11;7;7;11;11"
+                  keyTimes="0;0.45;0.46;0.54;0.55;1" />
+              </rect>
+            </svg>
+          </Link>
+        )}
+
+        {HERO.MASTODON && (
+          <Link href={`https://${HERO.MASTODON}`} aria-label="Mastodon">
+            <!-- Mastodon (original animated) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+              <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  stroke-dasharray="88"
+                  stroke-dashoffset="88"
+                  d="M15.5 21.5c-10.5 2.5-12.5-2.5-12.5-8.5v-3c0-6 2.5-7 7-7h4c4.5 0 7 1.5 7 5.5v4c0 6.5-10 4-13.5 4">
+                  <animate attributeName="stroke-dashoffset" dur="0.6s" values="88;0" fill="freeze" />
+                </path>
+                <path
+                  stroke-dasharray="32"
+                  stroke-dashoffset="32"
+                  d="M7 13.5v-5.5s.5-2 2.5-2s2.5 2 2.5 2v2.5V8s.5-2 2.5-2s2.5 2 2.5 2v5.5">
+                  <animate attributeName="stroke-dashoffset" begin="0.7s" dur="0.7s" values="32;0" fill="freeze" />
+                </path>
+              </g>
+            </svg>
+          </Link>
+        )}
+
+        {HERO.TWITTER && (
+          <Link href={`https://${HERO.TWITTER}`} aria-label="Twitter">
+            <!-- Twitter / X (original animated) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+              <g fill="currentColor">
+                <path d="M1 2h2.5L3.5 2h-2.5zM5.5 2h2.5L7.2 2h-2.5z">
+                  <animate
+                    attributeName="d"
+                    dur="0.4s"
+                    fill="freeze"
+                    values="
+                      M1 2h2.5L3.5 2h-2.5zM5.5 2h2.5L7.2 2h-2.5z;
+                      M1 2h2.5L18.5 22h-2.5zM5.5 2h2.5L23 22h-2.5z" />
+                </path>
+                <path d="M3 2h5v0h-5zM16 22h5v0h-5z">
+                  <animate
+                    attributeName="d"
+                    begin="0.4s"
+                    dur="0.4s"
+                    fill="freeze"
+                    values="
+                      M3 2h5v0h-5zM16 22h5v0h-5z;
+                      M3 2h5v2h-5zM16 22h5v-2h-5z" />
+                </path>
+                <path d="M18.5 2h3.5L22 2h-3.5z">
+                  <animate
+                    attributeName="d"
+                    begin="0.5s"
+                    dur="0.4s"
+                    fill="freeze"
+                    values="
+                      M18.5 2h3.5L22 2h-3.5z;
+                      M18.5 2h3.5L5 22h-3.5z" />
+                </path>
+              </g>
+            </svg>
+          </Link>
+        )}
+
+        <Link href={`mailto:${SITE.EMAIL}`} aria-label="Email">
+          <!-- Email (original animated) -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+            <mask id="lineMdEmailArrowRight0">
+              <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke-dasharray="64" stroke-dashoffset="64" d="M4 5h16v14H4z">
+                  <animate attributeName="stroke-dashoffset" dur="0.6s" values="64;0" fill="freeze" />
+                </path>
+                <path stroke-dasharray="24" stroke-dashoffset="24" d="M4 6.5l8 5.5l8-5.5">
+                  <animate attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="24;0" fill="freeze" />
+                </path>
+              </g>
+            </mask>
+            <rect width="24" height="24" fill="currentColor" mask="url(#lineMdEmailArrowRight0)" />
+          </svg>
+        </Link>
+
+        <Link href="/petals" aria-label="Petals">
+          <!-- Petals (original animated) -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke-dasharray="72" stroke-dashoffset="72" d="M3 19.5v-15.5h18v12h-14.5">
+                <animate attributeName="stroke-dashoffset" dur="0.6s" values="72;0" fill="freeze" />
+              </path>
+              <path stroke-dasharray="10" stroke-dashoffset="10" d="M8 7h8">
+                <animate attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" values="10;0" fill="freeze" />
+              </path>
+              <path stroke-dasharray="10" stroke-dashoffset="10" d="M8 10h8">
+                <animate attributeName="stroke-dashoffset" begin="1s" dur="0.2s" values="10;0" fill="freeze" />
+              </path>
+              <path stroke-dasharray="6" stroke-dashoffset="6" d="M8 13h4">
+                <animate attributeName="stroke-dashoffset" begin="1.3s" dur="0.2s" values="6;0" fill="freeze" />
+              </path>
+            </g>
+          </svg>
+        </Link>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script is:inline>
+  const root = document.getElementById("connectRoot");
+  const toggle = document.getElementById("connectToggle");
+  const center = document.getElementById("connectCenter");
+
+  let open = false;
+
+  const setOpen = (next) => {
+    open = next;
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.classList.toggle("is-visible", !open);
+    center.classList.toggle("is-visible", open);
+  };
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(true);
+  });
+
+  // Click / touch anywhere outside closes
+  document.addEventListener("pointerdown", (e) => {
+    if (!open) return;
+    if (!root.contains(e.target)) setOpen(false);
+  });
+
+  // ESC closes
+  document.addEventListener("keydown", (e) => {
+    if (open && e.key === "Escape") setOpen(false);
+  });
+
+  // Route change closes (Astro)
+  document.addEventListener("astro:before-swap", () => {
+    if (open) setOpen(false);
+  });
+</script>
+
+<style>
+.connect {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;          /* match footer control rail */
+}
+
+  .connect-trigger,
+  .connect-center {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(-36px);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.35s ease;
+  }
+
+  .is-visible {
+    transform: translateY(-50%) translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .connect-trigger {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    z-index: 2;
+  }
+
+  .connect-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .connect-row :global(svg) {
+    display: block;
+    width: 1em;
+    height: 1em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .connect-trigger,
+    .connect-center {
+      transition: none;
+      transform: translateY(-50%);
+      opacity: 1;
+    }
+  }
+</style>

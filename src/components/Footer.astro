@@ -1,5 +1,6 @@
 ---
 import { SITE } from "@consts";
+import Connect from "@components/Connect.astro";
 import Container from "@components/Container.astro";
 import BackToTop from "@components/BackToTop.astro";
 import ThemeSwitch from "@components/ThemeSwitch.astro";
@@ -7,143 +8,157 @@ import ThemeSwitch from "@components/ThemeSwitch.astro";
 
 <footer class="app-footer">
   <Container>
-    <div class="flex items-center
-justify-between">
-      <div class="text-sm opacity-80">
-        <a href="/about">
-          {SITE.TITLE} | 🫀 • 🫁 • 🧠 |
-        </a> &copy; {new Date().getFullYear()}
-      </div>
+    <div class="flex items-center justify-between">
+      <!-- Left -->
+      <Connect />
+
+      <!-- Right -->
       <div class="footer-controls">
         <div class="theme-switch"><ThemeSwitch /></div>
         <div class="back-to-top"><BackToTop /></div>
       </div>
     </div>
   </Container>
+
+  <!-- BREATH LINE (RESTORED) -->
   <div class="edge-line edge-line-bottom" aria-hidden="true"></div>
-</footer>
-<style>
-  .app-footer {
-    position: fixed;
-    inset: auto 0 0 0;
-    height: 56px;
-    z-index: 20;
-    background: transparent !important;
-  }
-  .edge-line {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .edge-line-bottom {
-    bottom: 0;
-    height: calc(
-      1px + var(--pulse, 0.5) * 0.6px + var(--pulse-cadence, 0) * 0.35px
-    );
-  }
-  .edge-line::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    height: 3px;
-    top: -1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(
-        255,
-        255,
-        255,
-        calc(
-          0.32 + var(--pulse, 0.5) * 0.44 + var(--pulse-spike, 0) * 0.45 +
-            var(--pulse-lunar, 0.5) * 0.1 + var(--pulse-weather, 0.12) * 0.1 +
-            var(--pulse-cadence, 0) * 0.22
-        )
-      ),
-      transparent
-    );
-    background-size: 100% 3px;
-    background-position: 0 0;
-    animation:
-      edge-scan calc(2.8s - var(--pulse-decay, 0) * 1.4s) linear infinite
-        reverse,
-      edge-breath 4.6s ease-in-out infinite,
-      edge-vshimmer 6.8s ease-in-out infinite;
-    animation-delay:
-      0s, calc(var(--pulse-phase, 0) * -0.12s - 1.6s),
-      calc(var(--pulse-phase, 0) * -0.18s - 2.2s);
-  }
-  html.light .edge-line::before {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(
-        0,
-        0,
-        0,
-        calc(
-          0.26 + var(--pulse, 0.5) * 0.4 + var(--pulse-spike, 0) * 0.38 +
-            var(--pulse-lunar, 0.5) * 0.1 + var(--pulse-weather, 0.12) * 0.1 +
-            var(--pulse-cadence, 0) * 0.2
-        )
-      ),
-      transparent
-    );
-    background-size: 100% 3px;
-  }
-  @keyframes edge-scan {
-    from {
-      transform: translateX(-100%);
+
+  <style>
+    .app-footer {
+      position: fixed;
+      inset: auto 0 0 0;
+      height: 56px;
+      z-index: 20;
+      background: transparent !important;
     }
-    to {
-      transform: translateX(100%);
+
+    .edge-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      overflow: hidden;
     }
-  }
-  @keyframes edge-breath {
-    0%,
-    100% {
-      opacity: 0.6;
+
+    .edge-line-bottom {
+      bottom: 0;
+      height: calc(
+        1px + var(--pulse, 0.5) * 0.6px + var(--pulse-cadence, 0) * 0.35px
+      );
     }
-    50% {
-      opacity: 1;
-    }
-  }
-  @keyframes edge-vshimmer {
-    0%,
-    100% {
-      background-position: 0 0;
-    }
-    50% {
-      background-position: 0 -1px;
-    }
-  }
-  .footer-controls {
-    position: relative;
-    width: 64px;
-    height: 32px;
-  }
-  .theme-switch {
-    position: absolute;
-    right: 0;
-    z-index: 2;
-  }
-  .back-to-top {
-    position: absolute;
-    right: 0;
-    z-index: 1;
-    pointer-events: none;
-  }
-  html[data-backtotop] .theme-switch {
-    transform: translateX(-28px);
-  }
-  html[data-backtotop] .back-to-top {
-    pointer-events: auto;
-  }
-  @media (prefers-reduced-motion: reduce) {
+
     .edge-line::before {
-      animation: none;
+      content: "";
+      position: absolute;
+      inset: 0;
+      height: 3px;
+      top: -1px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(
+          255,
+          255,
+          255,
+          calc(
+            0.32 + var(--pulse, 0.5) * 0.44 + var(--pulse-spike, 0) * 0.45 +
+              var(--pulse-lunar, 0.5) * 0.1 + var(--pulse-weather, 0.12) * 0.1 +
+              var(--pulse-cadence, 0) * 0.22
+          )
+        ),
+        transparent
+      );
+      background-size: 100% 3px;
+      background-position: 0 0;
+      animation:
+        edge-scan calc(2.8s - var(--pulse-decay, 0) * 1.4s) linear infinite
+          reverse,
+        edge-breath 4.6s ease-in-out infinite,
+        edge-vshimmer 6.8s ease-in-out infinite;
+      animation-delay:
+        0s, calc(var(--pulse-phase, 0) * -0.12s - 1.6s),
+        calc(var(--pulse-phase, 0) * -0.18s - 2.2s);
     }
-  }
-</style>
+
+    html.light .edge-line::before {
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(
+          0,
+          0,
+          0,
+          calc(
+            0.26 + var(--pulse, 0.5) * 0.4 + var(--pulse-spike, 0) * 0.38 +
+              var(--pulse-lunar, 0.5) * 0.1 + var(--pulse-weather, 0.12) * 0.1 +
+              var(--pulse-cadence, 0) * 0.2
+          )
+        ),
+        transparent
+      );
+      background-size: 100% 3px;
+    }
+
+    @keyframes edge-scan {
+      from {
+        transform: translateX(-100%);
+      }
+      to {
+        transform: translateX(100%);
+      }
+    }
+
+    @keyframes edge-breath {
+      0%,
+      100% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes edge-vshimmer {
+      0%,
+      100% {
+        background-position: 0 0;
+      }
+      50% {
+        background-position: 0 -1px;
+      }
+    }
+
+    .footer-controls {
+      position: relative;
+      width: 64px;
+      height: 32px;
+    }
+
+    .theme-switch {
+      position: absolute;
+      right: 0;
+      z-index: 2;
+    }
+
+    .back-to-top {
+      position: absolute;
+      right: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    html[data-backtotop] .theme-switch {
+      transform: translateX(-28px);
+    }
+
+    html[data-backtotop] .back-to-top {
+      pointer-events: auto;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .edge-line::before {
+        animation: none;
+      }
+    }
+  </style>
+</footer>

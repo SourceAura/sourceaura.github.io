@@ -1,6 +1,6 @@
-!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"37530b5fa64007988fc40d3071fac9fcc4d80d3a"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="754f938f-c1c6-4bee-9986-4e572ee3dbdb",e._sentryDebugIdIdentifier="sentry-dbid-754f938f-c1c6-4bee-9986-4e572ee3dbdb");})();}catch(e){}};import { g as getConfiguredImageService, i as imageConfig } from '../chunks/_astro_assets_Bi-rm54M.mjs';
-import { i as isRemotePath } from '../chunks/path_DKalnrXw.mjs';
-import { i as isRemoteAllowed } from '../chunks/index_BkXVn0hX.mjs';
+!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"e45248dffc4b90e7028c3e6547ae34764407f851"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="c03867b4-c84d-4f49-a2b9-14eda467216e",e._sentryDebugIdIdentifier="sentry-dbid-c03867b4-c84d-4f49-a2b9-14eda467216e");})();}catch(e){}};import { g as getConfiguredImageService, i as imageConfig } from '../chunks/_astro_assets_DH55MJXA.mjs';
+import { i as isRemotePath } from '../chunks/path_C8jR4AQz.mjs';
+import { i as isRemoteAllowed } from '../chunks/index_YleZBU60.mjs';
 import * as mime from 'mrmime';
 export { renderers } from '../renderers.mjs';
 

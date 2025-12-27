@@ -4,8 +4,8 @@ import mdx from "@astrojs/mdx";
 import pagefind from "astro-pagefind";
 import sitemap from "@astrojs/sitemap";
 
-import vue from '@astrojs/vue';
 import icon from "astro-icon";
+import vue from '@astrojs/vue';
 import preact from '@astrojs/preact';
 import sentry from "@sentry/astro";
 import spotlightjs from "@spotlightjs/astro";
