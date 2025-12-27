@@ -39,104 +39,147 @@ const { posts } = Astro.props;
   const count = items.length;
   const step = 360 / count;
 
+  /* ───────────────── CONFIG ───────────────── */
   const friction = 0.96;
   const velClamp = 3.2;
   const snapStrength = 0.06;
   const settleThreshold = 0.015;
 
+  /* ───────────────── STATE ───────────────── */
   let angle = 0;
   let vel = 0;
   let isDragging = false;
 
-  function getRadius() {
-    return matchMedia("(max-width: 768px)").matches ? 220 : 300;
-  }
+  let lastAngle = null;
+  let lastActive = -1;
 
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
-  }
+  let rafId = 0;
+  let running = false;
 
-  function snapAngle(a) {
-    return Math.round(a / step) * step;
-  }
+  /* ───────────────── RADIUS (CACHED) ───────────────── */
+  let radius = 300;
+  const mq = matchMedia("(max-width: 768px)");
 
+  function updateRadius() {
+    radius = mq.matches ? 220 : 300;
+  }
+  mq.addEventListener("change", updateRadius);
+  updateRadius();
+
+  /* ───────────────── HELPERS ───────────────── */
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+  const snapAngle = (a) => Math.round(a / step) * step;
+
+  /* ───────────────── TRANSFORMS ───────────────── */
   function applyTransforms() {
-    const radius = getRadius();
+    if (angle === lastAngle) return;
+    lastAngle = angle;
+
     ring.style.transform = `rotateY(${angle}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
     const active = ((Math.round(-normalized / step) % count) + count) % count;
 
+    if (active !== lastActive) {
+      lastActive = active;
+      items.forEach((el, i) => el.classList.toggle("active", i === active));
+    }
+
     const maxDist = Math.floor(count / 2 || 1);
 
     items.forEach((el, i) => {
-      el.style.transform = `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`;
-
       let dist = Math.abs(i - active);
       dist = Math.min(dist, count - dist);
 
-      const depth = Math.min(1, dist / maxDist); // 0 (active) -> 1 (far)
-      const prox = 1 - depth; // 1 (active) -> 0 (far)
+      const depth = Math.min(1, dist / maxDist);
+      const prox = 1 - depth;
 
       el.style.opacity = 1 - depth * 0.7;
-      el.style.filter = `blur(${depth * 6}px)`;
-
-      const panelScale = 1 - depth * 0.12;
-      el.style.setProperty("--panel-scale", panelScale);
-
-      // NEW: feed proximity into cards (consumed by PetalCard)
       el.style.setProperty("--petal-depth", depth.toFixed(4));
       el.style.setProperty("--petal-prox", prox.toFixed(4));
 
-      el.classList.toggle("active", i === active);
+      // Scale handles “depth” instead of blur (GPU-safe)
+      el.style.setProperty("--panel-scale", (1 - depth * 0.12).toFixed(4));
+      el.style.transform = `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`;
     });
   }
 
+  /* ───────────────── RAF LOOP (IDLE-AWARE) ───────────────── */
   function tick() {
+    if (!running) return;
+
     angle += vel;
     vel *= friction;
 
     if (Math.abs(vel) < settleThreshold) {
       const snapped = snapAngle(angle);
       angle += (snapped - angle) * snapStrength;
+
       if (Math.abs(snapped - angle) < 0.001) {
         angle = snapped;
         vel = 0;
+        running = false;
+        applyTransforms();
+        return;
       }
     }
 
     applyTransforms();
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
   }
 
-  // Isolated input handling
-  shell.addEventListener("pointerdown", (e) => {
-    isDragging = true;
-    shell.setPointerCapture?.(e.pointerId);
-  });
+  function start() {
+    if (running) return;
+    running = true;
+    rafId = requestAnimationFrame(tick);
+  }
 
-  shell.addEventListener("pointermove", (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
+  /* ───────────────── INPUT ───────────────── */
+  shell.addEventListener(
+    "pointerdown",
+    (e) => {
+      isDragging = true;
+      shell.setPointerCapture?.(e.pointerId);
+    },
+    { passive: true },
+  );
 
-    vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
-    angle += e.movementX * 0.12;
-  });
+  shell.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!isDragging) return;
+      vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
+      angle += e.movementX * 0.12;
+      start();
+    },
+    { passive: true },
+  );
 
-  shell.addEventListener("pointerup", () => {
-    isDragging = false;
-  });
+  shell.addEventListener(
+    "pointerup",
+    () => {
+      isDragging = false;
+    },
+    { passive: true },
+  );
 
   items.forEach((el) => {
     const href = el.dataset.href;
-    el.addEventListener("dblclick", () => (window.location.href = href));
+    el.addEventListener("dblclick", () => (location.href = href));
     el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") window.location.href = href;
+      if (e.key === "Enter") location.href = href;
     });
   });
 
+  /* ───────────────── INIT ───────────────── */
   applyTransforms();
-  requestAnimationFrame(tick);
+
+  /* ───────────────── CLEANUP (ASTRO ROUTES) ───────────────── */
+  function cleanup() {
+    cancelAnimationFrame(rafId);
+    mq.removeEventListener("change", updateRadius);
+  }
+  window.addEventListener("astro:before-swap", cleanup);
 </script>
 
 <style>
@@ -163,6 +206,7 @@ const { posts } = Astro.props;
     width: 100%;
     height: 100%;
     transform-style: preserve-3d;
+    will-change: transform;
   }
 
   .carousel-item {
@@ -177,6 +221,7 @@ const { posts } = Astro.props;
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(6px);
     pointer-events: auto;
+    will-change: transform, opacity;
   }
 
   .parallax-layer {
