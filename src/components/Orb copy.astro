@@ -3,8 +3,6 @@
 Orb:
 Plasma Orb - Petal
 */
-import { Image } from "astro:assets";
-import { readingTime } from "@lib/utils";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
@@ -12,20 +10,28 @@ interface Props {
   type?: "text" | "audio" | "video" | "photo" | "project";
 }
 
-const { post, type = "text" } = Astro.props;
-const { title, description, date } = post.data;
+const { post } = Astro.props;
 
-/* Extract first image (optional) – SAME LOGIC AS PetalCard */
+/* Extract first markdown image */
 let imageSrc: string | null = null;
+
 const match = post.body.match(/!\[.*?\]\((.*?)\)/);
 if (match?.[1]) {
-  imageSrc = match[1].startsWith("http") ? match[1] : `/src/assets/${match[1]}`;
+  const raw = match[1].trim();
+  imageSrc =
+    raw.startsWith("http") || raw.startsWith("/")
+      ? raw
+      : `/images/${raw.replace(/^\.?\//, "")}`;
 }
 ---
 
-<article class="orb-card" data-orb>
+<article
+  class="orb-card"
+  data-orb
+  data-has-image={imageSrc ? "true" : "false"}
+  data-seed={Math.floor(Math.random() * 1000)}
+>
   <div class="orb-surface">
-    <!-- PLASMA ORB -->
     <div class="orb-wrap">
       <svg
         viewBox="0 0 200 200"
@@ -35,35 +41,62 @@ if (match?.[1]) {
         <defs>
           <!-- Plasma filter -->
           <filter id="orbFX" x="0%" y="0%" width="100%" height="100%">
+            <!-- 1. Base noise -->
             <feTurbulence
-              type="turbulence"
-              baseFrequency="0.014"
+              id="orbNoise"
+              type="fractalNoise"
+              baseFrequency="0.015 0.019"
               numOctaves="2"
-              seed="4"
-              result="noise"
-            >
-              <animate
-                attributeName="baseFrequency"
-                dur="7s"
-                values="0.014;0.028;0.014"
-                repeatCount="indefinite"></animate>
-            </feTurbulence>
+              seed="1"
+              result="noise"></feTurbulence>
 
+            <!-- 2. Rolling flow: animate baseFrequency, NOT seed -->
+            <animate
+              xlink:href="#orbFX feTurbulence"
+              attributeName="baseFrequency"
+              dur="37s"
+              values="
+                0.014 0.018;
+                0.017 0.021;
+                0.015 0.019;
+                0.018 0.016;
+                0.016 0.020
+              "
+              repeatCount="indefinite"></animate>
+
+            <!-- 3. Directional drift -->
+            <feOffset in="SourceGraphic" dx="0" dy="0" result="drifted">
+              <animate
+                attributeName="dx"
+                dur="29s"
+                values="0;6;2;9;4;11;7"
+                repeatCount="indefinite"></animate>
+              <animate
+                attributeName="dy"
+                dur="41s"
+                values="0;3;8;1;10;5;12"
+                repeatCount="indefinite"></animate>
+            </feOffset>
+
+            <!-- 4. Displace AFTER drift -->
             <feDisplacementMap
-              in="SourceGraphic"
+              in="drifted"
               in2="noise"
-              scale="40"
+              scale="38"
+              xChannelSelector="R"
+              yChannelSelector="G"
               result="warped"></feDisplacementMap>
 
+            <!-- 5. Light shaping -->
             <feColorMatrix
               in="warped"
               type="matrix"
               values="
-                  1.08 0    0    0   -0.04
-                  0    1.08 0    0   -0.04
-                  0    0    1.08 0   -0.04
-                  0    0    0    1    0
-                "
+                1.04 0    0    0   -0.02
+                0    1.04 0    0   -0.02
+                0    0    1.04 0   -0.02
+                0    0    0    1    0
+              "
               result="colored"></feColorMatrix>
 
             <feSpecularLighting
@@ -71,15 +104,14 @@ if (match?.[1]) {
               surfaceScale="1"
               specularConstant="0.32"
               specularExponent="22"
-              lighting-color="white"
+              lighting-color="rgb(var(--orb-glow))"
               result="light"
             >
-              <fePointLight x="100" y="100" z="140"></fePointLight>
+              <fePointLight x="100" y="100" z="160"></fePointLight>
             </feSpecularLighting>
 
             <feComposite in="light" in2="colored" operator="in" result="lit"
             ></feComposite>
-
             <feBlend in="colored" in2="lit" mode="screen"></feBlend>
           </filter>
 
@@ -91,16 +123,25 @@ if (match?.[1]) {
 
           <!-- Fallback gradient -->
           <radialGradient id="orbGradient">
-            <stop offset="0%" stop-color="white" stop-opacity="0.25"></stop>
-            <stop offset="55%" stop-color="white" stop-opacity="0.45"></stop>
-            <stop offset="100%" stop-color="white" stop-opacity="0.7"></stop>
+            <stop
+              offset="0%"
+              stop-color="rgb(var(--orb-ink))"
+              stop-opacity="0.18"></stop>
+            <stop
+              offset="55%"
+              stop-color="rgb(var(--orb-ink))"
+              stop-opacity="0.38"></stop>
+            <stop
+              offset="100%"
+              stop-color="rgb(var(--orb-ink))"
+              stop-opacity="var(--orb-bg-opacity)"></stop>
           </radialGradient>
         </defs>
 
-        <!-- THIS IS WHAT ACTUALLY RENDERS -->
-        {
-          imageSrc ? (
-            <g filter="url(#orbFX)" mask="url(#orbMask)">
+        <!-- ALWAYS render fallback -->
+        <g filter="url(#orbFX)" mask="url(#orbMask)">
+          {
+            imageSrc && (
               <image
                 href={imageSrc}
                 x="38"
@@ -108,24 +149,16 @@ if (match?.[1]) {
                 width="124"
                 height="124"
                 preserveAspectRatio="xMidYMid slice"
+                onerror="this.remove()"
               />
-            </g>
-          ) : (
-            <circle
-              cx="100"
-              cy="100"
-              r="62"
-              fill="url(#orbGradient)"
-              filter="url(#orbFX)"
-              mask="url(#orbMask)"
-            />
-          )
-        }
+            )
+          }
+
+          <circle cx="100" cy="100" r="62" fill="url(#orbGradient)"></circle>
+        </g>
       </svg>
 
-      <!-- LENS CONTENT -->
       <div class="orb-lens">
-        <h2>{title}</h2>
         <svg
           viewBox="0 0 200 200"
           xmlns="http://www.w3.org/2000/svg"
@@ -137,49 +170,101 @@ if (match?.[1]) {
     </div>
 
     <script>
-      // Cursor light follows pointer (exact Test.astro behavior)
-      const light = document.getElementById("cursorLight");
+      const root = document.documentElement;
+      let lastScrollY = window.scrollY;
+      let scrollBias = 0;
 
-      if (light && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        window.addEventListener("mousemove", (e) => {
-          const cx = 100;
-          const cy = 100;
-
-          const dx = (e.clientX / window.innerWidth - 0.5) * 40;
-          const dy = (e.clientY / window.innerHeight - 0.5) * 40;
-
-          light.setAttribute("x", cx + dx);
-          light.setAttribute("y", cy + dy);
+      function syncOrbTheme() {
+        const isLight = root.classList.contains("light");
+        document.querySelectorAll("[data-orb]").forEach((orb) => {
+          orb.style.setProperty("--orb-energy", isLight ? "0.85" : "1");
         });
+      }
+
+      syncOrbTheme();
+      new MutationObserver(syncOrbTheme).observe(root, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          const y = window.scrollY;
+          const dy = y - lastScrollY;
+          lastScrollY = y;
+
+          scrollBias += Math.sign(dy) * 0.05;
+          scrollBias *= 0.9;
+
+          root.style.setProperty("--orb-scroll-bias", scrollBias.toFixed(4));
+        },
+        { passive: true },
+      );
+
+      const prefersReduced = matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      if (!prefersReduced) {
+        window.addEventListener(
+          "pointermove",
+          (e) => {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            document.querySelectorAll("[data-orb]").forEach((orb) => {
+              const r = orb.getBoundingClientRect();
+              const cx = r.left + r.width / 2;
+              const cy = r.top + r.height / 2;
+
+              const dx = (e.clientX - cx) / vw;
+              const dy = (e.clientY - cy) / vh;
+
+              const dist = Math.hypot(dx, dy);
+              const proximity = Math.max(0, 1 - dist * 3.2);
+
+              orb.style.setProperty("--orb-proximity", proximity.toFixed(4));
+            });
+          },
+          { passive: true },
+        );
       }
     </script>
 
     <style>
-      /* ─────────────────────────────
-   ORB CONTAINER
-   ───────────────────────────── */
+      :root {
+        --orb-ink: 255, 255, 255;
+        --orb-glow: 255, 255, 255;
+        --orb-bg-opacity: 0.55;
+      }
+
+      html.light {
+        --orb-ink: 0, 0, 0;
+        --orb-glow: 0, 0, 0;
+        --orb-bg-opacity: 0.45;
+      }
+
+      /* Image-less or broken-image orbs are always white */
+      .orb-card[data-has-image="false"] {
+        --orb-ink: 255, 255, 255;
+        --orb-glow: 255, 255, 255;
+        --orb-bg-opacity: 0.55;
+      }
+
       .orb-card {
         width: 100%;
         height: 100%;
         aspect-ratio: 1 / 1;
         border-radius: 50%;
-
         pointer-events: none;
-      }
+        --orb-proximity: 0;
+        --orb-scroll-bias: 0;
+        --orb-mouse-x: 0;
+        --orb-mouse-y: 0;
 
-      .orb-image {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        overflow: hidden;
-        z-index: 0;
-      }
-
-      .orb-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: scale(1.05);
+        /* per-orb micro variance */
+        /*filter: hue-rotate(calc(attr(data-seed number) * 0.02deg));*/
       }
 
       .orb-surface {
@@ -187,20 +272,13 @@ if (match?.[1]) {
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        overflow: visible;
-      }
-      /*calm when inactive */
-      .orb-card:not(.active) .orb-image img {
-        filter: saturate(0.9) contrast(0.95);
       }
 
-      /* ─────────────────────────────
-   PLASMA CORE
-   ───────────────────────────── */
       .orb-wrap {
         position: absolute;
         inset: 0;
         pointer-events: none;
+        filter: brightness(var(--orb-energy, 1));
       }
 
       .orb-wrap svg {
@@ -209,29 +287,22 @@ if (match?.[1]) {
         display: block;
       }
 
-      /* ─────────────────────────────
-   CONTENT LENS
-   ───────────────────────────── */
       .orb-lens {
         position: absolute;
         inset: 18%;
-        z-index: 2;
-
         display: flex;
         align-items: center;
         justify-content: center;
-        text-align: center;
-
-        border-radius: 50%;
         pointer-events: none;
       }
 
-      /* ─────────────────────────────
-   REDUCED MOTION
-   ───────────────────────────── */
+      .orb-wrap {
+        filter: brightness(calc(0.96 + var(--orb-energy, 1) * 0.06))
+          contrast(1.03) saturate(1.04);
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        svg animate,
-        feTurbulence animate {
+        svg animate {
           display: none;
         }
       }

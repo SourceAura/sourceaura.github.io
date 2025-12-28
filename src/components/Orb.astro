@@ -43,6 +43,7 @@ if (match?.[1]) {
           <filter id="orbFX" x="0%" y="0%" width="100%" height="100%">
             <!-- 1. Base noise -->
             <feTurbulence
+              id="orbNoise"
               type="fractalNoise"
               baseFrequency="0.015 0.019"
               numOctaves="2"
@@ -252,21 +253,18 @@ if (match?.[1]) {
       }
 
       .orb-card {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        pointer-events: none;
         --orb-proximity: 0;
         --orb-scroll-bias: 0;
         --orb-mouse-x: 0;
         --orb-mouse-y: 0;
 
         /* per-orb micro variance */
-        filter: hue-rotate(calc(attr(data-seed number) * 0.02deg));
-      }
-
-      .orb-card {
-        width: 100%;
-        height: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 50%;
-        pointer-events: none;
+        /*filter: hue-rotate(calc(attr(data-seed number) * 0.02deg));*/
       }
 
       .orb-surface {
@@ -304,8 +302,7 @@ if (match?.[1]) {
       }
 
       @media (prefers-reduced-motion: reduce) {
-        svg animate,
-        feTurbulence animate {
+        svg animate {
           display: none;
         }
       }
