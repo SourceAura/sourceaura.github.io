@@ -25,7 +25,12 @@ if (match?.[1]) {
 }
 ---
 
-<article class="orb-card" data-orb data-has-image={imageSrc ? "true" : "false"}>
+<article
+  class="orb-card"
+  data-orb
+  data-has-image={imageSrc ? "true" : "false"}
+  data-seed={Math.floor(Math.random() * 1000)}
+>
   <div class="orb-surface">
     <div class="orb-wrap">
       <svg
@@ -36,26 +41,52 @@ if (match?.[1]) {
         <defs>
           <!-- Plasma filter -->
           <filter id="orbFX" x="0%" y="0%" width="100%" height="100%">
+            <!-- 1. Base noise -->
             <feTurbulence
-              type="turbulence"
-              baseFrequency="0.014"
+              type="fractalNoise"
+              baseFrequency="0.015 0.019"
               numOctaves="2"
-              seed="4"
-              result="noise"
-            >
-              <animate
-                attributeName="baseFrequency"
-                dur="7s"
-                values="0.014;0.028;0.014"
-                repeatCount="indefinite"></animate>
-            </feTurbulence>
+              seed="1"
+              result="noise"></feTurbulence>
 
+            <!-- 2. Rolling flow: animate baseFrequency, NOT seed -->
+            <animate
+              xlink:href="#orbFX feTurbulence"
+              attributeName="baseFrequency"
+              dur="37s"
+              values="
+                0.014 0.018;
+                0.017 0.021;
+                0.015 0.019;
+                0.018 0.016;
+                0.016 0.020
+              "
+              repeatCount="indefinite"></animate>
+
+            <!-- 3. Directional drift -->
+            <feOffset in="SourceGraphic" dx="0" dy="0" result="drifted">
+              <animate
+                attributeName="dx"
+                dur="29s"
+                values="0;6;2;9;4;11;7"
+                repeatCount="indefinite"></animate>
+              <animate
+                attributeName="dy"
+                dur="41s"
+                values="0;3;8;1;10;5;12"
+                repeatCount="indefinite"></animate>
+            </feOffset>
+
+            <!-- 4. Displace AFTER drift -->
             <feDisplacementMap
-              in="SourceGraphic"
+              in="drifted"
               in2="noise"
-              scale="40"
+              scale="38"
+              xChannelSelector="R"
+              yChannelSelector="G"
               result="warped"></feDisplacementMap>
 
+            <!-- 5. Light shaping -->
             <feColorMatrix
               in="warped"
               type="matrix"
@@ -75,7 +106,7 @@ if (match?.[1]) {
               lighting-color="rgb(var(--orb-glow))"
               result="light"
             >
-              <fePointLight x="100" y="100" z="140"></fePointLight>
+              <fePointLight x="100" y="100" z="160"></fePointLight>
             </feSpecularLighting>
 
             <feComposite in="light" in2="colored" operator="in" result="lit"
@@ -139,6 +170,8 @@ if (match?.[1]) {
 
     <script>
       const root = document.documentElement;
+      let lastScrollY = window.scrollY;
+      let scrollBias = 0;
 
       function syncOrbTheme() {
         const isLight = root.classList.contains("light");
@@ -152,6 +185,50 @@ if (match?.[1]) {
         attributes: true,
         attributeFilter: ["class"],
       });
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          const y = window.scrollY;
+          const dy = y - lastScrollY;
+          lastScrollY = y;
+
+          scrollBias += Math.sign(dy) * 0.05;
+          scrollBias *= 0.9;
+
+          root.style.setProperty("--orb-scroll-bias", scrollBias.toFixed(4));
+        },
+        { passive: true },
+      );
+
+      const prefersReduced = matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      if (!prefersReduced) {
+        window.addEventListener(
+          "pointermove",
+          (e) => {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            document.querySelectorAll("[data-orb]").forEach((orb) => {
+              const r = orb.getBoundingClientRect();
+              const cx = r.left + r.width / 2;
+              const cy = r.top + r.height / 2;
+
+              const dx = (e.clientX - cx) / vw;
+              const dy = (e.clientY - cy) / vh;
+
+              const dist = Math.hypot(dx, dy);
+              const proximity = Math.max(0, 1 - dist * 3.2);
+
+              orb.style.setProperty("--orb-proximity", proximity.toFixed(4));
+            });
+          },
+          { passive: true },
+        );
+      }
     </script>
 
     <style>
@@ -172,6 +249,16 @@ if (match?.[1]) {
         --orb-ink: 255, 255, 255;
         --orb-glow: 255, 255, 255;
         --orb-bg-opacity: 0.55;
+      }
+
+      .orb-card {
+        --orb-proximity: 0;
+        --orb-scroll-bias: 0;
+        --orb-mouse-x: 0;
+        --orb-mouse-y: 0;
+
+        /* per-orb micro variance */
+        filter: hue-rotate(calc(attr(data-seed number) * 0.02deg));
       }
 
       .orb-card {
@@ -209,6 +296,11 @@ if (match?.[1]) {
         align-items: center;
         justify-content: center;
         pointer-events: none;
+      }
+
+      .orb-wrap {
+        filter: brightness(calc(0.96 + var(--orb-energy, 1) * 0.06))
+          contrast(1.03) saturate(1.04);
       }
 
       @media (prefers-reduced-motion: reduce) {
