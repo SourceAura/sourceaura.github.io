@@ -11,8 +11,6 @@ interface Props {
   post: CollectionEntry<"petals">;
   type?: "text" | "audio" | "video" | "photo" | "project";
 }
-const REVEAL_THRESHOLD = 96; // px
-let isRevealed = false;
 
 const { post, type = "text" } = Astro.props;
 const { title, description, date } = post.data;
@@ -25,7 +23,7 @@ if (match?.[1]) {
 }
 ---
 
-<article class="orb-card" data-orb>
+<article class="orb-card" data-orb data-has-image={imageSrc ? "true" : "false"}>
   <div class="orb-surface">
     <!-- PLASMA ORB -->
     <div class="orb-wrap">
@@ -192,6 +190,15 @@ if (match?.[1]) {
         --orb-ink: 0, 0, 0;
         --orb-glow: 0, 0, 0;
         --orb-bg-opacity: 0.45;
+      }
+      /* ─────────────────────────────
+         IMAGE-LESS ORB: ALWAYS WHITE
+         ───────────────────────────── */
+
+      .orb-card[data-has-image="false"] {
+        --orb-ink: 255, 255, 255;
+        --orb-glow: 255, 255, 255;
+        --orb-bg-opacity: 0.55;
       }
 
       /* ─────────────────────────────
