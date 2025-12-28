@@ -2,6 +2,7 @@
 /*
 404: "Found - A Page that was, Not.."
 */
+import Test from "@components/Test.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
@@ -15,6 +16,7 @@ import Container from "@components/Container.astro";
     <div class="mt-16 grid place-items-center gap-3">
       <h4 class="animate text-2xl font-semibold text-black dark:text-white">
         404: Page not found
+        <Test />
       </h4>
       <span class="animate"> </span>
     </div>

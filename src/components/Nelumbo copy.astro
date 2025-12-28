@@ -1,4 +1,8 @@
 ---
+/* Nelumbo
+Rose Lotus
+Nelumbo is a component that displays a carousel of petals.
+*/
 import PetalCard from "@components/PetalCard.astro";
 const { posts } = Astro.props;
 ---
@@ -52,17 +56,15 @@ const { posts } = Astro.props;
 
   /* ───────── VISIBILITY STATE ───────── */
 
-  let petalsOpen = true;
+  let petalsOpen = false;
 
   function updatePetalVisibility() {
     shell.toggleAttribute("data-petals-open", petalsOpen);
+
+    if (!petalsOpen) {
+      focusedIndex = -1;
+    }
   }
-  // Debug
-  window.addEventListener("qi:toggle-petals", () => {
-    console.log("[PetalCarousel] toggle received");
-    petalsOpen = !petalsOpen;
-    updatePetalVisibility();
-  });
 
   // Esc - And Touch/Click outside of viewport to Close
   window.addEventListener("keydown", (e) => {
@@ -107,6 +109,10 @@ const { posts } = Astro.props;
   let lastAngle = null;
   let lastActive = -1;
 
+  let focusedIndex = -1;
+  let snapTarget = null;
+  let snapElastic = 0;
+
   let rafId = 0;
   let running = false;
 
@@ -140,6 +146,29 @@ const { posts } = Astro.props;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const snapAngle = (a) => Math.round(a / step) * step;
 
+  function snapToIndex(index, immediate = false) {
+    const target = -index * step;
+    snapTarget = target;
+
+    if (immediate) {
+      angle = target;
+      vel = 0;
+      snapElastic = 0;
+      applyTransforms();
+      start();
+      return;
+    }
+
+    // Small elastic offset (visual only)
+    const delta = target - angle;
+    snapElastic = clamp(delta * 0.12, -18, 18);
+
+    // Kill existing spin and let snap logic handle it
+    vel = 0;
+
+    start();
+  }
+
   /* ───────────────── TRANSFORMS ───────────────── */
   function applyTransforms() {
     if (angle === lastAngle) return;
@@ -147,7 +176,7 @@ const { posts } = Astro.props;
 
     const om = getOmPulse(); // ← HERE
 
-    ring.style.transform = `rotateY(${angle}deg)`;
+    ring.style.transform = `rotateY(${angle + snapElastic}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
     const active = ((Math.round(-normalized / step) % count) + count) % count;
@@ -195,6 +224,24 @@ const { posts } = Astro.props;
     angle += vel;
     vel *= friction;
 
+    // ── SNAP TARGET RESOLUTION ──
+    if (snapTarget !== null) {
+      const d = snapTarget - angle;
+
+      angle += d * snapStrength;
+
+      // decay elastic
+      snapElastic *= 0.78;
+
+      // snap complete → hard lock
+      if (Math.abs(d) < 0.01 && Math.abs(snapElastic) < 0.2) {
+        angle = snapTarget;
+        vel = 0;
+        snapElastic = 0;
+        snapTarget = null;
+      }
+    }
+
     // ── OUTWARD PULL RELAXATION ──
     if (!isPulling) {
       pullVel *= 0.82;
@@ -208,7 +255,7 @@ const { posts } = Astro.props;
       }
     }
 
-    if (Math.abs(vel) < settleThreshold) {
+    if (snapTarget === null && Math.abs(vel) < settleThreshold) {
       const snapped = snapAngle(angle);
       angle += (snapped - angle) * snapStrength;
 
@@ -231,7 +278,9 @@ const { posts } = Astro.props;
     rafId = requestAnimationFrame(tick);
   }
 
-  // ── ACTIVE PETAL OUTWARD DRAG ──
+  // ── ACTIVE PETAL OUTWARD DRAG ─
+  //
+
   /* ───────────────── INPUT ───────────────── */
 
   function ensureOpen() {
@@ -242,18 +291,15 @@ const { posts } = Astro.props;
     }
   }
 
+  // viewport - rotation only
   viewport.addEventListener(
     "pointerdown",
     (e) => {
+      // If a petal handled this, don't rotate
+      if (e.target.closest(".carousel-item")) return;
+
       ensureOpen();
       isDragging = true;
-
-      const activeEl = items[lastActive];
-      if (activeEl && activeEl.contains(e.target)) {
-        isPulling = true;
-        pullVel = 0;
-      }
-
       viewport.setPointerCapture?.(e.pointerId);
     },
     { passive: true },
@@ -291,14 +337,42 @@ const { posts } = Astro.props;
   );
 
   // Expansion
+
   // ── PETAL KEYBOARD CONTROLS ──
   items.forEach((el) => {
     const href = el.dataset.href;
+    const index = Number(el.dataset.index);
 
-    // Mouse
-    el.addEventListener("dblclick", () => {
-      location.href = href;
-    });
+    // Touch/click: snap this petal to focus + make it active
+    el.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        ensureOpen();
+
+        // SECOND TAP → navigate
+        if (focusedIndex === index) {
+          const href = el.dataset.href;
+          if (href) location.href = href;
+          return;
+        }
+
+        // FIRST TAP → focus only
+        focusedIndex = index;
+
+        snapToIndex(index, false); // smooth snap (see Part B)
+
+        isPulling = false;
+        pullVel = 0;
+
+        start();
+      },
+      { passive: false },
+    );
 
     // Keyboard
     el.addEventListener("keydown", (e) => {
@@ -381,7 +455,7 @@ const { posts } = Astro.props;
     transform-style: preserve-3d;
     will-change: transform;
   }
-
+  /*Items*/
   .carousel-item {
     position: absolute;
     left: 50%;
@@ -393,8 +467,13 @@ const { posts } = Astro.props;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(6px);
-    pointer-events: none;
+    pointer-events: auto;
     will-change: transform, opacity;
+  }
+
+  /* Inner content stays inert */
+  .carousel-item * {
+    pointer-events: none;
   }
 
   .parallax-layer {

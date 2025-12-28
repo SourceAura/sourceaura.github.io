@@ -42,12 +42,72 @@ const { title, description, prev, next } = Astro.props
         attachPostNavigation({ prev, next })
       </script>
     ) : null}
+
+    <script is:inline type="module">
+      import {
+        mountGestures,
+        registerGestureHandler,
+      } from "/src/utils/gestures.ts";
+
+      mountGestures();
+
+      registerGestureHandler((gesture) => {
+        const petalShell = document.getElementById("petal-shell");
+        const petalsOpen = petalShell?.hasAttribute("data-petals-open");
+
+        const isPost = !!document.querySelector("article[data-orb]");
+
+        if (gesture === "pinch-in") {
+          // Post → petals
+          if (isPost) {
+            history.back();
+            return;
+          }
+
+          // Petals → home
+          if (petalsOpen) {
+            window.dispatchEvent(new Event("qi:toggle-petals"));
+            return;
+          }
+
+          // Anywhere → home
+          location.href = "/";
+        }
+      });
+    </script>
+
   </body>
 </html>
 
-<script is:inline>
-  // Compatibility shim for persisted client scripts
-  if (typeof window !== "undefined" && !("locales" in window)) {
-    window.locales = undefined;
-  }
+<script is:inline type="module">
+  import {
+    mountGestures,
+    registerGestureHandler,
+  } from "/src/utils/gestures.ts";
+
+  mountGestures();
+
+  registerGestureHandler((gesture) => {
+    const petalShell = document.getElementById("petal-shell");
+    const petalsOpen = petalShell?.hasAttribute("data-petals-open");
+
+    const route = document.body.dataset.route;
+
+    if (gesture === "pinch-in") {
+      // Post → petals
+      if (route === "post") {
+        history.back();
+        return;
+      }
+
+      // Petals → home
+      if (petalsOpen) {
+        window.dispatchEvent(new Event("qi:toggle-petals"));
+        return;
+      }
+
+      // Anywhere → home
+      location.href = "/";
+    }
+  });
 </script>

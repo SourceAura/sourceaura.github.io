@@ -3,7 +3,7 @@
 Rose Lotus
 Nelumbo is a component that displays a carousel of petals.
 */
-import PetalCard from "@components/PetalCard.astro";
+import Orb from "@components/Orb.astro";
 const { posts } = Astro.props;
 ---
 
@@ -19,7 +19,14 @@ const { posts } = Astro.props;
             data-href={`/petals/${post.slug}`}
           >
             <div class="parallax-layer">
-              <PetalCard post={post} />
+              <div class="petal-surface">
+                <Orb post={post} />
+
+                <div class="petal-content">
+                  <h3>{post.data.title}</h3>
+                  <p>{post.data.description}</p>
+                </div>
+              </div>
             </div>
           </div>
         ))
@@ -60,39 +67,55 @@ const { posts } = Astro.props;
 
   function updatePetalVisibility() {
     shell.toggleAttribute("data-petals-open", petalsOpen);
+
+    if (!petalsOpen) {
+      focusedIndex = -1;
+    }
   }
-  // Debug
-  window.addEventListener("qi:toggle-petals", () => {
-    console.log("[PetalCarousel] toggle received");
-    petalsOpen = !petalsOpen;
+
+  /* ───────── Event Listeners  ───────── */
+  window.addEventListener("gesture:close-petals", () => {
+    isPulling = false;
+    pullVel = 0;
+    petalsOpen = false;
     updatePetalVisibility();
   });
 
   // Esc - And Touch/Click outside of viewport to Close
   window.addEventListener("keydown", (e) => {
-    if (!petalsOpen) return;
+    if (e.key !== "Escape") return;
 
-    if (e.key === "Escape") {
+    if (isRevealed) {
+      closeRevealedPetal();
+      return;
+    }
+
+    if (petalsOpen) {
       isPulling = false;
       pullVel = 0;
       petalsOpen = false;
       updatePetalVisibility();
     }
   });
+
   // Touch / click outside viewport to close
   window.addEventListener(
     "pointerdown",
     (e) => {
-      if (!petalsOpen) return;
+      // If clicking inside active petal, ignore
+      if (e.target.closest(".carousel-item.active")) return;
 
-      // If the click started inside the carousel, ignore
-      if (viewport.contains(e.target)) return;
+      if (isRevealed) {
+        closeRevealedPetal();
+        return;
+      }
 
-      // Otherwise, close
-      isPulling = false;
-      pullVel = 0;
-      petalsOpen = false;
-      updatePetalVisibility();
+      if (petalsOpen) {
+        isPulling = false;
+        pullVel = 0;
+        petalsOpen = false;
+        updatePetalVisibility();
+      }
     },
     { passive: true },
   );
@@ -104,12 +127,20 @@ const { posts } = Astro.props;
   const settleThreshold = 0.015;
 
   /* ───────────────── STATE ───────────────── */
+
+  let isRevealed = false;
+  const REVEAL_THRESHOLD = 96; // px upward pull
+
   let angle = 0;
   let vel = 0;
   let isDragging = false;
 
   let lastAngle = null;
   let lastActive = -1;
+
+  let focusedIndex = -1;
+  let snapTarget = null;
+  let snapElastic = 0;
 
   let rafId = 0;
   let running = false;
@@ -121,6 +152,20 @@ const { posts } = Astro.props;
   let pullZ = 0; // current outward pull (px)
   let pullVel = 0;
   let isPulling = false;
+
+  function closeRevealedPetal() {
+    if (!isRevealed) return;
+
+    isRevealed = false;
+    isPulling = false;
+    pullZ = 0;
+    pullVel = 0;
+
+    shell.removeAttribute("data-revealed");
+
+    start(); // resume carousel physics
+  }
+
   /* ───────────────── OM PULSE (GLOBAL) ───────────────── */
   function getOmPulse() {
     const v = getComputedStyle(document.documentElement).getPropertyValue(
@@ -144,6 +189,29 @@ const { posts } = Astro.props;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const snapAngle = (a) => Math.round(a / step) * step;
 
+  function snapToIndex(index, immediate = false) {
+    const target = -index * step;
+    snapTarget = target;
+
+    if (immediate) {
+      angle = target;
+      vel = 0;
+      snapElastic = 0;
+      applyTransforms();
+      start();
+      return;
+    }
+
+    // Small elastic offset (visual only)
+    const delta = target - angle;
+    snapElastic = clamp(delta * 0.12, -18, 18);
+
+    // Kill existing spin and let snap logic handle it
+    vel = 0;
+
+    start();
+  }
+
   /* ───────────────── TRANSFORMS ───────────────── */
   function applyTransforms() {
     if (angle === lastAngle) return;
@@ -151,7 +219,7 @@ const { posts } = Astro.props;
 
     const om = getOmPulse(); // ← HERE
 
-    ring.style.transform = `rotateY(${angle}deg)`;
+    ring.style.transform = `rotateY(${angle + snapElastic}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
     const active = ((Math.round(-normalized / step) % count) + count) % count;
@@ -196,8 +264,31 @@ const { posts } = Astro.props;
     const friction = BASE_FRICTION * (1 - breath * 0.015);
     const snapStrength = BASE_SNAP * (1 + breath * 0.06);
 
-    angle += vel;
-    vel *= friction;
+    if (!isRevealed) {
+      angle += vel;
+      vel *= friction;
+    } else {
+      vel = 0;
+      angle = snapAngle(angle);
+    }
+
+    // ── SNAP TARGET RESOLUTION ──
+    if (snapTarget !== null) {
+      const d = snapTarget - angle;
+
+      angle += d * snapStrength;
+
+      // decay elastic
+      snapElastic *= 0.78;
+
+      // snap complete → hard lock
+      if (Math.abs(d) < 0.01 && Math.abs(snapElastic) < 0.2) {
+        angle = snapTarget;
+        vel = 0;
+        snapElastic = 0;
+        snapTarget = null;
+      }
+    }
 
     // ── OUTWARD PULL RELAXATION ──
     if (!isPulling) {
@@ -206,13 +297,26 @@ const { posts } = Astro.props;
 
       pullZ += (0 - pullZ) * 0.12;
 
+      // ── REVEAL STATE ──
+      if (!isRevealed && pullZ >= REVEAL_THRESHOLD) {
+        isRevealed = true;
+        pullVel = 0;
+        vel = 0;
+        shell.setAttribute("data-revealed", "");
+      }
+
+      if (isRevealed && pullZ < REVEAL_THRESHOLD * 0.6) {
+        isRevealed = false;
+        shell.removeAttribute("data-revealed");
+      }
+
       if (Math.abs(pullZ) < 0.2) {
         pullZ = 0;
         pullVel = 0;
       }
     }
 
-    if (Math.abs(vel) < settleThreshold) {
+    if (snapTarget === null && Math.abs(vel) < settleThreshold) {
       const snapped = snapAngle(angle);
       angle += (snapped - angle) * snapStrength;
 
@@ -235,7 +339,9 @@ const { posts } = Astro.props;
     rafId = requestAnimationFrame(tick);
   }
 
-  // ── ACTIVE PETAL OUTWARD DRAG ──
+  // ── ACTIVE PETAL OUTWARD DRAG ─
+  //
+
   /* ───────────────── INPUT ───────────────── */
 
   function ensureOpen() {
@@ -246,18 +352,7 @@ const { posts } = Astro.props;
     }
   }
 
-  // viewport - rotation only
-  viewport.addEventListener(
-    "pointerdown",
-    (e) => {
-      ensureOpen();
-      isDragging = true;
-      viewport.setPointerCapture?.(e.pointerId);
-    },
-    { passive: true },
-  );
-
-  viewport.addEventListener(
+  shell.addEventListener(
     "pointermove",
     (e) => {
       if (!isDragging) return;
@@ -269,6 +364,10 @@ const { posts } = Astro.props;
       }
 
       // vertical drag → pull active petal outward
+      if (e.movementY < -1) {
+        isPulling = true;
+      }
+
       if (isPulling) {
         pullVel = clamp(-e.movementY * 0.6, -8, 14);
         pullZ = clamp(pullZ + pullVel, 0, 140);
@@ -279,7 +378,7 @@ const { posts } = Astro.props;
     { passive: true },
   );
 
-  viewport.addEventListener(
+  shell.addEventListener(
     "pointerup",
     () => {
       isDragging = false;
@@ -289,14 +388,36 @@ const { posts } = Astro.props;
   );
 
   // Expansion
+
   // ── PETAL KEYBOARD CONTROLS ──
   items.forEach((el) => {
     const href = el.dataset.href;
+    const index = Number(el.dataset.index);
 
-    // Mouse
-    el.addEventListener("dblclick", () => {
-      location.href = href;
-    });
+    // Touch/click: snap this petal to focus + make it active
+    el.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        ensureOpen();
+
+        focusedIndex = index;
+        snapToIndex(index, false);
+
+        isDragging = true;
+        isPulling = false;
+        pullVel = 0;
+
+        el.setPointerCapture?.(e.pointerId);
+
+        start();
+      },
+      { passive: false },
+    );
 
     // Keyboard
     el.addEventListener("keydown", (e) => {
@@ -347,13 +468,26 @@ const { posts } = Astro.props;
 
   /* ───────────────── CLEANUP (ASTRO ROUTES) ───────────────── */
   function cleanup() {
+    closeRevealedPetal();
     cancelAnimationFrame(rafId);
     mq.removeEventListener("change", updateRadius);
   }
+
   window.addEventListener("astro:before-swap", cleanup);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) closeRevealedPetal();
+  });
 </script>
 
 <style>
+  .carousel-layer,
+  .carousel-viewport,
+  .carousel-ring {
+    background: transparent;
+    border: none;
+  }
+
   .carousel-layer {
     position: fixed;
     inset: 0;
@@ -368,9 +502,11 @@ const { posts } = Astro.props;
     left: 50%;
     top: var(--qi-center-y);
     transform: translate(-50%, -50%);
-    width: min(100%, 900px);
-    height: 360px;
-    perspective: 1400px;
+
+    width: clamp(220px, 40vw, 320px);
+    height: clamp(220px, 40vw, 320px);
+
+    perspective: 1200px;
   }
 
   .carousel-ring {
@@ -384,17 +520,20 @@ const { posts } = Astro.props;
     position: absolute;
     left: 50%;
     top: 50%;
-    width: clamp(250px, 44vw, 380px);
-    height: 130px;
-    border-radius: 14px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(6px);
+
+    width: clamp(180px, 32vw, 240px);
+    aspect-ratio: 1 / 1;
+
+    border-radius: 50%;
+    overflow: visible;
+    /*background: none;
+    border: none;*/
+
     pointer-events: auto;
     will-change: transform, opacity;
   }
-  /*All*/
+
+  /* Inner content stays inert */
   .carousel-item * {
     pointer-events: none;
   }
@@ -402,15 +541,13 @@ const { posts } = Astro.props;
   .parallax-layer {
     width: 100%;
     height: 100%;
+    aspect-ratio: 1 / 1;
     transform: scale(var(--panel-scale, 1));
     transition: transform 0.15s ease;
   }
 
   .carousel-item.active {
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.18),
-      0 0 30px rgba(255, 255, 255, 0.14),
-      0 0 60px rgba(255, 255, 255, 0.06);
+    box-shadow: none;
   }
 
   .carousel-hint {
@@ -433,6 +570,51 @@ const { posts } = Astro.props;
     }
   }
 
+  /* ───────────────── PETAL CONTENT REVEAL ───────────────── */
+
+  .carousel-item .petal-content {
+    position: absolute;
+    inset: 0;
+    padding: 1.4rem;
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 420ms ease,
+      transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Orb is the interaction surface */
+  .carousel-item .petal-surface {
+    pointer-events: auto;
+    cursor: grab;
+  }
+
+  .carousel-item.active .petal-surface {
+    cursor: grab;
+  }
+
+  #petal-shell[data-revealed] .carousel-item.active .petal-surface {
+    cursor: default;
+  }
+
+  #petal-shell[data-revealed] .carousel-item.active .petal-content {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* soften orb when content is open */
+  #petal-shell[data-revealed] .carousel-item.active .orb-wrap {
+    filter: blur(6px) brightness(0.85);
+    transition: filter 420ms ease;
+  }
+  /* Keep visual internals inert */
+  .orb-wrap,
+  .orb-wrap *,
+  .orb-lens,
+  .orb-lens * {
+    pointer-events: none;
+  }
   /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
   /* Home page: carousel is display-only */
   body[data-route="home"] .carousel-viewport {

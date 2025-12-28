@@ -1,35 +1,9 @@
-| Key            | Action                               |
-| -------------- | ------------------------------------ |
-| `Esc`          | Close petals / collapse active focus |
-| `/`            | Open search (PageFind, if enabled)   |
-| `Tab`          | Navigate interactive elements        |
-| `Shift + Tab`  | Reverse navigation                   |
-| `Cmd/Ctrl + K` | (Optional future) Command palette    |
-
-
-| Key                | Action                           |
-| ------------------ | -------------------------------- |
-| `←` / `→`          | Rotate carousel                  |
-| `Click + Drag (X)` | Rotate carousel                  |
-| `Click + Drag (Y)` | Pull active petal forward        |
-| `Space`            | Toggle expansion of active petal |
-| `↑`                | Pull active petal forward (step) |
-| `↓`                | Push active petal back           |
-| `Esc`              | Collapse expanded petal          |
-| `Enter`            | Navigate to petal                |
-| `Double Click`     | Navigate to petal                |
-
-
-| Key       | Action                                   |
-| --------- | ---------------------------------------- |
-| `↑` / `↓` | Adjust depth                             |
-| `Esc`     | Exit focus mode                          |
-| `Enter`   | Navigate                                 |
-| `Tab`     | Move through card content (if focusable) |
-
-| Key            | Action                 |
-| -------------- | ---------------------- |
-| `Home`         | Return to root         |
-| `Backspace`    | Back (browser default) |
-| `T` (optional) | Toggle theme           |
-| `B` (optional) | Back to top            |
+| Gesture                | Context             | Result                       |
+| ---------------------- | ------------------- | ---------------------------- |
+| **Horizontal swipe**   | Petals open         | Rotate carousel              |
+| **Tap petal**          | Petals open         | Focus petal                  |
+| **Tap focused petal**  | Petals open         | Navigate                     |
+| **Pinch-in**           | Inside a petal post | Close post → petals          |
+| **Pinch-in**           | Petals open         | Close petals → home          |
+| **Pinch-in**           | Anywhere else       | Go home                      |
+| **Pinch-out (subtle)** | Petals open         | Reinforce focus (micro pull) |

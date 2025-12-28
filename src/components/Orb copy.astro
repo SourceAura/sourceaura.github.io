@@ -1,0 +1,240 @@
+---
+/*
+Orb:
+Plasma Orb - Petal
+*/
+import { Image } from "astro:assets";
+import { readingTime } from "@lib/utils";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"petals">;
+  type?: "text" | "audio" | "video" | "photo" | "project";
+}
+
+const { post, type = "text" } = Astro.props;
+const { title, description, date } = post.data;
+
+/* Extract first image (optional) – SAME LOGIC AS PetalCard */
+let imageSrc: string | null = null;
+const match = post.body.match(/!\[.*?\]\((.*?)\)/);
+if (match?.[1]) {
+  imageSrc = match[1].startsWith("http") ? match[1] : `/src/assets/${match[1]}`;
+}
+---
+
+<article class="orb-card" data-orb>
+  <div class="orb-surface">
+    <!-- PLASMA ORB -->
+    <div class="orb-wrap">
+      <svg
+        viewBox="0 0 200 200"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <defs>
+          <!-- Plasma filter -->
+          <filter id="orbFX" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence
+              type="turbulence"
+              baseFrequency="0.014"
+              numOctaves="2"
+              seed="4"
+              result="noise"
+            >
+              <animate
+                attributeName="baseFrequency"
+                dur="7s"
+                values="0.014;0.028;0.014"
+                repeatCount="indefinite"></animate>
+            </feTurbulence>
+
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="noise"
+              scale="40"
+              result="warped"></feDisplacementMap>
+
+            <feColorMatrix
+              in="warped"
+              type="matrix"
+              values="
+                  1.08 0    0    0   -0.04
+                  0    1.08 0    0   -0.04
+                  0    0    1.08 0   -0.04
+                  0    0    0    1    0
+                "
+              result="colored"></feColorMatrix>
+
+            <feSpecularLighting
+              in="colored"
+              surfaceScale="1"
+              specularConstant="0.32"
+              specularExponent="22"
+              lighting-color="white"
+              result="light"
+            >
+              <fePointLight x="100" y="100" z="140"></fePointLight>
+            </feSpecularLighting>
+
+            <feComposite in="light" in2="colored" operator="in" result="lit"
+            ></feComposite>
+
+            <feBlend in="colored" in2="lit" mode="screen"></feBlend>
+          </filter>
+
+          <!-- Orb mask -->
+          <mask id="orbMask">
+            <rect width="100%" height="100%" fill="black"></rect>
+            <circle cx="100" cy="100" r="62" fill="white"></circle>
+          </mask>
+
+          <!-- Fallback gradient -->
+          <radialGradient id="orbGradient">
+            <stop offset="0%" stop-color="white" stop-opacity="0.25"></stop>
+            <stop offset="55%" stop-color="white" stop-opacity="0.45"></stop>
+            <stop offset="100%" stop-color="white" stop-opacity="0.7"></stop>
+          </radialGradient>
+        </defs>
+
+        <!-- THIS IS WHAT ACTUALLY RENDERS -->
+        {
+          imageSrc ? (
+            <g filter="url(#orbFX)" mask="url(#orbMask)">
+              <image
+                href={imageSrc}
+                x="38"
+                y="38"
+                width="124"
+                height="124"
+                preserveAspectRatio="xMidYMid slice"
+              />
+            </g>
+          ) : (
+            <circle
+              cx="100"
+              cy="100"
+              r="62"
+              fill="url(#orbGradient)"
+              filter="url(#orbFX)"
+              mask="url(#orbMask)"
+            />
+          )
+        }
+      </svg>
+
+      <!-- LENS CONTENT -->
+      <div class="orb-lens">
+        <h2>{title}</h2>
+        <svg
+          viewBox="0 0 200 200"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <slot />
+        </svg>
+      </div>
+    </div>
+
+    <script>
+      // Cursor light follows pointer (exact Test.astro behavior)
+      const light = document.getElementById("cursorLight");
+
+      if (light && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        window.addEventListener("mousemove", (e) => {
+          const cx = 100;
+          const cy = 100;
+
+          const dx = (e.clientX / window.innerWidth - 0.5) * 40;
+          const dy = (e.clientY / window.innerHeight - 0.5) * 40;
+
+          light.setAttribute("x", cx + dx);
+          light.setAttribute("y", cy + dy);
+        });
+      }
+    </script>
+
+    <style>
+      /* ─────────────────────────────
+   ORB CONTAINER
+   ───────────────────────────── */
+      .orb-card {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+
+        pointer-events: none;
+      }
+
+      .orb-image {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        overflow: hidden;
+        z-index: 0;
+      }
+
+      .orb-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.05);
+      }
+
+      .orb-surface {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        overflow: visible;
+      }
+      /*calm when inactive */
+      .orb-card:not(.active) .orb-image img {
+        filter: saturate(0.9) contrast(0.95);
+      }
+
+      /* ─────────────────────────────
+   PLASMA CORE
+   ───────────────────────────── */
+      .orb-wrap {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .orb-wrap svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* ─────────────────────────────
+   CONTENT LENS
+   ───────────────────────────── */
+      .orb-lens {
+        position: absolute;
+        inset: 18%;
+        z-index: 2;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      /* ─────────────────────────────
+   REDUCED MOTION
+   ───────────────────────────── */
+      @media (prefers-reduced-motion: reduce) {
+        svg animate,
+        feTurbulence animate {
+          display: none;
+        }
+      }
+    </style>
+  </div>
+</article>
