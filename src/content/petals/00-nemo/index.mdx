@@ -5,35 +5,15 @@ date: "2019-11-21"
 demoURL: "https://example.com/demo"
 repoURL: "https://github.com/example/repo"
 image:
-  src: /images/nemo.png
+  src: "/images/nemo.png"
   alt: "Remember Nemo 🎣"
 draft: false
 ---
 
-import { Image } from 'astro:assets';
-import nemo from '../../../assets/nemo.png';
-
-# My MDX Page
-
-// Local image stored in the the same folder
-![Nemo](nemo.png)
-
-
-
-![A starry night sky.](../../../assets/nemo.png)
-
 # Remember Nemo 🎣
 
-{/* // Local image stored in the same folder */}
-
-{/* // Local image stored in the the same folder */}
-{/* ![Nemo](nemo.png) */}
-
-{/* // Local image stored in src/assets/ */}
-{/* <Image src={test.png} alt="A rocketship in space." /> */}
-{/* <img src={rocket.src} alt="A rocketship in space." /> */}
-{/* ![A rocketship in space](../../assets/go-bro.png) */}
-{/* ![A rocketship in space](./go-bro.png) */}
-
+![Nemo](/images/nemo.png)
 
 ## "Remember Not, To Forget"
+
+Just keep swimming.
