@@ -1,11 +1,11 @@
 ---
+import { SITE } from "@consts"
+import Qi from "@/components/Qi.astro"
 import Head from "@components/Head.astro"
+import Quasar from "@components/Quasar.astro"
 import Header from "@components/Header.astro"
 import Footer from "@components/Footer.astro"
 import PageFind from "@components/PageFind.astro"
-import Qi from "@/components/Qi.astro"
-import Quasar from "@components/Quasar.astro"
-import { SITE } from "@consts"
 
 // 👇 optional navigation props
 const { title, description, prev, next } = Astro.props
@@ -21,11 +21,12 @@ const { title, description, prev, next } = Astro.props
 
     <Quasar />
     <Qi />
-
     <Header />
 
     <main>
+        <!-- Euthymia -->
       <slot />
+      <!--  -->
     </main>
 
     <Footer />

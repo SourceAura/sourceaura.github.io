@@ -6,8 +6,8 @@
   #qi-root {
     position: fixed;
     inset: 0;
-    z-index: 4;
-    pointer-events: auto;
+    z-index: 3;
+    pointer-events: none;
   }
 
   /* When petals are open, Qi becomes non-interactive */
@@ -659,4 +659,21 @@
   } else {
     start();
   }
+
+  // Emit qi center update event
+  function updateQiCenter() {
+    const qi = document.getElementById("qi-root");
+    if (!qi) return;
+
+    const rect = qi.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+
+    document.documentElement.style.setProperty("--qi-center-y", `${centerY}px`);
+  }
+
+  // initial + responsive
+  updateQiCenter();
+  addEventListener("resize", updateQiCenter);
+  addEventListener("orientationchange", updateQiCenter);
+  document.addEventListener("astro:after-swap", updateQiCenter);
 </script>

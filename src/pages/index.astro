@@ -1,9 +1,13 @@
 ---
+/*
+Home Page: Welcome to SourceAura
+*/
+
 import { SITE, HOME } from "@consts";
 import Layout from "@layouts/Layout.astro";
-import Container from "@components/Container.astro";
-import PetalCarousel from "@components/PetalCarousel.astro";
 import { getCollection } from "astro:content";
+import Nelumbo from "@components/Nelumbo.astro";
+import Container from "@components/Container.astro";
 
 const posts = (await getCollection("petals"))
   .filter((p) => !p.data.draft)
@@ -49,7 +53,8 @@ const posts = (await getCollection("petals"))
           </div>
         </article>
       </section>
-      <PetalCarousel posts={posts} />
+
+      <Nelumbo posts={posts} />
     </div>
   </Container>
 </Layout>

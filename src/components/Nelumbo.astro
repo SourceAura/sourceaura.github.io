@@ -1,0 +1,453 @@
+---
+/* Nelumbo
+Rose Lotus
+Nelumbo is a component that displays a carousel of petals.
+*/
+import PetalCard from "@components/PetalCard.astro";
+const { posts } = Astro.props;
+---
+
+<div class="carousel-layer" id="petal-shell">
+  <div class="carousel-viewport">
+    <div class="carousel-ring" id="petal-ring">
+      {
+        posts.map((post, i) => (
+          <div
+            class="carousel-item"
+            tabindex="0"
+            data-index={i}
+            data-href={`/petals/${post.slug}`}
+          >
+            <div class="parallax-layer">
+              <PetalCard post={post} />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="carousel-hint" aria-hidden="true">
+    <!--  -->
+  </div>
+</div>
+
+<script>
+  const shell = document.getElementById("petal-shell");
+  const ring = document.getElementById("petal-ring");
+  const items = [...ring.querySelectorAll(".carousel-item")];
+
+  const viewport = shell.querySelector(".carousel-viewport");
+
+  const count = items.length;
+  const step = 360 / count;
+  // E.T. Phone Home
+  const onHome = location.pathname === "/";
+  if (onHome) {
+    shell.addEventListener(
+      "click",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      true,
+    );
+  }
+
+  /* ───────── VISIBILITY STATE ───────── */
+
+  let petalsOpen = false;
+
+  function updatePetalVisibility() {
+    shell.toggleAttribute("data-petals-open", petalsOpen);
+  }
+  // Debug
+  window.addEventListener("qi:toggle-petals", () => {
+    console.log("[PetalCarousel] toggle received");
+    petalsOpen = !petalsOpen;
+    updatePetalVisibility();
+  });
+
+  // Esc - And Touch/Click outside of viewport to Close
+  window.addEventListener("keydown", (e) => {
+    if (!petalsOpen) return;
+
+    if (e.key === "Escape") {
+      isPulling = false;
+      pullVel = 0;
+      petalsOpen = false;
+      updatePetalVisibility();
+    }
+  });
+  // Touch / click outside viewport to close
+  window.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (!petalsOpen) return;
+
+      // If the click started inside the carousel, ignore
+      if (viewport.contains(e.target)) return;
+
+      // Otherwise, close
+      isPulling = false;
+      pullVel = 0;
+      petalsOpen = false;
+      updatePetalVisibility();
+    },
+    { passive: true },
+  );
+
+  /* ───────────────── BASE PHYSICS ───────────────── */
+  const BASE_FRICTION = 0.96;
+  const BASE_SNAP = 0.06;
+  const velClamp = 3.2;
+  const settleThreshold = 0.015;
+
+  /* ───────────────── STATE ───────────────── */
+  let angle = 0;
+  let vel = 0;
+  let isDragging = false;
+
+  let lastAngle = null;
+  let lastActive = -1;
+
+  let rafId = 0;
+  let running = false;
+
+  const KEY_PULL_STEP = 14;
+  const KEY_PULL_MAX = 140;
+
+  // ── ACTIVE PETAL OUTWARD PULL ──
+  let pullZ = 0; // current outward pull (px)
+  let pullVel = 0;
+  let isPulling = false;
+  /* ───────────────── OM PULSE (GLOBAL) ───────────────── */
+  function getOmPulse() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(
+      "--pulse",
+    );
+    const p = Number(v);
+    return Number.isFinite(p) ? p : 0.5;
+  }
+
+  /* ───────────────── RADIUS (CACHED) ───────────────── */
+  let radius = 300;
+  const mq = matchMedia("(max-width: 768px)");
+
+  function updateRadius() {
+    radius = mq.matches ? 220 : 300;
+  }
+  mq.addEventListener("change", updateRadius);
+  updateRadius();
+
+  /* ───────────────── HELPERS ───────────────── */
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+  const snapAngle = (a) => Math.round(a / step) * step;
+
+  /* ───────────────── TRANSFORMS ───────────────── */
+  function applyTransforms() {
+    if (angle === lastAngle) return;
+    lastAngle = angle;
+
+    const om = getOmPulse(); // ← HERE
+
+    ring.style.transform = `rotateY(${angle}deg)`;
+
+    const normalized = ((angle % 360) + 360) % 360;
+    const active = ((Math.round(-normalized / step) % count) + count) % count;
+
+    if (active !== lastActive) {
+      lastActive = active;
+      items.forEach((el, i) => el.classList.toggle("active", i === active));
+    }
+
+    const maxDist = Math.floor(count / 2 || 1);
+
+    items.forEach((el, i) => {
+      let dist = Math.abs(i - active);
+      dist = Math.min(dist, count - dist);
+
+      const depth = Math.min(1, dist / maxDist);
+      const prox = 1 - depth;
+
+      el.style.opacity = 1 - depth * 0.7;
+      el.style.setProperty("--petal-depth", depth.toFixed(4));
+      el.style.setProperty("--petal-prox", prox.toFixed(4));
+      el.style.setProperty("--panel-scale", (1 - depth * 0.12).toFixed(4));
+
+      const activeBias = i === active ? 22 + (om - 0.5) * 10 : 0;
+
+      const pull = i === active ? pullZ : 0;
+
+      el.style.transform = `translate(-50%, -50%)
+         rotateY(${i * step}deg)
+         translateZ(${radius + activeBias + pull}px)`;
+    });
+  }
+
+  /* ───────────────── RAF LOOP (IDLE-AWARE + OM-SYNCED) ───────────────── */
+  function tick() {
+    if (!running) return;
+
+    // Om pulse coupling (subtle, symmetric)
+    const om = getOmPulse(); // 0..1
+    const breath = (om - 0.5) * 2; // -1..+1
+
+    const friction = BASE_FRICTION * (1 - breath * 0.015);
+    const snapStrength = BASE_SNAP * (1 + breath * 0.06);
+
+    angle += vel;
+    vel *= friction;
+
+    // ── OUTWARD PULL RELAXATION ──
+    if (!isPulling) {
+      pullVel *= 0.82;
+      pullZ += pullVel;
+
+      pullZ += (0 - pullZ) * 0.12;
+
+      if (Math.abs(pullZ) < 0.2) {
+        pullZ = 0;
+        pullVel = 0;
+      }
+    }
+
+    if (Math.abs(vel) < settleThreshold) {
+      const snapped = snapAngle(angle);
+      angle += (snapped - angle) * snapStrength;
+
+      if (Math.abs(snapped - angle) < 0.001) {
+        angle = snapped;
+        vel = 0;
+        running = false;
+        applyTransforms();
+        return;
+      }
+    }
+
+    applyTransforms();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // ── ACTIVE PETAL OUTWARD DRAG ──
+  /* ───────────────── INPUT ───────────────── */
+
+  function ensureOpen() {
+    if (!petalsOpen) {
+      petalsOpen = true;
+      updatePetalVisibility();
+      start(); // kick the loop once
+    }
+  }
+
+  // viewport - rotation only
+  viewport.addEventListener(
+    "pointerdown",
+    (e) => {
+      ensureOpen();
+      isDragging = true;
+      viewport.setPointerCapture?.(e.pointerId);
+    },
+    { passive: true },
+  );
+
+  viewport.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!isDragging) return;
+
+      // horizontal drag → rotate carousel (disabled while pulling)
+      if (!isPulling) {
+        vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
+        angle += e.movementX * 0.12;
+      }
+
+      // vertical drag → pull active petal outward
+      if (isPulling) {
+        pullVel = clamp(-e.movementY * 0.6, -8, 14);
+        pullZ = clamp(pullZ + pullVel, 0, 140);
+      }
+
+      start();
+    },
+    { passive: true },
+  );
+
+  viewport.addEventListener(
+    "pointerup",
+    () => {
+      isDragging = false;
+      isPulling = false;
+    },
+    { passive: true },
+  );
+
+  // Expansion
+  // ── PETAL KEYBOARD CONTROLS ──
+  items.forEach((el) => {
+    const href = el.dataset.href;
+
+    // Mouse
+    el.addEventListener("dblclick", () => {
+      location.href = href;
+    });
+
+    // Keyboard
+    el.addEventListener("keydown", (e) => {
+      // Navigate
+      if (e.key === "Enter") {
+        location.href = href;
+        return;
+      }
+
+      // Expand / collapse
+      if (e.key === " ") {
+        e.preventDefault();
+        isPulling = !isPulling;
+        pullVel = 0;
+        start();
+        return;
+      }
+
+      // Fine depth control
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        pullZ = clamp(pullZ + KEY_PULL_STEP, 0, KEY_PULL_MAX);
+        isPulling = true;
+        start();
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        pullZ = clamp(pullZ - KEY_PULL_STEP, 0, KEY_PULL_MAX);
+        if (pullZ === 0) isPulling = false;
+        start();
+        return;
+      }
+
+      // Collapse
+      if (e.key === "Escape") {
+        isPulling = false;
+        pullVel = 0;
+        start();
+      }
+    });
+  });
+
+  /* ───────────────── INIT ───────────────── */
+  applyTransforms();
+  updatePetalVisibility();
+
+  /* ───────────────── CLEANUP (ASTRO ROUTES) ───────────────── */
+  function cleanup() {
+    cancelAnimationFrame(rafId);
+    mq.removeEventListener("change", updateRadius);
+  }
+  window.addEventListener("astro:before-swap", cleanup);
+</script>
+
+<style>
+  .carousel-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: auto;
+    z-index: 6;
+    isolation: isolate;
+  }
+
+  .carousel-viewport {
+    pointer-events: auto;
+    position: absolute;
+    left: 50%;
+    top: var(--qi-center-y);
+    transform: translate(-50%, -50%);
+    width: min(100%, 900px);
+    height: 360px;
+    perspective: 1400px;
+  }
+
+  .carousel-ring {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  /*Items*/
+  .carousel-item {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: clamp(250px, 44vw, 380px);
+    height: 130px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+    will-change: transform, opacity;
+  }
+  /*All*/
+  .carousel-item * {
+    pointer-events: none;
+  }
+
+  .parallax-layer {
+    width: 100%;
+    height: 100%;
+    transform: scale(var(--panel-scale, 1));
+    transition: transform 0.15s ease;
+  }
+
+  .carousel-item.active {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 0 30px rgba(255, 255, 255, 0.14),
+      0 0 60px rgba(255, 255, 255, 0.06);
+  }
+
+  .carousel-hint {
+    pointer-events: none;
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.4rem;
+    opacity: 0.55;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 768px) {
+    .carousel-viewport {
+      height: 320px;
+    }
+  }
+
+  /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
+  /* Home page: carousel is display-only */
+  body[data-route="home"] .carousel-viewport {
+    pointer-events: auto;
+  }
+
+  #petal-shell {
+    transition:
+      opacity 420ms ease,
+      transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  #petal-shell:not([data-petals-open]) {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px) scale(0.98);
+  }
+</style>

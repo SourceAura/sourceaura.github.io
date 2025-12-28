@@ -1,3 +1,0 @@
-!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"a0ded3feb5f2dcb4e226a8f6ab64a147e74e78fb"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="ad647ec5-c083-418c-bd16-03d5e2a7ae26",e._sentryDebugIdIdentifier="sentry-dbid-ad647ec5-c083-418c-bd16-03d5e2a7ae26");})();}catch(e){}};const server = {};
-
-export { server };

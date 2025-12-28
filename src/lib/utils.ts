@@ -1,3 +1,5 @@
+// Helper functions
+
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -21,7 +23,7 @@ export function readingTime(html: string) {
 }
 
 export function getRandomSize(): string {
-  const sizes = ['small', 'medium', 'large'];
+  const sizes = ["small", "medium", "large"];
   const weights = [0.5, 0.3, 0.2]; // Adjust these to change the frequency of each size
   const random = Math.random();
   let sum = 0;

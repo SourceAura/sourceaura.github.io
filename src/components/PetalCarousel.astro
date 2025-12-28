@@ -33,6 +33,8 @@ const { posts } = Astro.props;
   const ring = document.getElementById("petal-ring");
   const items = [...ring.querySelectorAll(".carousel-item")];
 
+  const viewport = shell.querySelector(".carousel-viewport");
+
   const count = items.length;
   const step = 360 / count;
   // E.T. Phone Home
@@ -50,7 +52,7 @@ const { posts } = Astro.props;
 
   /* ───────── VISIBILITY STATE ───────── */
 
-  let petalsOpen = false;
+  let petalsOpen = true;
 
   function updatePetalVisibility() {
     shell.toggleAttribute("data-petals-open", petalsOpen);
@@ -62,26 +64,29 @@ const { posts } = Astro.props;
     updatePetalVisibility();
   });
 
-  // Esc to Close
+  // Esc - And Touch/Click outside of viewport to Close
   window.addEventListener("keydown", (e) => {
     if (!petalsOpen) return;
-    if (e.key !== "Escape") return;
 
-    petalsOpen = false;
-    updatePetalVisibility();
+    if (e.key === "Escape") {
+      isPulling = false;
+      pullVel = 0;
+      petalsOpen = false;
+      updatePetalVisibility();
+    }
   });
-  // Outside Touch/Click
-  document.addEventListener(
+  // Touch / click outside viewport to close
+  window.addEventListener(
     "pointerdown",
     (e) => {
       if (!petalsOpen) return;
-      if (!onHome) return;
 
-      const viewport = shell.querySelector(".carousel-viewport");
-      if (!viewport) return;
-
+      // If the click started inside the carousel, ignore
       if (viewport.contains(e.target)) return;
 
+      // Otherwise, close
+      isPulling = false;
+      pullVel = 0;
       petalsOpen = false;
       updatePetalVisibility();
     },
@@ -105,6 +110,13 @@ const { posts } = Astro.props;
   let rafId = 0;
   let running = false;
 
+  const KEY_PULL_STEP = 14;
+  const KEY_PULL_MAX = 140;
+
+  // ── ACTIVE PETAL OUTWARD PULL ──
+  let pullZ = 0; // current outward pull (px)
+  let pullVel = 0;
+  let isPulling = false;
   /* ───────────────── OM PULSE (GLOBAL) ───────────────── */
   function getOmPulse() {
     const v = getComputedStyle(document.documentElement).getPropertyValue(
@@ -133,6 +145,8 @@ const { posts } = Astro.props;
     if (angle === lastAngle) return;
     lastAngle = angle;
 
+    const om = getOmPulse(); // ← HERE
+
     ring.style.transform = `rotateY(${angle}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
@@ -157,7 +171,13 @@ const { posts } = Astro.props;
       el.style.setProperty("--petal-prox", prox.toFixed(4));
       el.style.setProperty("--panel-scale", (1 - depth * 0.12).toFixed(4));
 
-      el.style.transform = `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`;
+      const activeBias = i === active ? 22 + (om - 0.5) * 10 : 0;
+
+      const pull = i === active ? pullZ : 0;
+
+      el.style.transform = `translate(-50%, -50%)
+         rotateY(${i * step}deg)
+         translateZ(${radius + activeBias + pull}px)`;
     });
   }
 
@@ -166,14 +186,27 @@ const { posts } = Astro.props;
     if (!running) return;
 
     // Om pulse coupling (subtle, symmetric)
-    const pulse = getOmPulse(); // 0..1
-    const breath = (pulse - 0.5) * 2; // -1..+1
+    const om = getOmPulse(); // 0..1
+    const breath = (om - 0.5) * 2; // -1..+1
 
-    const friction = BASE_FRICTION * (1 - breath * 0.015); // ±1.5%
-    const snapStrength = BASE_SNAP * (1 + breath * 0.06); // ±6%
+    const friction = BASE_FRICTION * (1 - breath * 0.015);
+    const snapStrength = BASE_SNAP * (1 + breath * 0.06);
 
     angle += vel;
     vel *= friction;
+
+    // ── OUTWARD PULL RELAXATION ──
+    if (!isPulling) {
+      pullVel *= 0.82;
+      pullZ += pullVel;
+
+      pullZ += (0 - pullZ) * 0.12;
+
+      if (Math.abs(pullZ) < 0.2) {
+        pullZ = 0;
+        pullVel = 0;
+      }
+    }
 
     if (Math.abs(vel) < settleThreshold) {
       const snapped = snapAngle(angle);
@@ -198,40 +231,115 @@ const { posts } = Astro.props;
     rafId = requestAnimationFrame(tick);
   }
 
+  // ── ACTIVE PETAL OUTWARD DRAG ──
   /* ───────────────── INPUT ───────────────── */
-  shell.addEventListener(
+
+  function ensureOpen() {
+    if (!petalsOpen) {
+      petalsOpen = true;
+      updatePetalVisibility();
+      start(); // kick the loop once
+    }
+  }
+
+  viewport.addEventListener(
     "pointerdown",
     (e) => {
+      ensureOpen();
       isDragging = true;
-      shell.setPointerCapture?.(e.pointerId);
+
+      const activeEl = items[lastActive];
+      if (activeEl && activeEl.contains(e.target)) {
+        isPulling = true;
+        pullVel = 0;
+      }
+
+      viewport.setPointerCapture?.(e.pointerId);
     },
     { passive: true },
   );
 
-  shell.addEventListener(
+  viewport.addEventListener(
     "pointermove",
     (e) => {
       if (!isDragging) return;
-      vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
-      angle += e.movementX * 0.12;
+
+      // horizontal drag → rotate carousel (disabled while pulling)
+      if (!isPulling) {
+        vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
+        angle += e.movementX * 0.12;
+      }
+
+      // vertical drag → pull active petal outward
+      if (isPulling) {
+        pullVel = clamp(-e.movementY * 0.6, -8, 14);
+        pullZ = clamp(pullZ + pullVel, 0, 140);
+      }
+
       start();
     },
     { passive: true },
   );
 
-  shell.addEventListener(
+  viewport.addEventListener(
     "pointerup",
     () => {
       isDragging = false;
+      isPulling = false;
     },
     { passive: true },
   );
 
+  // Expansion
+  // ── PETAL KEYBOARD CONTROLS ──
   items.forEach((el) => {
     const href = el.dataset.href;
-    el.addEventListener("dblclick", () => (location.href = href));
+
+    // Mouse
+    el.addEventListener("dblclick", () => {
+      location.href = href;
+    });
+
+    // Keyboard
     el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") location.href = href;
+      // Navigate
+      if (e.key === "Enter") {
+        location.href = href;
+        return;
+      }
+
+      // Expand / collapse
+      if (e.key === " ") {
+        e.preventDefault();
+        isPulling = !isPulling;
+        pullVel = 0;
+        start();
+        return;
+      }
+
+      // Fine depth control
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        pullZ = clamp(pullZ + KEY_PULL_STEP, 0, KEY_PULL_MAX);
+        isPulling = true;
+        start();
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        pullZ = clamp(pullZ - KEY_PULL_STEP, 0, KEY_PULL_MAX);
+        if (pullZ === 0) isPulling = false;
+        start();
+        return;
+      }
+
+      // Collapse
+      if (e.key === "Escape") {
+        isPulling = false;
+        pullVel = 0;
+        start();
+      }
     });
   });
 
@@ -251,8 +359,8 @@ const { posts } = Astro.props;
   .carousel-layer {
     position: fixed;
     inset: 0;
-    pointer-events: none;
-    z-index: 3;
+    pointer-events: auto;
+    z-index: 6;
     isolation: isolate;
   }
 
@@ -260,7 +368,7 @@ const { posts } = Astro.props;
     pointer-events: auto;
     position: absolute;
     left: 50%;
-    top: 55%;
+    top: var(--qi-center-y);
     transform: translate(-50%, -50%);
     width: min(100%, 900px);
     height: 360px;
@@ -285,7 +393,7 @@ const { posts } = Astro.props;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(6px);
-    pointer-events: auto;
+    pointer-events: none;
     will-change: transform, opacity;
   }
 
@@ -319,15 +427,14 @@ const { posts } = Astro.props;
 
   @media (max-width: 768px) {
     .carousel-viewport {
-      top: 62%;
       height: 320px;
     }
   }
 
   /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
   /* Home page: carousel is display-only */
-  body[data-route="home"] #petal-shell {
-    pointer-events: none;
+  body[data-route="home"] .carousel-viewport {
+    pointer-events: auto;
   }
 
   #petal-shell {

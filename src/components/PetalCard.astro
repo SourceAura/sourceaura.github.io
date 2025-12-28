@@ -1,4 +1,7 @@
 ---
+/*
+PetalCard:
+*/
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import FormattedDate from "./FormattedDate.astro";
@@ -311,6 +314,9 @@ if (match?.[1]) {
   }
 
   .carousel-item {
+    height: 100%;
+    pointer-events: none;
+
     /* ensures vars exist even before JS populates */
     --petal-depth: var(--petal-depth, 1);
     --petal-prox: var(--petal-prox, 0);
@@ -355,9 +361,6 @@ if (match?.[1]) {
   }
   .petal-surface {
     min-height: 100%;
-  }
-  .carousel-item {
-    height: 100%;
   }
 
   /* ─────────────────────────────

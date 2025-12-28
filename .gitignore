@@ -4,6 +4,8 @@ dist/
 # .astro/
 # saves
 
+AGENTS.md
+
 src/capsules/
 # 404
 # 404.astro/

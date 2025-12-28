@@ -1,14 +1,5 @@
 import type { Socials } from "@types";
 
-// export type Metadata = {
-//   TITLE: string;
-//   ICON: string;
-//   DESCRIPTION: string;
-//   GITHUB?: string; // Add the GITHUB property with an optional modifier
-//   TWITTER?: string;
-//   MASTODON?: string;
-// };
-
 interface Metadata {
   TITLE: string;
   DESCRIPTION: string;
