@@ -27,10 +27,7 @@ import Search from "astro-pagefind/components/Search";
         }}
       />
 
-      <div class="mt-2 flex items-baseline justify-between text-xs">
-        <span id="current-time" class="font-mono tabular-nums"></span>
-        <span>Press <kbd>Esc</kbd></span>
-      </div>
+      <div class="mt-2 flex items-baseline justify-between text-xs"></div>
     </div>
   </div>
 </div>
@@ -54,10 +51,30 @@ import Search from "astro-pagefind/components/Search";
   const DAMPING = 38;
   const MASS = 1;
 
+  /* ---------------------------
+     INPUT MODALITY TRACKING
+     --------------------------- */
+  let keyboardFocus = false;
+
+  window.addEventListener("keydown", () => {
+    keyboardFocus = true;
+    root.classList.add("keyboard-focus");
+    root.classList.remove("mouse-focus");
+  });
+
+  window.addEventListener("pointerdown", () => {
+    keyboardFocus = false;
+    root.classList.add("mouse-focus");
+    root.classList.remove("keyboard-focus");
+  });
+
   function applySpringStyles() {
     const p = Math.max(0, Math.min(1, 1 - Math.abs(y) / 14));
     shell.style.transform = `translateY(${y}px) scale(${0.985 + 0.015 * p})`;
     shell.style.opacity = String(0.1 + 0.9 * p);
+
+    // Qi drives glow intensity
+    root.style.setProperty("--qi", p.toFixed(4));
   }
 
   function startSpring() {
@@ -133,24 +150,45 @@ import Search from "astro-pagefind/components/Search";
   shell.style.marginTop = "calc(var(--header-height, 72px) + 12px)";
   applySpringStyles();
 
-  function updateTime() {
-    const el = document.getElementById("current-time");
-    if (!el) return;
-    el.textContent = new Intl.DateTimeFormat(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(new Date());
-  }
-  updateTime();
-  setInterval(updateTime, 1000);
+  /* =====================================================
+     PAGEFIND — THUMBNAIL CLICK NAVIGATION
+  ===================================================== */
+
+  document.addEventListener("click", (e) => {
+    const thumb = e.target.closest(".pagefind-ui__result-thumb");
+    if (!thumb) return;
+
+    const result = thumb.closest(".pagefind-ui__result");
+    if (!result) return;
+
+    const link = result.querySelector(".pagefind-ui__result-title a");
+    if (!link) return;
+
+    // Respect new tab / modifier clicks
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+      window.open(link.href, "_blank");
+      return;
+    }
+
+    window.location.href = link.href;
+  });
 </script>
 
 <style is:global>
   /* =====================================================
-     TEXT — FORCE PURE WHITE / BLACK BY THEME
+     THEME + GLOW VARS
   ===================================================== */
 
+  :root {
+    --qi: 0;
+    --search-glow: oklch(0.72 0.06 255);
+  }
+
+  html.dark {
+    --search-glow: oklch(0.95 0.01 255);
+  }
+
+  /* Force white text in dark mode */
   html.dark .pagefind-ui,
   html.dark .pagefind-ui * {
     color: #ffffff !important;
@@ -162,7 +200,21 @@ import Search from "astro-pagefind/components/Search";
   }
 
   /* =====================================================
-     SEARCH INPUT — ABSOLUTE TRANSPARENCY
+     SEARCH INPUT BORDER — THEME LOCK
+  ===================================================== */
+
+  /* Light mode: black border */
+  html.light .pagefind-ui__search-input input {
+    border-color: #000000 !important;
+  }
+
+  /* Dark mode: white border */
+  html.dark .pagefind-ui__search-input input {
+    border-color: #ffffff !important;
+  }
+
+  /* =====================================================
+     SEARCH INPUT — TRANSPARENT + INTENTIONAL GLOW
   ===================================================== */
 
   .pagefind-ui__search-input {
@@ -176,39 +228,129 @@ import Search from "astro-pagefind/components/Search";
     padding: 0.75rem 1.25rem;
     border-radius: 999px !important;
 
-    /* Kill ALL background sources */
     background: transparent !important;
-    background-color: transparent !important;
-    background-image: none !important;
-
-    /* Neutralize browser paint */
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important;
-
     border: 1px solid currentColor;
 
     color: inherit;
     caret-color: currentColor;
 
     outline: none !important;
+    box-shadow: none !important;
   }
 
-  /* Autofill hard-kill (Chrome, Safari) */
-  .pagefind-ui__search-input input:-webkit-autofill,
-  .pagefind-ui__search-input input:-webkit-autofill:hover,
-  .pagefind-ui__search-input input:-webkit-autofill:focus,
-  .pagefind-ui__search-input input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
-    -webkit-text-fill-color: currentColor !important;
-    transition: background-color 9999s ease-out;
+  /* Kill Pagefind + browser focus ring */
+  .pagefind-ui__search-input:focus-within {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  /* =====================================================
+     SCROLLBAR — SLIM / LOW VISUAL WEIGHT
+  ===================================================== */
+
+  /* Firefox */
+  #pagefind-container {
+    scrollbar-width: thin; /* already thin, keep */
   }
 
-  /* Focus glow (border only, no fill) */
-  .pagefind-ui__search-input input:focus {
-    border-color: var(--accent);
+  /* WebKit (Chrome, Safari, Edge) */
+  #pagefind-container::-webkit-scrollbar {
+    width: 5px; /* ↓ from 8px */
+    height: 5px;
+  }
+
+  #pagefind-container::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    opacity: 0.65; /* slightly lighter presence */
+  }
+
+  /* =====================================================
+     SCROLLBAR — ULTRA SLIM (≈ 50%)
+  ===================================================== */
+
+  /* Firefox */
+  #pagefind-container {
+    scrollbar-width: thin; /* Firefox only supports auto | thin */
+  }
+
+  /* WebKit browsers (Chrome, Safari, Edge) */
+  #pagefind-container::-webkit-scrollbar {
+    width: 4px; /* ↓ half of original 8px */
+    height: 4px;
+  }
+
+  #pagefind-container::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    opacity: 0.6;
+  }
+
+  /* Optional: slightly stronger on hover so it’s still usable */
+  #pagefind-container::-webkit-scrollbar-thumb:hover {
+    opacity: 0.9;
+  }
+
+  /* =====================================================
+     SCROLLBAR — HIDDEN UNTIL SCROLL
+  ===================================================== */
+
+  /* Firefox */
+  #pagefind-container {
+    scrollbar-width: none; /* hidden by default */
+  }
+
+  /* Show scrollbar in Firefox while hovering / scrolling */
+  #pagefind-container:hover {
+    scrollbar-width: thin;
+  }
+
+  /* WebKit browsers (Chrome, Safari, Edge) */
+  #pagefind-container::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
+
+  /* Reveal scrollbar on interaction */
+  #pagefind-container:hover::-webkit-scrollbar,
+  #pagefind-container:active::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  /* Thumb styling (inherits theme color) */
+  #pagefind-container::-webkit-scrollbar-thumb {
+    background-color: currentColor;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+
+  /* Fade thumb in only when visible */
+  #pagefind-container:hover::-webkit-scrollbar-thumb,
+  #pagefind-container:active::-webkit-scrollbar-thumb {
+    opacity: 0.85;
+  }
+
+  /* Optional: slightly stronger on hover */
+  #pagefind-container::-webkit-scrollbar-thumb:hover {
+    opacity: 1;
+  }
+
+  /* =====================================================
+     CUSTOM FOCUS GLOW
+     - mouse: softer, quieter
+     - keyboard: clearer, more assertive
+     - Qi modulates intensity
+  ===================================================== */
+
+  .mouse-focus .pagefind-ui__search-input input:focus {
+    box-shadow: 0 0 calc(10px + 20px * var(--qi))
+      color-mix(in oklch, var(--search-glow) 35%, transparent);
+  }
+
+  .keyboard-focus .pagefind-ui__search-input input:focus {
     box-shadow:
-      0 0 0 1px var(--accent),
-      0 0 18px;
+      0 0 0 1px var(--search-glow),
+      0 0 calc(14px + 26px * var(--qi))
+        color-mix(in oklch, var(--search-glow) 55%, transparent);
   }
 
   /* =====================================================
@@ -219,20 +361,9 @@ import Search from "astro-pagefind/components/Search";
     border-radius: 14px;
     padding: 0.75rem 0.85rem;
   }
-  /* =====================================================
-     REMOVE NATIVE FOCUS OUTLINE (BLUE RING)
-  ===================================================== */
-
-  .pagefind-ui__search-input input {
-    outline: none !important;
-  }
-
-  .pagefind-ui__search-input input:focus-visible {
-    outline: none !important;
-  }
 
   /* =====================================================
-     SCROLLBAR — TRANSPARENT TRACK, THEME COLOR THUMB
+     SCROLLBAR — TRANSPARENT TRACK
   ===================================================== */
 
   #pagefind-container {
@@ -259,12 +390,71 @@ import Search from "astro-pagefind/components/Search";
     opacity: 1;
   }
 
-  kbd {
-    line-height: 1;
+  /* =====================================================
+     REMOVE ALL HIGHLIGHTS
+  ===================================================== */
+
+  .pagefind-ui ::selection,
+  .pagefind-ui ::-moz-selection {
+    background: transparent;
+  }
+
+  .pagefind-ui mark {
+    background: transparent !important;
   }
 
   #backdrop {
     background: transparent !important;
     backdrop-filter: none !important;
+  }
+
+  kbd {
+    line-height: 1;
+  }
+
+  /* =====================================================
+     PAGEFIND CLEAR BUTTON / TOOLTIP — HARD TRANSPARENCY
+  ===================================================== */
+
+  /* Clear button itself */
+  .pagefind-ui__search-clear {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Tooltip container (if rendered as element) */
+  .pagefind-ui__search-clear-tooltip {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Tooltip text wrapper */
+  .pagefind-ui__search-clear-tooltip * {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Pseudo-element tooltips */
+  .pagefind-ui__search-clear::before,
+  .pagefind-ui__search-clear::after {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Hover / focus / active safety */
+  .pagefind-ui__search-clear:hover,
+  .pagefind-ui__search-clear:focus,
+  .pagefind-ui__search-clear:focus-visible,
+  .pagefind-ui__search-clear:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
   }
 </style>

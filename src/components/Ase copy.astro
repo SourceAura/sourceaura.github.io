@@ -1,8 +1,8 @@
 ---
 /*
-Ase: Home anchor + Pagefind toggle
-- Navigates Home only if not already there
-- Pagefind persists independently of routing
+Ase: displays a "PageFind" search pill.
+Always navigates Home.
+Also toggles Pagefind without coupling to navigation.
 */
 import { SITE } from "@consts";
 ---
@@ -24,14 +24,7 @@ import { SITE } from "@consts";
     dark:focus-visible:bg-white/5"
   style="background-color: transparent; text-decoration: none;"
   onclick="
-    const onHome = location.pathname === '/';
-
-    // If already home, prevent redundant navigation
-    if (onHome) {
-      event.preventDefault();
-    }
-
-    // Pagefind toggles independently of navigation
+    // Toggle Pagefind without interfering with navigation
     if (window.togglePagefind) {
       window.togglePagefind();
     } else if (window.openPagefind) {
@@ -42,12 +35,6 @@ import { SITE } from "@consts";
   "
   onkeydown="
     if (event.key === 'Enter' || event.key === ' ') {
-      const onHome = location.pathname === '/';
-
-      if (onHome) {
-        event.preventDefault();
-      }
-
       if (window.togglePagefind) {
         window.togglePagefind();
       } else if (window.openPagefind) {
@@ -66,7 +53,7 @@ import { SITE } from "@consts";
 </a>
 
 <style is:global>
-  /* Header reacts to search proximity (set by Pagefind spring) */
+  /* Header reacts to search proximity (set by PageFind spring) */
   header[data-role="app-header"] {
     transform: translateY(calc(-1px * var(--search-lift, 0)));
     transition: transform 90ms linear;

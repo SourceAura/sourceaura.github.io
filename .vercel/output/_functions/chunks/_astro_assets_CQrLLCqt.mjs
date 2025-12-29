@@ -1,7 +1,7 @@
-!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"4526ff814b781afdffb19cf9e865c2058769dacd"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="d8be6b83-cc63-4959-930f-458b4d5309c5",e._sentryDebugIdIdentifier="sentry-dbid-d8be6b83-cc63-4959-930f-458b4d5309c5");})();}catch(e){}};import { j as joinPaths, i as isRemotePath } from './path_aXQAsatY.mjs';
-import { A as AstroError, aj as ExpectedImage, ak as LocalImageUsedWrongly, al as MissingImageDimension, am as UnsupportedImageFormat, an as IncompatibleDescriptorOptions, ao as UnsupportedImageConversion, ap as toStyleString, aq as NoImageMetadata, ar as FailedToFetchRemoteImageDimensions, as as ExpectedImageOptions, at as ExpectedNotESMImage, au as InvalidImageService, d as createAstro, c as createComponent, av as ImageMissingAlt, m as maybeRenderHead, e as addAttribute, s as spreadAttributes, a as renderTemplate, aw as ExperimentalFontsNotEnabled, ax as FontFamilyNotFound, u as unescapeHTML } from './astro/server_BOJUARYH.mjs';
-import { D as DEFAULT_OUTPUT_FORMAT, a as VALID_SUPPORTED_FORMATS, b as DEFAULT_HASH_PROPS } from './consts_CheGZCdh.mjs';
-import { i as isRemoteAllowed, t as typeHandlers, a as types } from './index_DsHJ3pas.mjs';
+!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{};e.SENTRY_RELEASE={id:"a195b6aa3c4b67ec5c2f815d20dee486244212d0"};}catch(e){}}();;{try{(function(){var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:{},n=(new e.Error).stack;n&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[n]="d8be6b83-cc63-4959-930f-458b4d5309c5",e._sentryDebugIdIdentifier="sentry-dbid-d8be6b83-cc63-4959-930f-458b4d5309c5");})();}catch(e){}};import { j as joinPaths, i as isRemotePath } from './path_DIp1ECXy.mjs';
+import { A as AstroError, aj as ExpectedImage, ak as LocalImageUsedWrongly, al as MissingImageDimension, am as UnsupportedImageFormat, an as IncompatibleDescriptorOptions, ao as UnsupportedImageConversion, ap as toStyleString, aq as NoImageMetadata, ar as FailedToFetchRemoteImageDimensions, as as ExpectedImageOptions, at as ExpectedNotESMImage, au as InvalidImageService, d as createAstro, c as createComponent, av as ImageMissingAlt, m as maybeRenderHead, e as addAttribute, s as spreadAttributes, a as renderTemplate, aw as ExperimentalFontsNotEnabled, ax as FontFamilyNotFound, u as unescapeHTML } from './astro/server_DBjK87Rq.mjs';
+import { D as DEFAULT_OUTPUT_FORMAT, a as VALID_SUPPORTED_FORMATS, b as DEFAULT_HASH_PROPS } from './consts_Bz1E0uW1.mjs';
+import { i as isRemoteAllowed, t as typeHandlers, a as types } from './index_BGqFQQRa.mjs';
 import * as mime from 'mrmime';
 import 'clsx';
 import 'piccolore';
@@ -475,7 +475,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_G-BTn1XS.mjs'
+      './sharp_C10YASxu.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
