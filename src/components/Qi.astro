@@ -540,6 +540,22 @@
     return 60;
   }
 
+  function fadeFrame() {
+    ctx.save();
+
+    // erase existing Qi pixels slightly instead of painting over
+    ctx.globalCompositeOperation = "destination-out";
+
+    const base = prefersReduced ? 0.18 : 0.08;
+    const perfBias = (1 - perfScale) * 0.06;
+    const alpha = Math.min(0.22, base + perfBias);
+
+    ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    ctx.restore();
+  }
+
   function draw(now) {
     const dt = now - lastT;
     lastT = now;
@@ -548,7 +564,7 @@
     const skip = perfScale < 0.6 ? 2 : 1;
     const heavyFrame = tickN % skip === 0;
 
-    ctx.clearRect(0, 0, cssW, cssH);
+    fadeFrame();
 
     const cx = cssW / 2;
     const cy = cssH / 2;
