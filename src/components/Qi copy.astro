@@ -1,0 +1,695 @@
+<div id="qi-root">
+  <canvas id="qi-vis"></canvas>
+</div>
+
+<style>
+  #qi-root {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* When petals are open, Qi becomes non-interactive */
+  body:has(#petal-shell[data-petals-open]) #qi-root {
+    pointer-events: none;
+  }
+
+  #qi-vis {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const qiRoot = document.getElementById("qi-root");
+  const canvas = document.getElementById("qi-vis");
+  const ctx = canvas.getContext("2d", { alpha: true });
+
+  // ───────────────── CORE STATE (REQUIRED) ─────────────────
+
+  let isLight = false;
+  let isMobile =
+    matchMedia("(max-width: 768px)").matches ||
+    /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  let prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let cssW = 0;
+  let cssH = 0;
+  // Debug
+  function emitPetalToggle() {
+    window.dispatchEvent(new CustomEvent("qi:toggle-petals"));
+    window.__pulse?.touch?.();
+  }
+
+  function isInsideQiCore(e) {
+    const rect = qiRoot.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    const x = e.clientX - rect.left - cx;
+    const y = e.clientY - rect.top - cy;
+
+    const CORE_RADIUS = 72;
+    return x * x + y * y <= CORE_RADIUS * CORE_RADIUS;
+  }
+
+  qiRoot.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (!isInsideQiCore(e)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      emitPetalToggle();
+    },
+    { passive: false },
+  );
+
+  /* ───────── PETAL TOGGLE (CORE-LIMITED) ───────── */
+
+  const BINS = 240;
+  const audio = new Float32Array(BINS);
+  const smooth = new Float32Array(BINS);
+  /* ───────────────── THEME ───────────────── */
+  function updateTheme() {
+    isLight = document.documentElement.classList.contains("light");
+  }
+  updateTheme();
+  new MutationObserver(updateTheme).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+
+  /* ───────────────── RESIZE (DETHRASH) ───────────────── */
+  let lastW = 0;
+  let lastH = 0;
+  let resizeQueued = false;
+
+  function resize(force = false) {
+    const dpr = Math.min(devicePixelRatio || 1, isMobile ? 1.6 : 2);
+    const rect = canvas.getBoundingClientRect();
+
+    const width = Math.round(rect.width) || window.innerWidth;
+    const height = Math.round(rect.height) || window.innerHeight;
+
+    if (!force && width === lastW && height === lastH) return;
+    lastW = width;
+    lastH = height;
+
+    cssW = width;
+    cssH = height;
+
+    canvas.width = Math.max(1, Math.floor(cssW * dpr));
+    canvas.height = Math.max(1, Math.floor(cssH * dpr));
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function queueResize() {
+    if (resizeQueued) return;
+    resizeQueued = true;
+    requestAnimationFrame(() => {
+      resizeQueued = false;
+      resize(false);
+    });
+  }
+
+  resize(true);
+  requestAnimationFrame(() => resize(true));
+
+  addEventListener("resize", queueResize, { passive: true });
+  addEventListener("orientationchange", queueResize, { passive: true });
+
+  /* ───────────────── BATTERY-AWARE THROTTLING 🔋 ───────────────── */
+  let perfScale = 1; // 1 = full
+
+  async function initBattery() {
+    try {
+      if (!("getBattery" in navigator)) return;
+      const b = await navigator.getBattery();
+
+      const apply = () => {
+        const lvl = typeof b.level === "number" ? b.level : 1;
+        const charging = !!b.charging;
+        const saveData = !!(
+          navigator.connection && navigator.connection.saveData
+        );
+
+        let s = 0.55 + lvl * 0.55; // 0.55..1.1
+        if (!charging) s -= 0.25 * (1 - lvl);
+        if (saveData) s -= 0.12;
+
+        perfScale = Math.max(0.45, Math.min(1, s));
+      };
+
+      apply();
+      b.addEventListener("levelchange", apply);
+      b.addEventListener("chargingchange", apply);
+    } catch {
+      // no-op
+    }
+  }
+  initBattery();
+
+  /* ───────────────── DEVICE TILT PARALLAX 🌐 (THROTTLED) ───────────────── */
+  let tiltX = 0; // -1..1
+  let tiltY = 0; // -1..1
+  let tiltOK = false;
+  let lastOrient = 0;
+
+  function clamp(n, a, b) {
+    return Math.max(a, Math.min(b, n));
+  }
+
+  if (!prefersReduced) {
+    addEventListener(
+      "deviceorientation",
+      (e) => {
+        const now = performance.now();
+        // cap orientation processing ~30hz
+        if (now - lastOrient < 33) return;
+        lastOrient = now;
+
+        const g = typeof e.gamma === "number" ? e.gamma : 0;
+        const b = typeof e.beta === "number" ? e.beta : 0;
+
+        const nx = clamp(g / 35, -1, 1);
+        const ny = clamp(b / 45, -1, 1);
+
+        tiltX = tiltX * 0.9 + nx * 0.1;
+        tiltY = tiltY * 0.9 + ny * 0.1;
+
+        tiltOK = true;
+      },
+      { passive: true },
+    );
+  }
+
+  /* ───────────────── OM ENTRAINMENT (CACHED READ) ───────────────── */
+  let omPulse = 0.5;
+  function sampleOmPulse() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(
+      "--pulse",
+    );
+    omPulse = Number(v) || 0.5;
+  }
+  sampleOmPulse();
+  // sampling the CSS var ~10hz is plenty and avoids per-frame style reads
+  setInterval(sampleOmPulse, 120);
+
+  function getOmPulse() {
+    return omPulse;
+  }
+
+  /* ───────────────── WAKE STATE ───────────────── */
+  let wake = 0;
+  function setWake(on) {
+    wake += on ? 0.25 : -0.12;
+    wake = Math.max(0, Math.min(1, wake));
+  }
+  window.addEventListener("open-pagefind", () => setWake(true));
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setWake(false);
+  });
+
+  /* ───────────────── SPACE DUST (INSIDE CEPHALON, ELECTRIFIED) ⚡ ───────────────── */
+  const DUST_COUNT = 150;
+  const dust = Array.from({ length: DUST_COUNT }, () => spawnDust(true));
+
+  function spawnDust(initial = false) {
+    return {
+      r: initial ? Math.random() * 0.85 : 0.15 + Math.random() * 0.15,
+      a: Math.random() * Math.PI * 2,
+      z: Math.pow(Math.random(), 0.65),
+      drift: 0.00045 + Math.random() * 0.00055,
+      orbit: (0.001 + Math.random() * 0.0014) * (Math.random() < 0.5 ? -1 : 1),
+      wob: Math.random() * Math.PI * 2,
+      phase: Math.random() * Math.PI * 2,
+    };
+  }
+
+  function stepDust(dt) {
+    const k = dt * 0.7;
+    const t = performance.now() * 0.001;
+    const pulse = getOmPulse();
+
+    for (let i = 0; i < dust.length; i++) {
+      const p = dust[i];
+
+      p.r += p.drift * k;
+
+      const near = 1 / (1 + p.r * 5);
+      p.a += p.orbit * k * near;
+
+      p.a += Math.sin(t * 0.9 + p.wob) * 0.00013;
+
+      p.phase += 0.05 + pulse * 0.03;
+
+      if (p.r > 0.95) dust[i] = spawnDust(false);
+    }
+  }
+
+  function drawDust(cephalonRadius) {
+    const base = isLight ? 0 : 255;
+    const pulse = getOmPulse();
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+
+    const layers = [
+      { z0: 0.0, z1: 0.4, blur: 1.6, alpha: 0.08 },
+      { z0: 0.4, z1: 0.75, blur: 0.9, alpha: 0.1 },
+      { z0: 0.75, z1: 1.01, blur: 0.45, alpha: 0.12 },
+    ];
+
+    for (const L of layers) {
+      ctx.filter = `blur(${L.blur}px)`;
+      ctx.fillStyle = `rgba(${base},${base},${base},${L.alpha})`;
+
+      for (const p of dust) {
+        if (p.z < L.z0 || p.z >= L.z1) continue;
+
+        const rr = p.r * cephalonRadius;
+        const x = Math.cos(p.a) * rr;
+        const y = Math.sin(p.a) * rr;
+
+        const flicker = 0.72 + 0.28 * Math.sin(p.phase + pulse * Math.PI * 2);
+        const r = (0.55 + p.z * 0.75) * flicker;
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x, y, r * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.filter = "none";
+    ctx.restore();
+  }
+
+  /* ───────────────── AUDIO MOCK ───────────────── */
+  function updateAudio() {
+    for (let i = 0; i < audio.length; i++) {
+      audio[i] = Math.max(
+        0.02,
+        Math.min(1, audio[i] + (Math.random() - 0.5) * 0.02),
+      );
+    }
+  }
+
+  /* ───────────────── FFT SMOOTHING (FAST ATTACK, SLOW RELEASE) ───────────────── */
+  function smoothFFT() {
+    const attack = 0.22 * perfScale + 0.06;
+    const release = 0.06 * perfScale + 0.02;
+
+    for (let i = 0; i < BINS; i++) {
+      const target = audio[i];
+
+      const f = i / (BINS - 1);
+      const rel = release * (0.55 + 0.7 * f);
+      const att = attack * (0.85 + 0.3 * (1 - f));
+
+      const a = target > smooth[i] ? att : rel;
+      smooth[i] += (target - smooth[i]) * a;
+
+      if (smooth[i] < 0.02) smooth[i] = 0.02;
+      if (smooth[i] > 1) smooth[i] = 1;
+    }
+  }
+
+  /* ───────────────── SESSION MEMORY ───────────────── */
+  const PHASE_KEY = "qi-neural-phase";
+  let sessionPhase =
+    Number(localStorage.getItem(PHASE_KEY)) || Math.random() * Math.PI * 2;
+  setInterval(() => {
+    localStorage.setItem(PHASE_KEY, sessionPhase.toFixed(4));
+  }, 5000);
+
+  /* ───────────────── NEURAL CORE ───────────────── */
+  const NODES = 8;
+  const LINKS = [];
+  const FIRINGS = [];
+  const RIPPLES = [];
+
+  const nodes = Array.from({ length: NODES }, (_, i) => ({
+    a: (i / NODES) * Math.PI * 2,
+    s: 0.001 + Math.random() * 0.0012,
+    bin: Math.floor((i / NODES) * BINS),
+  }));
+
+  for (let i = 0; i < NODES; i++) {
+    for (let j = i + 1; j < NODES; j++) {
+      if (Math.random() < 0.25) LINKS.push([i, j]);
+    }
+  }
+
+  function maybeFire() {
+    const p = (0.02 + wake * 0.04) * perfScale;
+    if (Math.random() < p) {
+      const link = LINKS[Math.floor(Math.random() * LINKS.length)];
+      FIRINGS.push({ link, t: 0 });
+    }
+  }
+
+  /* ───────────────── CEPHALON CORE ───────────────── */
+  const CEPHALON_POINTS = 64;
+  const cephalon = Array.from({ length: CEPHALON_POINTS }, (_, i) => ({
+    a: (i / CEPHALON_POINTS) * Math.PI * 2,
+    r: 0.35 + Math.random() * 0.25,
+    s: 0.0006 + Math.random() * 0.0006,
+    p: Math.random() * Math.PI * 2,
+  }));
+
+  function drawCephalonCore(radius) {
+    const pulse = getOmPulse();
+    const t = performance.now() * 0.001;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineWidth = 0.6;
+
+    const base = isLight ? 0 : 255;
+    const alpha = 0.12 + wake * 0.08 + pulse * 0.06;
+
+    ctx.strokeStyle = `rgba(${base},${base},${base},${alpha})`;
+
+    for (let i = 0; i < cephalon.length; i++) {
+      const p1 = cephalon[i];
+      const p2 = cephalon[(i + 1) % cephalon.length];
+
+      p1.a += p1.s * (0.6 + pulse);
+      p1.p += 0.003 + wake * 0.004;
+
+      const warp =
+        Math.sin(p1.p + t) * 0.08 + Math.sin(p1.a * 3 + t * 0.7) * 0.05;
+
+      const r1 = radius * (p1.r + warp);
+      const r2 = radius * (p2.r + warp * 0.7);
+
+      ctx.beginPath();
+      ctx.moveTo(
+        Math.cos(p1.a + sessionPhase) * r1,
+        Math.sin(p1.a + sessionPhase) * r1,
+      );
+      ctx.lineTo(
+        Math.cos(p2.a + sessionPhase) * r2,
+        Math.sin(p2.a + sessionPhase) * r2,
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  /* ───────────────── MERKABA CORE ───────────────── */
+  function drawMerkaba(radius) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+
+    const pulse = getOmPulse();
+    let rot = performance.now() * 0.00015 * (0.6 + pulse);
+
+    if (!prefersReduced && tiltOK) rot += tiltX * 0.03 * (0.35 + wake);
+
+    const base = isLight ? 0 : 255;
+    const alpha = 0.22 + wake * 0.22;
+
+    ctx.strokeStyle = `rgba(${base},${base},${base},${alpha})`;
+    ctx.lineWidth = 1.6;
+
+    const up = [
+      [0, -radius],
+      [-radius * 0.86, radius * 0.5],
+      [radius * 0.86, radius * 0.5],
+    ];
+
+    const down = [
+      [0, radius],
+      [-radius * 0.86, -radius * 0.5],
+      [radius * 0.86, -radius * 0.5],
+    ];
+
+    function drawTetra(points, r) {
+      ctx.save();
+      ctx.rotate(r);
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[(i + 1) % points.length];
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      }
+      for (const [x, y] of points) {
+        ctx.moveTo(0, 0);
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    drawTetra(up, rot);
+    drawTetra(down, -rot * 0.92);
+    ctx.restore();
+  }
+
+  /* ───────────────── NEURAL NETWORK (WITH RIPPLE EMISSION) ───────────────── */
+  function drawNeuralCore(radius) {
+    ctx.save();
+
+    const pulse = getOmPulse();
+    const base = isLight ? 0 : 255;
+    const alpha = 0.2 + pulse * 0.25 + wake * 0.25;
+
+    ctx.lineWidth = 0.6;
+    ctx.strokeStyle = `rgba(${base},${base},${base},${alpha})`;
+    ctx.beginPath();
+
+    for (const [i, j] of LINKS) {
+      const n1 = nodes[i];
+      const n2 = nodes[j];
+
+      n1.a += n1.s;
+      n2.a += n2.s;
+
+      const r1 = radius * (0.55 + smooth[n1.bin] * 0.45);
+      const r2 = radius * (0.55 + smooth[n2.bin] * 0.45);
+
+      ctx.moveTo(
+        Math.cos(n1.a + sessionPhase) * r1,
+        Math.sin(n1.a + sessionPhase) * r1,
+      );
+      ctx.lineTo(
+        Math.cos(n2.a + sessionPhase) * r2,
+        Math.sin(n2.a + sessionPhase) * r2,
+      );
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = isLight ? "#000" : "#fff";
+    for (const n of nodes) {
+      const r = radius * (0.55 + smooth[n.bin] * 0.55);
+      ctx.beginPath();
+      ctx.arc(
+        Math.cos(n.a + sessionPhase) * r,
+        Math.sin(n.a + sessionPhase) * r,
+        1.5 + wake * 0.6,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    for (let i = FIRINGS.length - 1; i >= 0; i--) {
+      const f = FIRINGS[i];
+      f.t += prefersReduced ? 0.02 : 0.05;
+
+      if (f.t >= 1) {
+        const [a, b] = f.link;
+        const angle = (nodes[a].a + nodes[b].a) * 0.5 + sessionPhase;
+        RIPPLES.push({ a: angle, s: 0.6 + wake * 0.6, life: 1 });
+        FIRINGS.splice(i, 1);
+      }
+    }
+
+    maybeFire();
+    ctx.restore();
+  }
+
+  /* ───────────────── MAIN DRAW ───────────────── */
+  let lastT = performance.now();
+  let tickN = 0;
+
+  // FPS cap + pause when hidden
+  let rafId = 0;
+  let lastFrame = 0;
+
+  function getTargetFps() {
+    // mobile + low perf -> 30; desktop -> 60
+    if (isMobile) return 30;
+    if (perfScale < 0.7) return 30;
+    return 60;
+  }
+
+  function fadeFrame() {
+    ctx.save();
+
+    // erase existing Qi pixels slightly instead of painting over
+    ctx.globalCompositeOperation = "destination-out";
+
+    const base = prefersReduced ? 0.18 : 0.08;
+    const perfBias = (1 - perfScale) * 0.06;
+    const alpha = Math.min(0.22, base + perfBias);
+
+    ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    ctx.restore();
+  }
+
+  function draw(now) {
+    const dt = now - lastT;
+    lastT = now;
+
+    tickN++;
+    const skip = perfScale < 0.6 ? 2 : 1;
+    const heavyFrame = tickN % skip === 0;
+
+    fadeFrame();
+
+    const cx = cssW / 2;
+    const cy = cssH / 2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    const merkabaRadius = 52;
+    const cephalonRadius = 32;
+    const neuralRadius = 36;
+
+    if (heavyFrame || prefersReduced) stepDust(dt);
+    drawDust(cephalonRadius);
+
+    drawCephalonCore(cephalonRadius);
+    drawMerkaba(merkabaRadius);
+    drawNeuralCore(neuralRadius);
+
+    const step = (Math.PI * 2) / audio.length;
+    const barBase = 60;
+
+    const baseCol = isLight ? "0,0,0" : "255,255,255";
+    ctx.fillStyle = `rgba(${baseCol},0.7)`;
+
+    for (let i = 0; i < audio.length; i++) {
+      ctx.rotate(step);
+
+      let rippleBoost = 0;
+      const angle = i * step;
+      for (const r of RIPPLES) {
+        const d = Math.abs(
+          Math.atan2(Math.sin(angle - r.a), Math.cos(angle - r.a)),
+        );
+        if (d < 0.3) rippleBoost += (1 - d / 0.3) * r.s * r.life;
+      }
+
+      const v = smooth[i] + rippleBoost;
+      const h = v * 42;
+
+      ctx.fillRect(-1, barBase, 2, h);
+
+      if (v > 0.38) {
+        const g = (v - 0.38) / 0.62;
+        const glowH = h * (0.45 + g * 0.35);
+
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = `rgba(${baseCol},${0.06 + g * 0.08})`;
+        ctx.fillRect(-2.2, barBase - 1, 4.4, glowH);
+        ctx.restore();
+      }
+    }
+
+    for (let i = RIPPLES.length - 1; i >= 0; i--) {
+      RIPPLES[i].life -= prefersReduced ? 0.03 : 0.05;
+      if (RIPPLES[i].life <= 0) RIPPLES.splice(i, 1);
+    }
+
+    ctx.restore();
+  }
+
+  function frame(t) {
+    if (document.hidden) {
+      rafId = 0;
+      return;
+    }
+
+    const fps = getTargetFps();
+    const minMs = 1000 / fps;
+    if (lastFrame && t - lastFrame < minMs) {
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
+    lastFrame = t;
+
+    updateAudio();
+    smoothFFT();
+    draw(t);
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function start() {
+    if (rafId) return;
+    lastFrame = 0;
+    lastT = performance.now();
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function stop() {
+    if (!rafId) return;
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (document.hidden) stop();
+      else start();
+    },
+    { passive: true },
+  );
+
+  if (prefersReduced) {
+    // keep your reduced-motion behavior (static-ish)
+    start();
+  } else {
+    start();
+  }
+
+  // Emit qi center update event
+  function updateQiCenter() {
+    const qi = document.getElementById("qi-root");
+    if (!qi) return;
+
+    const rect = qi.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+
+    document.documentElement.style.setProperty("--qi-center-y", `${centerY}px`);
+  }
+
+  // initial + responsive
+  updateQiCenter();
+  addEventListener("resize", updateQiCenter);
+  addEventListener("orientationchange", updateQiCenter);
+  document.addEventListener("astro:after-swap", updateQiCenter);
+</script>

@@ -1,0 +1,50 @@
+<div class="giscus"></div>
+
+<script
+  src="https://giscus.app/client.js"
+  data-repo="sourceaura/sourceaura.github.io"
+  data-repo-id="MDEwOlJlcG9zaXRvcnkyMDg2Nzg2NjY="
+  data-category="Show and tell"
+  data-category-id="DIC_kwDODHAvCs4Cgi0j"
+  data-mapping="pathname"
+  data-reactions-enabled="1"
+  data-emit-metadata="1"
+  data-input-position="bottom"
+  data-theme="preferred_color_scheme"
+  data-lang="en"
+  crossorigin="anonymous"
+  async></script>
+
+<style>
+  #giscus-wrapper {
+    outline: 1px solid red;
+  }
+
+  .giscus {
+    background: transparent !important;
+  }
+
+  .giscus-frame {
+    background: transparent !important;
+  }
+
+  :global(html.dark) .giscus {
+    color: var(--dark);
+  }
+
+  :global(html.light) .giscus {
+    color: black;
+  }
+
+  :global(html.dark) .giscus .gsc-comment {
+    background: color-mix(in oklch, black 65%, transparent) !important;
+    border: 1px solid color-mix(in oklch, white 18%, transparent);
+    border-radius: 10px;
+  }
+
+  :global(html.light) .giscus .gsc-comment {
+    background: color-mix(in oklch, white 75%, transparent) !important;
+    border: 1px solid color-mix(in oklch, black 18%, transparent);
+    border-radius: 10px;
+  }
+</style>

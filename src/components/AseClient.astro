@@ -1,0 +1,14 @@
+---
+/**
+ * Client-only bootstrap for Ase
+ * This file NEVER runs on the server.
+ */
+---
+
+<script is:inline type="module">
+  import { initAseClient } from "/src/lib/ase-client.js";
+
+  console.log("[ASE] inline module script executed");
+
+  initAseClient();
+</script>

@@ -72,4 +72,12 @@
 
 -------
 
+- 12292025 :: GraphQL - Wind in Sails 🚣‍♂️
+
+-------
+
+- 12302025 :: PyTorch - Neural Network 🧠
+
+-------
+
 ![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io?style=plastic)

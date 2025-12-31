@@ -1,83 +1,1102 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import Container from "@components/Container.astro";
-import FormattedDate from "@components/FormattedDate.astro";
-import { readingTime } from "@utils/utils";
-import Giscus from "@components/Giscus.astro";
 import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+import Giscus from "@components/Giscus.astro";
+import { readingTime } from "@utils/utils";
 
 /* ─────────────────────────────────────────────
    Static paths
    ───────────────────────────────────────────── */
-
 export async function getStaticPaths() {
-  const posts = (await getCollection("petals"))
-    .filter((post) => !post.data.draft)
-    .sort(
-      (a, b) =>
-        new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
-    );
-
-  return posts.map((post) => ({
-    params: { slug: post.slug },
-    props: post,
-  }));
+  const posts = (await getCollection("petals")).filter((p) => !p.data.draft);
+  return posts.map((post) => ({ params: { slug: post.slug }, props: post }));
 }
 
 type Props = CollectionEntry<"petals">;
 
 /* ─────────────────────────────────────────────
-   Adjacent post logic
-   ───────────────────────────────────────────── */
-
-const posts = await getCollection("petals");
-const sortedPosts = posts
-  .filter((post) => !post.data.draft)
-  .sort(
-    (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
-  );
-
-function getAdjacentPost(offset: number) {
-  const currentIndex = sortedPosts.findIndex(
-    (post: CollectionEntry<"petals">) => post.slug === Astro.params.slug,
-  );
-  return sortedPosts[currentIndex + offset];
-}
-
-const nextPost = getAdjacentPost(1);
-const prevPost = getAdjacentPost(-1);
-
-/* ─────────────────────────────────────────────
    Current post
    ───────────────────────────────────────────── */
-
 const post = Astro.props as Props;
 const { Content } = await post.render();
+
+const d = new Date(post.data.date);
+const dateLabel = d.toLocaleDateString(undefined, {
+  month: "2-digit",
+  day: "2-digit",
+  year: "numeric",
+});
+const rt = `${readingTime(post.body)} min`;
+
+/* Extract first image */
+let imageSrc: string | null = null;
+const match = post.body.match(/!\[.*?\]\((.*?)\)/);
+
+if (match?.[1]) {
+  const raw = match[1].trim();
+
+  if (raw.startsWith("http")) {
+    imageSrc = raw;
+  } else {
+    // normalize markdown paths to /images/...
+    const cleaned = raw.replace(/^\.?\//, "");
+    imageSrc = `/${cleaned}`;
+  }
+}
 ---
 
 <Layout title={post.data.title} description={post.data.excerpt ?? ""}>
   <Container>
-    <div class="mx-auto max-w-3xl">
-      <!-- SEARCHABLE CONTENT -->
-      <article class="mt-8" data-pagefind-body>
-        <h1 class="mb-4 text-3xl font-semibold">
-          {post.data.title}
-        </h1>
+    <section class="modr-scope" aria-label="Petal">
+      <!-- image here not title -->
+      <div class="container" aria-label={post.data.title}>
+        <div class="card">
+          <div class="content">
+            <h3 class="title">{post.data.title}</h3>
+            &nbsp;
+            <!-- tags row (date + read time) -->
+            <div class="tags">
+              <!-- Date -->
+              <p>{dateLabel}</p>
 
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          <FormattedDate date={new Date(post.data.date)} />
-          <span class="mx-2">•</span>
-          <span>{readingTime(post.body)} min read</span>
+              <!-- Time Icon -->
+              <span class="icon-time" aria-hidden="true">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="1em"
+                  height="1em"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 3">
+                    <animateTransform
+                      attributeName="transform"
+                      type="rotate"
+                      from="0 12 12"
+                      to="360 12 12"
+                      dur="12s"
+                      repeatCount="indefinite"></animateTransform>
+                  </path>
+                </svg>
+              </span>
+              <!-- Reading Time -->
+              <p>{rt}</p>
+            </div>
+
+            <!-- sliding content area (scrollable) -->
+            <div class="text" id="article">
+              {
+                post.data.description && (
+                  <p class="lede">{post.data.description}</p>
+                )
+              }
+              <!-- Article -->
+              <div class="article prose dark:prose-invert" data-pagefind-body>
+                <Content />
+              </div>
+            </div>
+          </div>
+          <!-- Stats -->
+          <div class="card-stats" aria-label="Post statistics">
+            <span class="value">
+              <!-- Reactions -->
+              <button class="stat" title="Reactions">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="1.1em"
+                  height="1.1em"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"
+                  >
+                    <animateTransform
+                      attributeName="transform"
+                      type="scale"
+                      values="1;1.08;1"
+                      dur="3.2s"
+                      repeatCount="indefinite"
+                      additive="sum"></animateTransform>
+                  </path>
+                </svg>
+                <span class="count" data-reactions></span>
+              </button>
+
+              <!-- Comments -->
+              <button class="stat" title="Comments" data-toggle-giscus>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="1.1em"
+                  height="1.1em"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"
+                  >
+                    <animate
+                      attributeName="opacity"
+                      values="1;0.7;1"
+                      dur="4s"
+                      repeatCount="indefinite"></animate>
+                  </path>
+                </svg>
+                <span class="count" data-comments></span>
+              </button>
+              <span class="stat-label"></span>
+            </span>
+          </div>
+          <!-- icon cue -->
+          <span class="icon-cue" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.8em"
+              height="1.8em"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M6 15l6-6l6 6">
+                <animate
+                  attributeName="d"
+                  dur="2.6s"
+                  repeatCount="indefinite"
+                  values="
+                    M6 15l6-6l6 6;
+                    M6 17l6-8l6 8;
+                    M6 15l6-6l6 6
+                  "
+                ></animate>
+              </path>
+            </svg>
+          </span>
         </div>
 
-        <div class="prose max-w-none dark:prose-invert">
-          <Content />
-        </div>
-      </article>
-
-      <div class="mt-12">
-        <Giscus />
+        <figure>
+          {
+            imageSrc ? (
+              <img src={imageSrc} alt={post.data.title} />
+            ) : (
+              <div class="img-fallback" aria-hidden="true" />
+            )
+          }
+        </figure>
       </div>
+    </section>
+    <!-- GISCUS -->
+    <div id="giscus-wrapper" class="comments is-collapsed">
+      <Giscus />
     </div>
   </Container>
 </Layout>
+
+<!-- Main -->
+<script is:inline>
+  (() => {
+    // Touch/keyboard friendly "hover": tap toggles open state
+    const root = document.querySelector(".modr-scope");
+    const cardLink = root?.querySelector("a.container");
+    const article = root?.querySelector(".article");
+    const cue = root?.querySelector(".icon-cue");
+
+    function updateCueScrollState() {
+      if (!article || !cue) return;
+
+      const scrollable = article.scrollHeight > article.clientHeight + 4;
+      cue.dataset.scrollable = scrollable ? "true" : "false";
+    }
+
+    updateCueScrollState();
+    if (cardLink) {
+      let open = false;
+
+      cardLink.addEventListener("click", (e) => {
+        if (e.metaKey || e.ctrlKey) return;
+
+        const canHover = matchMedia("(hover:hover) and (pointer:fine)").matches;
+        if (canHover) {
+          e.preventDefault();
+          return;
+        }
+
+        e.preventDefault();
+        open = !open;
+        cardLink.classList.toggle("is-open", open);
+      });
+    }
+
+    window.addEventListener("message", (event) => {
+      if (event.origin !== "https://giscus.app") return;
+
+      const g = event.data?.giscus;
+      if (!g || !g.discussion) return;
+
+      const commentsEl = document.querySelector("[data-comments]");
+      if (commentsEl) {
+        commentsEl.textContent = g.discussion.totalCommentCount;
+      }
+      // REACTION COUNT
+      // REACTION COUNT
+      const reactionsEl = document.querySelector("[data-reactions]");
+
+      // clamp helper
+      function formatCount(n) {
+        return n > 99 ? "99+" : String(n);
+      }
+
+      function animateCount(el) {
+        el.animate(
+          [
+            { transform: "scale(0.85)", opacity: 0 },
+            { transform: "scale(1)", opacity: 1 },
+          ],
+          {
+            duration: 220,
+            easing: "cubic-bezier(.2,.8,.2,1)",
+          },
+        );
+      }
+
+      if (reactionsEl && g.discussion?.id) {
+        fetch(`/api/reactions?id=${g.discussion.id}`)
+          .then((r) => r.json())
+          .then((d) => {
+            if (typeof d.total !== "number") return;
+
+            const value = formatCount(d.total);
+
+            reactionsEl.textContent = value;
+            reactionsEl.dataset.active = "true";
+
+            reactionsEl
+              .closest(".stat")
+              ?.setAttribute("data-has-reactions", "true");
+
+            animateCount(reactionsEl);
+          })
+          .catch(console.error);
+      }
+
+      console.log("GISCUS DISCUSSION PAYLOAD:", g.discussion);
+    });
+  })();
+</script>
+<!-- Main End -->
+
+<!-- Giscus Toggle -->
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector("[data-toggle-giscus]");
+    const giscus = document.getElementById("giscus-wrapper");
+
+    console.log("TOGGLE FOUND:", !!toggle);
+    console.log("GISCUS FOUND:", !!giscus);
+
+    if (!toggle || !giscus) return;
+
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      console.log("COMMENT ICON CLICKED");
+
+      giscus.classList.toggle("is-collapsed");
+
+      console.log(
+        "GISCUS COLLAPSED:",
+        giscus.classList.contains("is-collapsed"),
+      );
+    });
+  });
+</script>
+<!-- Giscus Toggle End -->
+
+<style>
+  /* Debug */
+  .card,
+  .content,
+  .tags {
+    overflow: visible;
+  }
+
+  .card {
+    position: relative;
+    z-index: 0; /* establish root */
+  }
+
+  .card-stats {
+    z-index: 10;
+  }
+
+  .content {
+    z-index: 5;
+  }
+
+  .tags {
+    z-index: 6;
+  }
+
+  /**/
+
+  .icon-cue,
+  .icon-time {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Visually align icon cue with stats row */
+  .icon-cue {
+    position: absolute;
+
+    /* 🔑 align to the same rail as stats */
+    right: 1.25rem;
+    bottom: 1.25rem;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transform: none; /* remove translateY */
+    opacity: 0.6;
+
+    pointer-events: none;
+  }
+
+  .icon-cue svg {
+    transition: transform 300ms ease;
+    transform-origin: center;
+  }
+
+  .card-stats {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    height: 1.1em; /* establish visual rail */
+  }
+
+  .tags {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    font-size: 0.65rem;
+    line-height: 1;
+    opacity: 0.75;
+    position: absolute;
+    pointer-events: none; /* cue no longer participates in flow */
+  }
+
+  /* normalize text elements */
+  .tags p {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  /* separator dot */
+  .tags > span:not(.icon-time) {
+    width: 0.25em;
+    height: 0.25em;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+  }
+
+  /* clock icon wrapper */
+  .icon-time {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transform: translateY(-0.5px); /* micro optical alignment */
+  }
+
+  /* svg size consistency */
+  .icon-time svg {
+    width: 0.85em;
+    height: 0.85em;
+    opacity: 0.85;
+  }
+  .icon-time svg {
+    animation: qiTick 6s linear infinite;
+  }
+
+  @keyframes qiTick {
+    from {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.6;
+    }
+  }
+
+  .container figure {
+    background: transparent;
+    position: absolute;
+    /* moved up + left */
+    top: 22%;
+    left: -2%;
+    /* keep vertical centering logic */
+    transform: translateY(-50%);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 50%;
+    width: 30%;
+
+    box-shadow: 5px 5px 15px hsla(0, 0%, 0%, 0.5);
+    overflow: hidden;
+    border-radius: 10px;
+
+    z-index: 2;
+  }
+
+  .container figure img {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    display: block;
+
+    transform: rotate(0deg) scale(1);
+    transition:
+      transform 500ms ease-in-out,
+      scale 500ms ease-in-out;
+  }
+
+  .card-stats .value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    font-size: 0.75rem;
+    opacity: 0.65;
+  }
+
+  .card-stats .stat {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .card-stats .stat-label {
+    margin-left: 0.25rem;
+    white-space: nowrap;
+  }
+
+  .stat {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    position: relative;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .stat::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+
+    font-size: 0.55rem;
+    padding: 0.25em 0.45em;
+    border-radius: 4px;
+
+    background: color-mix(in oklch, black 75%, transparent);
+    color: white;
+
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 150ms ease,
+      transform 150ms ease;
+  }
+
+  .stat:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .stat:focus-visible {
+    outline: 1px solid color-mix(in oklch, currentColor 40%, transparent);
+    outline-offset: 3px;
+  }
+
+  .stat svg {
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat {
+    overflow: visible;
+    position: relative; /* anchor for badge */
+  }
+
+  .stat .count:not(:empty) {
+    opacity: 0.75;
+  }
+
+  .stat:hover .count {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  .container.is-open .stat .count {
+    /* hmm think */
+  }
+
+  /* Couht Badges */
+  .stat {
+    position: relative;
+    overflow: visible;
+  }
+
+  .stat svg {
+    transform-origin: center;
+    transition: transform 200ms ease;
+    /*opacity 200ms ease;*/
+  }
+
+  .stat:hover svg {
+    transform: scale(1.15);
+  }
+
+  .stat .count {
+    position: absolute;
+    top: -0.45em;
+    right: -0.55em; /* ✅ top-right */
+    left: auto;
+    opacity: 0;
+    transform: scale(0.75);
+    min-width: 1.2em;
+    height: 1.2em;
+    padding: 0 0.35em;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 0.6rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+
+    border-radius: 999px;
+    background: color-mix(in oklch, currentColor 25%, transparent);
+    color: currentColor;
+
+    transform: scale(0.75);
+    transition:
+      opacity 200ms ease,
+      transform 200ms ease;
+
+    pointer-events: none;
+  }
+
+  .stat .count[data-active="true"] {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @keyframes heartBeat {
+    0% {
+      transform: scale(1);
+    }
+    25% {
+      transform: scale(1.15);
+    }
+    40% {
+      transform: scale(1);
+    }
+    60% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Hide cue when card is open */
+  .container.is-open .icon-cue {
+    opacity: 0;
+    transform: scale(0.9);
+    transition:
+      opacity 200ms ease,
+      transform 200ms ease;
+  }
+
+  .stat[data-has-reactions="true"] svg {
+    transform: scale(1.12);
+    animation: heartBeat 2.8s ease-in-out infinite;
+  }
+
+  /* Fade cue when there's nothing to scroll */
+  .icon-cue[data-scrollable="false"] {
+    opacity: 0.25;
+  }
+
+  /*.stat .count[data-reactions] {
+    display: none;
+  }*/
+
+  .card-stats {
+    position: absolute;
+    left: 1.25rem;
+    bottom: 1.25rem;
+
+    display: flex;
+    align-items: center;
+    height: 1.4em; /* ← slightly taller rail */
+
+    z-index: 108;
+  }
+
+  /* Qi Sync */
+
+  @keyframes qiHeart {
+    0% {
+      transform: scale(1.12);
+    }
+    40% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1.12);
+    }
+  }
+
+  .stat[data-has-reactions="true"] svg {
+    animation: qiHeart calc(2.8s + var(--qi, 0s)) ease-in-out infinite;
+  }
+
+  /* =====================================================
+
+   Structure + transitions follow the pen’s container/card/content model.
+   ===================================================== */
+
+  .modr-scope {
+    position: relative;
+    min-height: 70vh;
+    display: grid;
+    place-items: center;
+    padding: 6rem 0;
+    z-index: 50;
+  }
+
+  /* Scoped variables (instead of :root) */
+  .modr-scope {
+    font-size: 16px;
+    --bu: calc(1rem + max(1vh, 1vw));
+
+    --default-font-size: calc(var(--bu) * 0.75);
+  }
+
+  /* Theme cohesion: flip “panel” colors in dark mode while keeping the pen’s vibe */
+  :global(html.dark) .modr-scope {
+    --primary: color-mix(in oklch, black 72%, oklch(0.35 0.03 160));
+    --light: oklch(0.18 0.02 260);
+    --light-dark: oklch(0.22 0.02 260);
+    --light-darker: oklch(0.26 0.02 260);
+    --dark: oklch(0.92 0.01 260);
+    --dark-light: oklch(0.86 0.01 260);
+    --accent: currentColor;
+  }
+
+  /* Keep the card perfectly centered in the viewport at all times */
+  .modr-scope {
+    /*pointer-events: none; */
+  }
+
+  .modr-scope > .container {
+    position: fixed;
+    left: 50%;
+    top: 34%;
+    height: 30%;
+    width: 32%;
+    transform: translate(-50%, -50%);
+    pointer-events: auto; /* re-enable interaction for the card */
+  }
+
+  .modr-scope * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+
+    color: currentColor;
+    font-family:
+      "Jaldi",
+      system-ui,
+      -apple-system,
+      Segoe UI,
+      Roboto,
+      sans-serif;
+    font-size: var(--default-font-size);
+    font-weight: 400;
+    text-decoration: none;
+  }
+
+  :global(html.dark) .modr-scope * {
+    color: var(--dark);
+  }
+
+  /* Center band background (like the pen) */
+  .modr-scope::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    height: 420px;
+    width: 100%;
+    background: transparent;
+    border-radius: 14px;
+    opacity: 1;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    height: 420px;
+    width: min(980px, 100%);
+    border-radius: var(--bu);
+    z-index: 60;
+    display: block;
+  }
+
+  .img-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(var(--primary-light), var(--primary-lighter));
+  }
+
+  /* Right panel */
+  .card {
+    position: absolute;
+    right: 0;
+    height: 100%;
+    width: 85%;
+    width: min(1000px, 100%);
+    border-radius: var(--bu);
+
+    background: transparent !important;
+
+    border: 1px solid color-mix(in oklch, currentColor 18%, transparent);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    transition:
+      transform 350ms ease,
+      border-color 350ms ease;
+  }
+
+  /* Stat Line */
+
+  .card {
+    position: relative; /* 🔑 anchor context */
+  }
+
+  .card-stats {
+    position: absolute;
+    left: 1.25rem;
+    bottom: 1.25rem;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+
+    background: transparent;
+    z-index: 10;
+  }
+
+  @media (max-width: 520px) {
+    .card-stats {
+      font-size: 0.7rem;
+      gap: 0.75rem;
+    }
+  }
+
+  /* Content stack */
+  .content {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    margin: auto;
+    inset: 0 0 0 auto;
+    width: 64.5%;
+    height: 90%;
+    overflow: hidden;
+  }
+
+  .title {
+    position: absolute;
+    padding: calc(var(--bu) * 0.25) calc(var(--bu) * 0.5);
+    margin: auto;
+    inset: auto 0 50%;
+    font-family: "Capriola", ui-sans-serif, system-ui, sans-serif;
+    text-align: center;
+    transition: bottom 500ms ease-in-out;
+  }
+
+  .title::before {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    right: 5%;
+    width: 90%;
+    height: 5px;
+    border-radius: 2.5px;
+    background: var(--accent);
+    transition: width 500ms 300ms ease-in-out;
+  }
+
+  .tags {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: calc(var(--bu) * 0.25);
+    padding: calc(var(--bu) * 0.25) calc(var(--bu) * 0.5);
+    margin: auto;
+    inset: 50% 0 auto;
+    opacity: 100%;
+    transition: opacity 500ms 800ms;
+  }
+
+  .tags p {
+    font-size: calc(var(--default-font-size) * 0.75);
+  }
+
+  .tags span {
+    width: 100%;
+  }
+
+  .text {
+    position: absolute;
+    top: 100%;
+    padding: 0 calc(var(--bu) * 0.5);
+    transition: top 500ms ease-in;
+    width: 100%;
+  }
+
+  .text .lede {
+    font-size: calc(var(--default-font-size) * 0.9);
+    opacity: 0.85;
+    margin-bottom: 0.75rem;
+  }
+
+  /* The “article” becomes your scrollable body inside the pen’s reveal */
+  .article {
+    max-height: 210px;
+    overflow: auto;
+    padding-right: 10px;
+    scrollbar-width: thin;
+  }
+
+  .article::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .article::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--dark) 40%, transparent);
+    border-radius: 999px;
+  }
+
+  /* comments live under the article */
+  .comments {
+    margin-top: 1.5rem;
+  }
+
+  /* icon cue */
+  .content > span {
+    font-size: calc(var(--bu) * 1.75);
+    opacity: 100%;
+    transform: translateY(0px);
+    transition:
+      transform 500ms 500ms ease-out,
+      opacity 300ms 500ms;
+  }
+
+  /* Hover choreography from the pen */
+  .container:hover figure {
+    box-shadow: 5px 5px 30px hsla(0, 0%, 0%, 0.5);
+  }
+
+  .container:hover figure img {
+    transform: rotate(-1.25deg);
+    scale: 1.1;
+    transition:
+      scale 500ms ease-in-out,
+      transform 500ms ease-in-out;
+  }
+
+  .container:hover .card {
+    transform: translateX(2.5px) translateY(2.5px);
+    background: linear-gradient(var(--light), var(--light-darker));
+  }
+
+  .container:hover .title {
+    bottom: 75%;
+    transition: bottom 300ms 495ms ease-out;
+  }
+
+  .container:hover .title::before {
+    width: 0%;
+    transition: width 300ms 300ms ease-in;
+  }
+
+  .container:hover .tags {
+    opacity: 0%;
+    transition: opacity 300ms ease-in;
+  }
+
+  .container:hover .text {
+    top: 25%;
+    transition: top 500ms 300ms ease-out;
+  }
+
+  .container.is-open .icon-cue svg {
+    transform: rotate(180deg);
+  }
+
+  .container:hover .content > span {
+    transform: translateY(25%);
+    opacity: 0%;
+    transition:
+      transform 300ms ease-in,
+      opacity 200ms;
+  }
+
+  /* Touch "open" state mirrors hover */
+  .container.is-open figure {
+    box-shadow: 5px 5px 30px hsla(0, 0%, 0%, 0.5);
+  }
+  .container.is-open figure img {
+    transform: rotate(-1.25deg);
+    scale: 1.1;
+  }
+  .container.is-open .card {
+    transform: translateX(2.5px) translateY(2.5px);
+    background: linear-gradient(var(--light), var(--light-darker));
+  }
+  .container.is-open .title {
+    bottom: 75%;
+  }
+  .container.is-open .title::before {
+    width: 0%;
+  }
+  .container.is-open .tags {
+    opacity: 0%;
+  }
+  .container.is-open .text {
+    top: 25%;
+  }
+  .container.is-open .content > span {
+    transform: translateY(25%);
+    opacity: 0%;
+  }
+  /* Giscus*/
+
+  /* ─────────────────────────────────────────────
+     Giscus: anchor below fixed card
+     ───────────────────────────────────────────── */
+  .modr-scope {
+    --card-width: min(980px, 100%);
+  }
+
+  /* ─────────────────────────────────────────────
+        GISCUS: hard center + iframe correction
+        ───────────────────────────────────────────── */
+
+  #giscus-wrapper {
+    position: fixed;
+    left: 50%;
+    top: calc(34% + 210px + 1rem);
+
+    transform: translateX(-50%);
+
+    width: min(980px, 100%);
+    display: flex;
+    justify-content: center;
+
+    z-index: 77;
+    pointer-events: auto;
+  }
+
+  /* center the giscus container itself */
+  #giscus-wrapper .giscus {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* force iframe to respect layout */
+  #giscus-wrapper iframe {
+    position: relative !important;
+    inset: auto !important;
+    margin: 0 auto !important;
+
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  #giscus-wrapper.is-collapsed {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* ─────────────────────────────────────────────
+     Giscus: remove phantom vertical spacing
+     ───────────────────────────────────────────── */
+
+  #giscus-wrapper {
+    width: var(--card-width);
+    margin-top: 0 !important;
+    /*padding-top: 0.21rem;*/
+  }
+
+  #giscus-wrapper > .giscus {
+    margin-top: 0 !important;
+  }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .container {
+      width: var(--card-width);
+    }
+    .container figure {
+      width: 52%;
+    }
+    .content {
+      width: 62%;
+    }
+  }
+</style>

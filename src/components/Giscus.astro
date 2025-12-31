@@ -1,6 +1,6 @@
 ---
 /*
-Giscus: displays a comment section.
+Giscus — chat-like styling via iframe-safe variables
 */
 ---
 
@@ -13,49 +13,55 @@ Giscus: displays a comment section.
   data-category="Show and tell"
   data-category-id="DIC_kwDODHAvCs4Cgi0j"
   data-mapping="pathname"
-  data-strict="0"
   data-reactions-enabled="1"
-  data-emit-metadata="0"
-  data-input-position="top"
-  data-theme="transparent_dark"
+  data-emit-metadata="1"
+  data-input-position="bottom"
+  data-theme="fro"
   data-lang="en"
   crossorigin="anonymous"
-  async></script>
+  async
+  key="chat-theme-v1"></script>
 
 <style>
+  /* =====================================================
+     CHAT-LIKE THEME VARIABLES (iframe-safe)
+  ===================================================== */
+
   .giscus {
-    --color-primary: #ff5733;
-    --color-secondary: #333;
-    --background-color: transparent !important;
-    --border-color: rgba(224, 224, 224, 0.3);
+    /* message stream */
+    --color-bg-canvas: transparent;
+    --color-bg-primary: transparent;
+    --color-bg-secondary: color-mix(in oklch, white 4%, transparent);
+
+    /* chat bubbles */
+    --color-border-primary: color-mix(in oklch, white 18%, transparent);
+    --color-border-secondary: color-mix(in oklch, white 12%, transparent);
+
+    /* text */
+    --color-fg-default: white;
+    --color-fg-muted: rgba(255, 255, 255, 0.55);
+
+    /* accents */
+    --color-accent-fg: white;
+    --color-accent-emphasis: color-mix(in oklch, white 85%, transparent);
+
+    /* input bar */
+    --color-input-bg: color-mix(in oklch, white 6%, transparent);
+    --color-input-border: color-mix(in oklch, white 20%, transparent);
+
+    /* reactions */
+    --color-social-reaction-bg: transparent;
+    --color-social-reaction-border: color-mix(in oklch, white 20%, transparent);
   }
 
+  /* soften iframe edges */
   .giscus-frame {
-    background-color: transparent !important;
+    background: transparent !important;
   }
 
-  .giscus .gsc-comment {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-  }
-
-  .giscus .gsc-comment-author {
-    font-weight: bold;
-    color: var(--color-primary);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .giscus {
-      color: ghostwhite !important;
-    }
-  }
-
-  @media (prefers-color-scheme: light) {
-    .giscus {
-      color: black !important;
-    }
+  /* tighten vertical rhythm */
+  .giscus {
+    font-size: 13px;
+    line-height: 1.45;
   }
 </style>

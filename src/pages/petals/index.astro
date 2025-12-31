@@ -4,16 +4,144 @@ import Container from "@components/Container.astro";
 import Nelumbo from "@components/Nelumbo.astro";
 import { getCollection } from "astro:content";
 
-const posts = (await getCollection("petals")).filter((p) => !p.data.draft);
+const posts = (await getCollection("petals"))
+  .filter((p) => !p.data.draft)
+  .sort(
+    (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  );
 ---
 
 <Layout title="Petals">
   <head>
     <meta name="pagefind:filter" content="nav" />
   </head>
+
   <Container>
-    <div class="game-container" data-pagefind-body>
+    <!-- ───────────────── CHRONICLE DECK ───────────────── -->
+    <section class="chronicle space-y-12 py-24" data-pagefind-body>
+      {
+        posts.map((post) => {
+          const d = new Date(post.data.date);
+          const day = d.getDate();
+          const month = d.toLocaleString("default", { month: "long" });
+          const year = d.getFullYear();
+
+          return (
+            <a href={`/petals/${post.slug}`} class="chronicle-card group">
+              <div class="date-block">
+                <span class="day">{day}</span>
+                <span class="month">{month}</span>
+                <span class="year">{year}</span>
+              </div>
+
+              <div class="content-block">
+                <h2>{post.data.title}</h2>
+                {post.data.description && <p>{post.data.description}</p>}
+              </div>
+            </a>
+          );
+        })
+      }
+    </section>
+
+    <!-- ───────────────── NELUMBO (ALT VIEW) ───────────────── -->
+    <section class="pt-32">
       <Nelumbo posts={posts} />
-    </div>
+    </section>
   </Container>
 </Layout>
+
+<style>
+  /* ───────────────── CHRONICLE DECK ───────────────── */
+
+  .chronicle {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chronicle-card {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 2rem;
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+    text-decoration: none;
+    color: inherit;
+
+    background: color-mix(in oklch, currentColor 3%, transparent);
+    border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
+
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.35s ease,
+      box-shadow 0.35s ease;
+  }
+
+  .chronicle-card:hover {
+    transform: translateY(-2px);
+    background: color-mix(in oklch, currentColor 6%, transparent);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  }
+
+  /* ───────── DATE BLOCK (Test.astro DNA) ───────── */
+
+  .date-block {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1;
+    opacity: 0.45;
+  }
+
+  .date-block .day {
+    font-size: 4rem;
+    font-weight: 700;
+  }
+
+  .date-block .month {
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .date-block .year {
+    font-size: 0.8rem;
+    opacity: 0.6;
+  }
+
+  .group:hover .date-block {
+    opacity: 0.75;
+  }
+
+  /* ───────── CONTENT BLOCK ───────── */
+
+  .content-block h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .content-block p {
+    opacity: 0.7;
+    max-width: 46ch;
+    line-height: 1.5;
+  }
+
+  /* ───────── RESPONSIVE ───────── */
+
+  @media (max-width: 640px) {
+    .chronicle-card {
+      grid-template-columns: 1fr;
+    }
+
+    .date-block {
+      flex-direction: row;
+      gap: 0.75rem;
+      align-items: baseline;
+    }
+
+    .date-block .day {
+      font-size: 2.4rem;
+    }
+  }
+</style>

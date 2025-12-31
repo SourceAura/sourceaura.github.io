@@ -1,0 +1,97 @@
+/* ============================================================
+   Calyx.css
+   Transparent, theme-aware surface system for SourceAura
+   ------------------------------------------------------------
+   - No hardcoded colors
+   - Fully compatible with ThemeSwitch
+   - Uses currentColor + oklch mixing
+   - Designed for cards, panels, and floating surfaces
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Base Calyx Surface
+------------------------------------------------------------ */
+
+.calyx {
+  position: relative;
+
+  background: color-mix(in oklch, var(--bg, transparent) 88%, currentColor 12%);
+
+  border: 1px solid color-mix(in oklch, currentColor 18%, transparent);
+
+  border-radius: var(--calyx-radius, 1rem);
+
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+
+  transition:
+    background 350ms ease,
+    border-color 350ms ease,
+    box-shadow 350ms ease,
+    transform 350ms ease;
+}
+
+/* ------------------------------------------------------------
+   Hover / Active Lift
+------------------------------------------------------------ */
+
+.calyx--lift:hover,
+.calyx--lift.is-open {
+  transform: translate(2.5px, 2.5px);
+
+  background: color-mix(in oklch, var(--bg, transparent) 82%, currentColor 18%);
+
+  border-color: color-mix(in oklch, currentColor 28%, transparent);
+}
+
+/* ------------------------------------------------------------
+   Elevated Variant (optional)
+------------------------------------------------------------ */
+
+.calyx--elevated {
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.25);
+}
+
+/* ------------------------------------------------------------
+   Subtle Variant (for quiet cards)
+------------------------------------------------------------ */
+
+.calyx--subtle {
+  background: color-mix(in oklch, var(--bg, transparent) 94%, currentColor 6%);
+
+  border-color: color-mix(in oklch, currentColor 12%, transparent);
+}
+
+/* ------------------------------------------------------------
+   Text Safety
+   ------------------------------------------------------------
+   Ensures surfaces inherit theme color cleanly
+------------------------------------------------------------ */
+
+.calyx,
+.calyx * {
+  color: currentColor;
+}
+
+/* ------------------------------------------------------------
+   Media Frames (images, videos)
+------------------------------------------------------------ */
+
+.calyx-media {
+  border-radius: calc(var(--calyx-radius, 1rem) * 0.75);
+  overflow: hidden;
+
+  border: 1px solid color-mix(in oklch, currentColor 18%, transparent);
+}
+
+/* ------------------------------------------------------------
+   Reduced Motion Respect
+------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .calyx,
+  .calyx--lift {
+    transition: none;
+    transform: none;
+  }
+}

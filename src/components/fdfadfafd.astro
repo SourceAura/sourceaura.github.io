@@ -1,0 +1,83 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import Container from "@components/Container.astro";
+import FormattedDate from "@components/FormattedDate.astro";
+import { readingTime } from "@lib/utils";
+import Giscus from "@components/Giscus.astro";
+import Layout from "@layouts/Layout.astro";
+
+/* ─────────────────────────────────────────────
+   Static paths
+   ───────────────────────────────────────────── */
+
+export async function getStaticPaths() {
+  const posts = (await getCollection("petals"))
+    .filter((post) => !post.data.draft)
+    .sort(
+      (a, b) =>
+        new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+    );
+
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: post,
+  }));
+}
+
+type Props = CollectionEntry<"petals">;
+
+/* ─────────────────────────────────────────────
+   Adjacent post logic
+   ───────────────────────────────────────────── */
+
+const posts = await getCollection("petals");
+const sortedPosts = posts
+  .filter((post) => !post.data.draft)
+  .sort(
+    (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  );
+
+function getAdjacentPost(offset: number) {
+  const currentIndex = sortedPosts.findIndex(
+    (post: CollectionEntry<"petals">) => post.slug === Astro.params.slug,
+  );
+  return sortedPosts[currentIndex + offset];
+}
+
+const nextPost = getAdjacentPost(1);
+const prevPost = getAdjacentPost(-1);
+
+/* ─────────────────────────────────────────────
+   Current post
+   ───────────────────────────────────────────── */
+
+const post = Astro.props as Props;
+const { Content } = await post.render();
+---
+
+<Layout title={post.data.title} description={post.data.excerpt ?? ""}>
+  <Container>
+    <div class="mx-auto max-w-3xl">
+      <!-- SEARCHABLE CONTENT -->
+      <article class="mt-8" data-pagefind-body>
+        <h1 class="mb-4 text-3xl font-semibold">
+          {post.data.title}
+        </h1>
+
+        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          <FormattedDate date={new Date(post.data.date)} />
+          <span class="mx-2">•</span>
+          <span>{readingTime(post.body)} min read</span>
+        </div>
+
+        <div class="prose max-w-none dark:prose-invert">
+          <Content />
+        </div>
+      </article>
+
+      <div class="mt-12">
+        <Giscus />
+      </div>
+    </div>
+  </Container>
+</Layout>

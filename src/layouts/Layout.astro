@@ -7,7 +7,6 @@ import Header from "@components/Header.astro"
 import Footer from "@components/Footer.astro"
 import PageFind from "@components/PageFind.astro"
 
-// 👇 optional navigation props
 const { title, description, prev, next } = Astro.props
 ---
 
@@ -24,25 +23,28 @@ const { title, description, prev, next } = Astro.props
     <Header />
 
     <main>
-        <!-- Euthymia -->
       <slot />
-      <!--  -->
     </main>
 
     <Footer />
     <PageFind />
 
     {prev || next ? (
-      <script
-        define:vars={{ prev, next }}
-        type="module"
-      >
+      <script define:vars={{ prev, next }} type="module">
         import { attachPostNavigation } from "/src/utils/postNavigator"
-
         attachPostNavigation({ prev, next })
       </script>
     ) : null}
 
+    <!-- ✅ Ase bootstrap (browser-only, guaranteed) -->
+    <script is:inline type="module">
+      import { initAseClient } from "/src/lib/ase-client.js";
+
+      console.log("[ASE] inline bootstrap executed");
+      initAseClient();
+    </script>
+
+    <!-- Existing gesture script (unchanged) -->
     <script is:inline type="module">
       import {
         mountGestures,
@@ -54,23 +56,17 @@ const { title, description, prev, next } = Astro.props
       registerGestureHandler((gesture) => {
         const petalShell = document.getElementById("petal-shell");
         const petalsOpen = petalShell?.hasAttribute("data-petals-open");
-
         const isPost = !!document.querySelector("article[data-orb]");
 
         if (gesture === "pinch-in") {
-          // Post → petals
           if (isPost) {
             history.back();
             return;
           }
-
-          // Petals → home
           if (petalsOpen) {
             window.dispatchEvent(new Event("qi:toggle-petals"));
             return;
           }
-
-          // Anywhere → home
           location.href = "/";
         }
       });
@@ -78,36 +74,115 @@ const { title, description, prev, next } = Astro.props
 
   </body>
 </html>
+<!-- Ase Debug Hud -->
+<script>
+  function startAseDebugHud() {
+    const debugEl = document.getElementById("ase-debug");
+    if (!debugEl) return;
 
-<script is:inline type="module">
-  import {
-    mountGestures,
-    registerGestureHandler,
-  } from "/src/utils/gestures.ts";
+    setInterval(() => {
+      const s = window.__aseSession;
+      if (!s) return;
 
-  mountGestures();
+      const now = performance.now();
+      const timeOnSite = (now - s.startTime) / 1000;
 
-  registerGestureHandler((gesture) => {
-    const petalShell = document.getElementById("petal-shell");
-    const petalsOpen = petalShell?.hasAttribute("data-petals-open");
+      const avgScrollVelocity =
+        s.scrollSamples.length
+          ? s.scrollSamples.reduce((a, b) => a + b, 0) / s.scrollSamples.length
+          : 0;
 
-    const route = document.body.dataset.route;
+      const idleRatio =
+        s.idleTime / Math.max(now - s.startTime, 1);
 
-    if (gesture === "pinch-in") {
-      // Post → petals
-      if (route === "post") {
-        history.back();
-        return;
-      }
+      debugEl.innerHTML = `
+<div style="opacity:.7;margin-bottom:6px;">Ase · session</div>
+time        ${timeOnSite.toFixed(1)}s<br/>
+scroll vel  ${avgScrollVelocity.toFixed(3)}<br/>
+idle ratio  ${idleRatio.toFixed(2)}<br/>
+interacts   ${s.interactions}<br/>
+ase-wake    ${getComputedStyle(document.documentElement)
+  .getPropertyValue("--ase-wake")
+  .trim()}
+      `;
+    }, 500);
+  }
 
-      // Petals → home
-      if (petalsOpen) {
-        window.dispatchEvent(new Event("qi:toggle-petals"));
-        return;
-      }
+  // wait until Ase client initializes
+  window.addEventListener("load", () => {
+    setTimeout(startAseDebugHud, 800);
+  });
 
-      // Anywhere → home
-      location.href = "/";
+  // Toggle with `
+  let aseDebugVisible = true;
+  window.addEventListener("keydown", e => {
+    if (e.key === "`") {
+      const el = document.getElementById("ase-debug");
+      if (!el) return;
+      aseDebugVisible = !aseDebugVisible;
+      el.style.display = aseDebugVisible ? "block" : "none";
     }
   });
 </script>
+
+
+
+<!-- Styles Below -->
+
+<style>
+#ase-debug {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+
+  min-width: 220px;
+  max-width: 260px;
+
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+
+  padding: 10px 12px;
+
+  background: transparent;
+  color: currentColor;
+
+  border-radius: 6px; /* neat rectangle, not pill */
+  z-index: 9999;
+  pointer-events: none;
+
+  backdrop-filter: blur(6px);
+
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+html.light #ase-debug {
+  background: rgba(255, 255, 255, 0.75);
+  color: black;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+#ase-debug {
+  animation: ase-debug-fade-in 240ms ease-out;
+}
+
+@keyframes ase-debug-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
+</style>
+
+
+<div id="ase-debug"></div>
