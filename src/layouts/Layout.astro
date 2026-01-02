@@ -40,7 +40,7 @@ const { title, description, prev, next } = Astro.props
     <script is:inline type="module">
       import { initAseClient } from "/src/lib/ase-client.js";
 
-      console.log("[ASE] inline bootstrap executed");
+      console.log("[ASE] bootstrap starting");
       initAseClient();
     </script>
 
@@ -76,6 +76,8 @@ const { title, description, prev, next } = Astro.props
 </html>
 <!-- Ase Debug Hud -->
 <script>
+const tick = Math.floor(performance.now() / 500);
+
   function startAseDebugHud() {
     const debugEl = document.getElementById("ase-debug");
     if (!debugEl) return;
@@ -130,6 +132,7 @@ ase-wake    ${getComputedStyle(document.documentElement)
 <!-- Styles Below -->
 
 <style>
+
 #ase-debug {
   position: fixed;
   top: 12px;
@@ -144,10 +147,11 @@ ase-wake    ${getComputedStyle(document.documentElement)
 
   padding: 10px 12px;
 
-  background: transparent;
-  color: currentColor;
+  background: transparent !important;
+  color: white;
 
-  border-radius: 6px; /* neat rectangle, not pill */
+  border-radius: 6px;
+
   z-index: 9999;
   pointer-events: none;
 
@@ -156,18 +160,17 @@ ase-wake    ${getComputedStyle(document.documentElement)
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.25),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  animation: ase-debug-fade-in 240ms ease-out;
 }
 
 html.light #ase-debug {
   background: rgba(255, 255, 255, 0.75);
   color: black;
+
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.12),
     inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-
-#ase-debug {
-  animation: ase-debug-fade-in 240ms ease-out;
 }
 
 @keyframes ase-debug-fade-in {

@@ -3,7 +3,10 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
 export function initAseClient() {
   if (typeof window === "undefined") return;
 
-  console.log("[ASE] initAseClient called");
+  console.log("[ASE] initAseClient CALLED");
+
+  const API = "http://127.0.0.1:8000";
+  const INFER_EVERY_MS = 6000;
 
   const session = {
     startTime: performance.now(),
@@ -11,19 +14,22 @@ export function initAseClient() {
     idleTime: 0,
     interactions: 0,
     scrollSamples: [],
+    inferTimer: null,
   };
 
   window.__aseSession = session;
 
+  // --- Activity ---
   const markActivity = () => {
     session.interactions++;
     session.lastActivity = performance.now();
   };
 
-  ["click", "keydown", "pointerdown", "touchstart"].forEach(evt => {
-    window.addEventListener(evt, markActivity, { passive: true });
-  });
+  ["click", "keydown", "pointerdown", "touchstart"].forEach(evt =>
+    window.addEventListener(evt, markActivity, { passive: true })
+  );
 
+  // --- Scroll ---
   let lastScrollY = window.scrollY;
   let lastScrollT = performance.now();
 
@@ -37,13 +43,14 @@ export function initAseClient() {
     session.lastActivity = now;
   }, { passive: true });
 
+  // --- Idle ---
   setInterval(() => {
     if (performance.now() - session.lastActivity > 2000) {
       session.idleTime += 500;
     }
   }, 500);
 
-  async function sendToAse() {
+  function buildVector() {
     const now = performance.now();
     const timeOnSite = (now - session.startTime) / 1000;
 
@@ -53,10 +60,9 @@ export function initAseClient() {
           session.scrollSamples.length
         : 0;
 
-    const idleRatio =
-      session.idleTime / Math.max(now - session.startTime, 1);
+    const idleRatio = session.idleTime / Math.max(now - session.startTime, 1);
 
-    const sessionVector = [
+    return [
       clamp01(avgScrollVelocity * 40),
       clamp01(idleRatio),
       0, 0,
@@ -65,29 +71,33 @@ export function initAseClient() {
       clamp01(timeOnSite / 300),
       clamp01(avgScrollVelocity * 20),
     ];
+  }
+
+  async function inferNow() {
+    console.log("[ASE] infer tick");
+
+    const values = buildVector();
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/infer", {
+      const res = await fetch(`${API}/infer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ values: sessionVector }),
+        body: JSON.stringify({ values }),
       });
 
       const data = await res.json();
       const aseWake = clamp01(data.embedding?.[3] ?? 0.5);
 
-      document.documentElement.style.setProperty(
-        "--ase-wake",
-        aseWake.toFixed(3)
-      );
-
-      console.log("[ASE] wake:", aseWake);
-    } catch {
-      console.warn("[ASE] offline");
+      document.documentElement.style.setProperty("--ase-wake", aseWake);
+      console.log("[ASE] wake", aseWake);
+    } catch (e) {
+      console.warn("[ASE] infer failed", e);
     }
   }
 
   window.addEventListener("load", () => {
-    setTimeout(sendToAse, 600);
+    console.log("[ASE] window load → starting inference loop");
+    setTimeout(inferNow, 600);
+    session.inferTimer = setInterval(inferNow, INFER_EVERY_MS);
   });
 }
