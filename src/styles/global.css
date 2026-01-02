@@ -1,8 +1,8 @@
+@import "./Calyx.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import "./Calyx.css";
 
 /* ======================================================
    BASE THEME TOKENS (DARK = DEFAULT)
