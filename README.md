@@ -80,4 +80,7 @@
 
 -------
 
+- 01012026 :: Ase - SI 🖥️
+
+-------
 ![Vercel](https://vercelbadge.vercel.app/api/sourceaura/sourceaura.github.io?style=plastic)
