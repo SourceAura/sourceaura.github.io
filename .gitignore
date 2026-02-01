@@ -10,6 +10,8 @@ src/capsules/
 # 404
 # 404.astro/
 
+# Ase.astro
+
 # dependencies
 node_modules/
 

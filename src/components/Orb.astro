@@ -115,6 +115,78 @@ if (match?.[1]) {
             <feBlend in="colored" in2="lit" mode="screen"></feBlend>
           </filter>
 
+          <!-- LED pixel/dot look (apply AFTER orbFX output) -->
+          <filter id="orbLED" x="-10%" y="-10%" width="120%" height="120%">
+            <!-- tweak this for "LED resolution" (lower = chunkier pixels) -->
+            <feComponentTransfer in="SourceGraphic" result="pre">
+              <feFuncR type="gamma" amplitude="1.0" exponent="0.9" offset="0"
+              ></feFuncR>
+              <feFuncG type="gamma" amplitude="1.0" exponent="0.9" offset="0"
+              ></feFuncG>
+              <feFuncB type="gamma" amplitude="1.0" exponent="0.9" offset="0"
+              ></feFuncB>
+            </feComponentTransfer>
+
+            <!-- pixelate: scale down then scale up with nearest sampling -->
+            <feImage
+              href="data:image/svg+xml;utf8,
+                <svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'>
+                  <rect width='8' height='8' fill='black'/>
+                </svg>"
+              x="0"
+              y="0"
+              width="8"
+              height="8"
+              preserveAspectRatio="none"
+              result="blank"></feImage>
+
+            <!-- Downsample by scaling via feDisplacementMap trick:
+                 We do a real pixelation using feTile + feComposite and a dot mask below.
+                 The actual "nearest-neighbor upscale" is done by CSS image-rendering on a raster,
+                 but in SVG we can approximate by applying a dot mask and a mild blur/bloom. -->
+
+            <!-- Dot mask: circles in a grid -->
+            <feImage
+              href="data:image/svg+xml;utf8,
+                <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'>
+                  <rect width='16' height='16' fill='black'/>
+                  <circle cx='8' cy='8' r='5.2' fill='white'/>
+                </svg>"
+              x="0"
+              y="0"
+              width="16"
+              height="16"
+              preserveAspectRatio="none"
+              result="dotPattern"></feImage>
+
+            <feTile in="dotPattern" result="dots"></feTile>
+
+            <!-- Apply dot mask to the incoming graphic -->
+            <feComposite in="pre" in2="dots" operator="in" result="dotted"
+            ></feComposite>
+
+            <!-- Bloom -->
+            <feGaussianBlur in="dotted" stdDeviation="1.1" result="blur"
+            ></feGaussianBlur>
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="
+                1.2 0   0   0   0
+                0   1.2 0   0   0
+                0   0   1.2 0   0
+                0   0   0   1   0"
+              result="bloom"></feColorMatrix>
+
+            <feBlend in="dotted" in2="bloom" mode="screen" result="out"
+            ></feBlend>
+
+            <!-- optional: dark grid feel (very subtle) -->
+            <feComponentTransfer in="out">
+              <feFuncA type="linear" slope="1"></feFuncA>
+            </feComponentTransfer>
+          </filter>
+          <!--  -->
           <!-- Orb mask -->
           <mask id="orbMask">
             <rect width="100%" height="100%" fill="black"></rect>
@@ -137,177 +209,212 @@ if (match?.[1]) {
               stop-opacity="var(--orb-bg-opacity)"></stop>
           </radialGradient>
         </defs>
-
+        <!-- RENDERING BELOW -->
         <!-- ALWAYS render fallback -->
-        <g filter="url(#orbFX)" mask="url(#orbMask)">
-          {
-            imageSrc && (
-              <image
-                href={imageSrc}
-                x="38"
-                y="38"
-                width="124"
-                height="124"
-                preserveAspectRatio="xMidYMid slice"
-                onerror="this.remove()"
-              />
-            )
-          }
 
-          <circle cx="100" cy="100" r="62" fill="url(#orbGradient)"></circle>
+        <g filter="url(#orbLED)" mask="url(#orbMask)">
+          <g filter="url(#orbFX)">
+            {
+              imageSrc && (
+                <image
+                  href={imageSrc}
+                  x="38"
+                  y="38"
+                  width="124"
+                  height="124"
+                  preserveAspectRatio="xMidYMid slice"
+                  onerror="this.remove()"
+                />
+              )
+            }
+
+            <circle cx="100" cy="100" r="62" fill="url(#orbGradient)"></circle>
+          </g>
         </g>
+        <!-- RENDERING END -->
+        <div class="orb-lens">
+          <svg
+            viewBox="0 0 200 200"
+            width="100%"
+            height="100%"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <slot />
+          </svg>
+        </div>
       </svg>
 
-      <div class="orb-lens">
-        <svg
-          viewBox="0 0 200 200"
-          width="100%"
-          height="100%"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <slot />
-        </svg>
-      </div>
-    </div>
+      <script>
+        const root = document.documentElement;
+        let lastScrollY = window.scrollY;
+        let scrollBias = 0;
 
-    <script>
-      const root = document.documentElement;
-      let lastScrollY = window.scrollY;
-      let scrollBias = 0;
+        function syncOrbTheme() {
+          const isLight = root.classList.contains("light");
+          document.querySelectorAll("[data-orb]").forEach((orb) => {
+            orb.style.setProperty("--orb-energy", isLight ? "0.85" : "1");
+          });
+        }
 
-      function syncOrbTheme() {
-        const isLight = root.classList.contains("light");
-        document.querySelectorAll("[data-orb]").forEach((orb) => {
-          orb.style.setProperty("--orb-energy", isLight ? "0.85" : "1");
+        syncOrbTheme();
+        new MutationObserver(syncOrbTheme).observe(root, {
+          attributes: true,
+          attributeFilter: ["class"],
         });
-      }
 
-      syncOrbTheme();
-      new MutationObserver(syncOrbTheme).observe(root, {
-        attributes: true,
-        attributeFilter: ["class"],
-      });
-
-      window.addEventListener(
-        "scroll",
-        () => {
-          const y = window.scrollY;
-          const dy = y - lastScrollY;
-          lastScrollY = y;
-
-          scrollBias += Math.sign(dy) * 0.05;
-          scrollBias *= 0.9;
-
-          root.style.setProperty("--orb-scroll-bias", scrollBias.toFixed(4));
-        },
-        { passive: true },
-      );
-
-      const prefersReduced = matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-
-      if (!prefersReduced) {
         window.addEventListener(
-          "pointermove",
-          (e) => {
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
+          "scroll",
+          () => {
+            const y = window.scrollY;
+            const dy = y - lastScrollY;
+            lastScrollY = y;
 
-            document.querySelectorAll("[data-orb]").forEach((orb) => {
-              const r = orb.getBoundingClientRect();
-              const cx = r.left + r.width / 2;
-              const cy = r.top + r.height / 2;
+            scrollBias += Math.sign(dy) * 0.05;
+            scrollBias *= 0.9;
 
-              const dx = (e.clientX - cx) / vw;
-              const dy = (e.clientY - cy) / vh;
-
-              const dist = Math.hypot(dx, dy);
-              const proximity = Math.max(0, 1 - dist * 3.2);
-
-              orb.style.setProperty("--orb-proximity", proximity.toFixed(4));
-            });
+            root.style.setProperty("--orb-scroll-bias", scrollBias.toFixed(4));
           },
           { passive: true },
         );
-      }
-    </script>
 
-    <style>
-      :root {
-        --orb-ink: 255, 255, 255;
-        --orb-glow: 255, 255, 255;
-        --orb-bg-opacity: 0.55;
-      }
+        const prefersReduced = matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
 
-      html.light {
-        --orb-ink: 0, 0, 0;
-        --orb-glow: 0, 0, 0;
-        --orb-bg-opacity: 0.45;
-      }
+        if (!prefersReduced) {
+          window.addEventListener(
+            "pointermove",
+            (e) => {
+              const vw = window.innerWidth;
+              const vh = window.innerHeight;
 
-      /* Image-less or broken-image orbs are always white */
-      .orb-card[data-has-image="false"] {
-        --orb-ink: 255, 255, 255;
-        --orb-glow: 255, 255, 255;
-        --orb-bg-opacity: 0.55;
-      }
+              document.querySelectorAll("[data-orb]").forEach((orb) => {
+                const r = orb.getBoundingClientRect();
+                const cx = r.left + r.width / 2;
+                const cy = r.top + r.height / 2;
 
-      .orb-card {
-        width: 100%;
-        height: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 50%;
-        pointer-events: none;
-        --orb-proximity: 0;
-        --orb-scroll-bias: 0;
-        --orb-mouse-x: 0;
-        --orb-mouse-y: 0;
+                const dx = (e.clientX - cx) / vw;
+                const dy = (e.clientY - cy) / vh;
 
-        /* per-orb micro variance */
-        /*filter: hue-rotate(calc(attr(data-seed number) * 0.02deg));*/
-      }
+                const dist = Math.hypot(dx, dy);
+                const proximity = Math.max(0, 1 - dist * 3.2);
 
-      .orb-surface {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-      }
-
-      .orb-wrap {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        filter: brightness(var(--orb-energy, 1));
-      }
-
-      .orb-wrap svg {
-        width: 100%;
-        height: 100%;
-        display: block;
-      }
-
-      .orb-lens {
-        position: absolute;
-        inset: 18%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-      }
-
-      .orb-wrap {
-        filter: brightness(calc(0.96 + var(--orb-energy, 1) * 0.06))
-          contrast(1.03) saturate(1.04);
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        svg animate {
-          display: none;
+                orb.style.setProperty("--orb-proximity", proximity.toFixed(4));
+              });
+            },
+            { passive: true },
+          );
         }
-      }
-    </style>
+      </script>
+
+      <style>
+        :root {
+          --orb-ink: 255, 255, 255;
+          --orb-glow: 255, 255, 255;
+          --orb-bg-opacity: 0.55;
+        }
+
+        html.light {
+          --orb-ink: 0, 0, 0;
+          --orb-glow: 0, 0, 0;
+          --orb-bg-opacity: 0.45;
+        }
+
+        /* Image-less or broken-image orbs are always white */
+        .orb-card[data-has-image="false"] {
+          --orb-ink: 255, 255, 255;
+          --orb-glow: 255, 255, 255;
+          --orb-bg-opacity: 0.55;
+        }
+
+        .orb-card {
+          width: 100%;
+          height: 100%;
+          aspect-ratio: 1 / 1;
+          border-radius: 50%;
+          pointer-events: none;
+          --orb-proximity: 0;
+          --orb-scroll-bias: 0;
+          --orb-mouse-x: 0;
+          --orb-mouse-y: 0;
+
+          /* per-orb micro variance */
+          /*filter: hue-rotate(calc(attr(data-seed number) * 0.02deg));*/
+        }
+
+        .orb-surface {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+        }
+
+        .orb-wrap {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          filter: brightness(var(--orb-energy, 1));
+        }
+
+        .orb-wrap svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .orb-lens {
+          position: absolute;
+          inset: 18%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+        }
+
+        .orb-wrap {
+          filter: brightness(calc(0.96 + var(--orb-energy, 1) * 0.06))
+            contrast(1.03) saturate(1.04);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          svg animate {
+            display: none;
+          }
+        }
+      </style>
+
+      <style>
+        .orb-card {
+          /* ...existing... */
+          /* makes glow read brighter */
+          filter: drop-shadow(0 0 10px rgba(var(--orb-glow), 0.22));
+        }
+
+        .orb-surface {
+          /* subtle glass */
+          box-shadow:
+            inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+            inset 0 0 30px rgba(0, 0, 0, 0.22);
+        }
+
+        /* optional: faint scanlines */
+        .orb-wrap::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          pointer-events: none;
+          background: repeating-linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0),
+            rgba(0, 0, 0, 0) 3px,
+            rgba(0, 0, 0, 0.045) 4px
+          );
+          mix-blend-mode: multiply;
+          opacity: 0.35;
+        }
+      </style>
+    </div>
   </div>
 </article>
