@@ -72,10 +72,14 @@ interface Props {
   rimStrength?: number;
   rimPower?: number;
 
-  // NEW: visibility guards
-  minPixelAlpha?: number; // absolute minimum alpha for any LED
-  minBackfaceAlpha?: number; // minimum alpha multiplier for the back side
-  ignoreTextureAlpha?: boolean; // treat texture alpha as 1 (recommended)
+  // Visibility guards
+  minPixelAlpha?: number;
+  minBackfaceAlpha?: number;
+  ignoreTextureAlpha?: boolean;
+
+  // NEW: streak/line prevention
+  maxDotPx?: number; // clamp LED size in pixels
+  nearPlaneEpsilon?: number; // if fLen-rotZ < this, cull (projection blow-up)
 }
 
 const {
@@ -124,21 +128,22 @@ const {
   depthScaleStrength = 0.55,
   depthBrightStrength = 0.22,
 
-  // Make dithering less “hole-punchy” by default
   ditherStrength = 0.45,
   ditherContrast = 1.25,
 
-  // Backface/rim tuned to shape, not vanish
   backfaceMin = 0.35,
   backfaceStrength = 0.65,
 
   rimStrength = 0.22,
   rimPower = 2.2,
 
-  // Visibility guards (these are the key fixes)
   minPixelAlpha = 0.12,
   minBackfaceAlpha = 0.35,
   ignoreTextureAlpha = true,
+
+  // NEW defaults (prevents the “white line”)
+  maxDotPx = 7,
+  nearPlaneEpsilon = 28,
 } = Astro.props;
 
 /* Extract first markdown image */
@@ -204,6 +209,8 @@ const canvasId = `${uid}_canvas`;
     minPixelAlpha,
     minBackfaceAlpha,
     ignoreTextureAlpha,
+    maxDotPx,
+    nearPlaneEpsilon,
   }}
 >
   (() => {
@@ -237,6 +244,7 @@ const canvasId = `${uid}_canvas`;
     let rotYaw = 0,
       rotPitch = 0,
       rotRoll = 0;
+
     let lastTime = performance.now();
     let phase = 0;
 
@@ -370,6 +378,7 @@ const canvasId = `${uid}_canvas`;
       p.x = x;
       p.y = y;
       p.z = z;
+
       p.vx = vx;
       p.vy = vy;
       p.vz = vz;
@@ -445,13 +454,15 @@ const canvasId = `${uid}_canvas`;
     }
 
     function drawDot(x, y, size) {
+      // clamp size to prevent streaks
+      const clamped = Math.min(maxDotPx, Math.max(1, size));
       if (!useSquares) {
         ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.arc(x, y, clamped, 0, Math.PI * 2);
         ctx.fill();
         return;
       }
-      const s = Math.max(1, size | 0);
+      const s = clamped | 0;
       ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
     }
 
@@ -487,7 +498,6 @@ const canvasId = `${uid}_canvas`;
       const czp = Math.cos(rotRoll),
         szp = Math.sin(rotRoll);
 
-      // orbit axis is rotated world-up
       const up = rotateVec(0, 1, 0, cyp, syp, cxp, sxp, czp, szp);
       const orbitAxisX = up.x,
         orbitAxisY = up.y,
@@ -498,7 +508,6 @@ const canvasId = `${uid}_canvas`;
       ctx.clearRect(0, 0, w, h);
       ctx.globalCompositeOperation = cachedMode;
 
-      // Base pass (no glow)
       ctx.shadowBlur = 0;
       ctx.shadowColor = "transparent";
 
@@ -506,7 +515,6 @@ const canvasId = `${uid}_canvas`;
       while (p) {
         const next = p.next;
 
-        // drift for non-locked
         if (!p.locked) {
           p.age++;
           if (p.age > p.stuck) {
@@ -575,7 +583,6 @@ const canvasId = `${uid}_canvas`;
           }
         }
 
-        // rotate position
         const localZ = p.z - scz;
         const pr = rotateVec(p.x, p.y, localZ, cyp, syp, cxp, sxp, czp, szp);
 
@@ -583,12 +590,28 @@ const canvasId = `${uid}_canvas`;
         const rotY = pr.y;
         const rotZ = pr.z + scz;
 
+        // prevent projection blow-up near camera
+        const denom = fLen - rotZ;
+        if (denom < nearPlaneEpsilon || !Number.isFinite(denom)) {
+          if (!p.locked) recycle(p);
+          p = next;
+          continue;
+        }
+
         if (rotZ > zMax) {
           p = next;
           continue;
         }
 
-        const m = (radiusSp * fLen * projectionScale) / (fLen - rotZ);
+        const m = (radiusSp * fLen * projectionScale) / denom;
+
+        // reject insane projections
+        if (!Number.isFinite(m) || m <= 0 || m > 8) {
+          if (!p.locked) recycle(p);
+          p = next;
+          continue;
+        }
+
         const px = rotX * m + projCenterX;
         const py = rotY * m + projCenterY + centerYOffset;
 
@@ -597,11 +620,10 @@ const canvasId = `${uid}_canvas`;
           continue;
         }
 
-        // depth (stable heuristic)
         let depth = 1 - rotZ / -750;
         depth = clamp01(depth);
 
-        // normal z in view space for backface/rim
+        // normal
         let nxl, nyl, nzl;
         if (p.locked) {
           const s = Math.sin(p.phi);
@@ -616,27 +638,22 @@ const canvasId = `${uid}_canvas`;
         }
 
         const nr = rotateVec(nxl, nyl, nzl, cyp, syp, cxp, sxp, czp, szp);
-        const nzView = nr.z; // + = facing viewer-ish
+        const nzView = nr.z;
 
-        // Backface fade (safe)
         const faceFactor = clamp01((nzView + 1) * 0.5);
         const backFadeRaw =
           backfaceMin +
           (1 - backfaceMin) *
             (1 - backfaceStrength + backfaceStrength * faceFactor);
-
         const backFade = Math.max(minBackfaceAlpha, backFadeRaw);
 
-        // Rim light (safe)
         const rimBase = 1 - Math.min(1, Math.abs(nzView));
         const rim = Math.pow(clamp01(rimBase), rimPower);
         const rimBoost = 1 + rimStrength * rim;
 
-        // Size scaling: front bigger
         const sizeBoost = 1 + depthScaleStrength * depth;
         const size = m * particleRad * sizeBoost;
 
-        // UV scroll by yaw
         const u = p.theta / (Math.PI * 2) + rotYaw / (Math.PI * 2);
         const v = p.phi / Math.PI;
 
@@ -646,7 +663,6 @@ const canvasId = `${uid}_canvas`;
           g = 0,
           b = 0,
           a = 1;
-
         if (tex) {
           r = tex.r;
           g = tex.g;
@@ -660,7 +676,6 @@ const canvasId = `${uid}_canvas`;
           a = 1;
         }
 
-        // Dither based on luminance (but never fully “off”)
         let lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
         lum = clamp01((lum - 0.5) * ditherContrast + 0.5);
 
@@ -669,14 +684,11 @@ const canvasId = `${uid}_canvas`;
         const ditherAlpha =
           1 - ditherStrength + ditherStrength * (0.38 + 0.62 * mask);
 
-        // shimmer
         const scan = Math.sin(phase + v * Math.PI * 14);
         const shimmer = 1 + shimmerStrength * scan;
 
-        // front bright
         const brightBoost = 1 + depthBrightStrength * depth;
 
-        // FINAL ALPHA (with hard floor)
         const computedA =
           a *
           materialStrength *
@@ -716,21 +728,23 @@ const canvasId = `${uid}_canvas`;
             );
             const rotZ2 = pr2.z + scz;
 
-            if (rotZ2 <= zMax) {
-              const m2 = (radiusSp * fLen * projectionScale) / (fLen - rotZ2);
-              const px2 = pr2.x * m2 + projCenterX;
-              const py2 = pr2.y * m2 + projCenterY + centerYOffset;
+            const denom2 = fLen - rotZ2;
+            if (denom2 >= nearPlaneEpsilon && rotZ2 <= zMax) {
+              const m2 = (radiusSp * fLen * projectionScale) / denom2;
+              if (Number.isFinite(m2) && m2 > 0 && m2 < 8) {
+                const px2 = pr2.x * m2 + projCenterX;
+                const py2 = pr2.y * m2 + projCenterY + centerYOffset;
 
-              if (px2 >= 0 && px2 <= w && py2 >= 0 && py2 <= h) {
-                let depth2 = 1 - rotZ2 / -750;
-                depth2 = clamp01(depth2);
+                if (px2 >= 0 && px2 <= w && py2 >= 0 && py2 <= h) {
+                  let depth2 = 1 - rotZ2 / -750;
+                  depth2 = clamp01(depth2);
 
-                // simpler shaping, still safe
-                const a2 = Math.max(0.08, depth2 * glowStrength);
-                ctx.fillStyle = `rgba(255,255,255,${a2})`;
+                  const a2 = Math.max(0.08, depth2 * glowStrength);
+                  ctx.fillStyle = `rgba(255,255,255,${a2})`;
 
-                const sizeBoost2 = 1 + depthScaleStrength * depth2;
-                drawDot(px2, py2, m2 * particleRad * sizeBoost2);
+                  const sizeBoost2 = 1 + depthScaleStrength * depth2;
+                  drawDot(px2, py2, m2 * particleRad * sizeBoost2);
+                }
               }
             }
           }
