@@ -43,11 +43,14 @@ interface Props {
   gravity?: number; // y accel
   maxDriftRadius?: number; // multiplier of sphereRad
 
-  // NEW: spring + orbit controls
+  // Spring + orbit controls
   springK?: number; // radial spring strength
   damping?: number; // velocity damping per frame (0..1)
   orbitK?: number; // tangential swirl strength
   targetRadiusMul?: number; // target radius multiplier (near surface)
+
+  // NEW: secondary swirl for "field line" vibe (0..1)
+  swirlMix?: number;
 }
 
 const {
@@ -60,8 +63,8 @@ const {
   projectionScale = 0.88,
 
   // Density for readability
-  particlesPerFrame = 43,
-  maxParticles = 3600,
+  particlesPerFrame = 77,
+  maxParticles = 2000,
   particleRad = 1.65,
 
   glowBlur = 7,
@@ -85,11 +88,14 @@ const {
   gravity = 0,
   maxDriftRadius = 2.6,
 
-  // Spring orbit (NEW)
+  // Spring orbit
   springK = 0.0022,
   damping = 0.985,
   orbitK = 0.0014,
   targetRadiusMul = 1.02,
+
+  // Secondary swirl mix (field-line feel)
+  swirlMix = 0.35,
 } = Astro.props;
 
 /* Extract first markdown image */
@@ -142,6 +148,7 @@ const canvasId = `${uid}_canvas`;
     damping,
     orbitK,
     targetRadiusMul,
+    swirlMix,
   }}
 >
   (() => {
@@ -229,6 +236,15 @@ const canvasId = `${uid}_canvas`;
         attributes: true,
         attributeFilter: ["style", "class"],
       });
+    }
+
+    // Vector helpers
+    function cross(ax, ay, az, bx, by, bz) {
+      return {
+        x: ay * bz - az * by,
+        y: az * bx - ax * bz,
+        z: ax * by - ay * bx,
+      };
     }
 
     // ---- Material image sampling (offscreen canvas) ----
@@ -417,6 +433,31 @@ const canvasId = `${uid}_canvas`;
       const cz = Math.cos(rotRoll),
         sz = Math.sin(rotRoll);
 
+      // NEW: orbit axis rotates with the orb
+      // Start with (0,1,0) and rotate it with the same chain (pitch -> yaw -> roll)
+      let ax = 0,
+        ay = 1,
+        az = 0;
+
+      // pitch
+      let ay1 = cx * ay - sx * az;
+      let az1 = sx * ay + cx * az;
+      let ax1 = ax;
+
+      // yaw
+      let ax2 = cy * ax1 + sy * az1;
+      let az2 = -sy * ax1 + cy * az1;
+      let ay2 = ay1;
+
+      // roll
+      let ax3 = cz * ax2 - sz * ay2;
+      let ay3 = sz * ax2 + cz * ay2;
+      let az3 = az2;
+
+      const orbitAxisX = ax3;
+      const orbitAxisY = ay3;
+      const orbitAxisZ = az3;
+
       ctx.clearRect(0, 0, displayWidth, displayHeight);
       ctx.globalCompositeOperation = cachedMode;
 
@@ -448,17 +489,38 @@ const canvasId = `${uid}_canvas`;
           const nyr = dy / r;
           const nzr = dz / r;
 
-          // radial spring back to target radius (positive if outside, negative if inside)
+          // radial spring back to target radius
           const dr = targetR - r;
           const axSpring = springK * dr * nxr;
           const aySpring = springK * dr * nyr;
           const azSpring = springK * dr * nzr;
 
-          // tangential swirl around the Y axis to create orbiting motion
-          // tangent = up × radial = (0,1,0) × (nx,ny,nz) = (nz,0,-nx)
-          const tx = nzr;
-          const ty = 0;
-          const tz = -nxr;
+          // NEW: tangential swirl around the orb's rotating axis
+          // tangent = axis × radial
+          const t = cross(orbitAxisX, orbitAxisY, orbitAxisZ, nxr, nyr, nzr);
+          const tl = Math.sqrt(t.x * t.x + t.y * t.y + t.z * t.z) || 1;
+          let tx = t.x / tl;
+          let ty = t.y / tl;
+          let tz = t.z / tl;
+
+          // Optional: secondary swirl (field-line corkscrew)
+          // t2 = radial × tangent
+          if (swirlMix > 0) {
+            const t2 = cross(nxr, nyr, nzr, tx, ty, tz);
+            const t2l = Math.sqrt(t2.x * t2.x + t2.y * t2.y + t2.z * t2.z) || 1;
+            const sx2 = t2.x / t2l;
+            const sy2 = t2.y / t2l;
+            const sz2 = t2.z / t2l;
+
+            const bx = tx * (1 - swirlMix) + sx2 * swirlMix;
+            const by = ty * (1 - swirlMix) + sy2 * swirlMix;
+            const bz = tz * (1 - swirlMix) + sz2 * swirlMix;
+
+            const bl = Math.sqrt(bx * bx + by * by + bz * bz) || 1;
+            tx = bx / bl;
+            ty = by / bl;
+            tz = bz / bl;
+          }
 
           // add forces + jitter
           p.velX +=
@@ -496,20 +558,20 @@ const canvasId = `${uid}_canvas`;
         let z = p.z - scz;
 
         // pitch
-        let y1 = cx * y - sx * z;
-        let z1 = sx * y + cx * z;
+        let y1p = cx * y - sx * z;
+        let z1p = sx * y + cx * z;
 
         // yaw
-        let x2 = cy * x + sy * z1;
-        let z2 = -sy * x + cy * z1;
+        let x2p = cy * x + sy * z1p;
+        let z2p = -sy * x + cy * z1p;
 
         // roll
-        let x3 = cz * x2 - sz * y1;
-        let y3 = sz * x2 + cz * y1;
+        let x3p = cz * x2p - sz * y1p;
+        let y3p = sz * x2p + cz * y1p;
 
-        const rotX = x3;
-        const rotY = y3;
-        const rotZ = z2 + scz;
+        const rotX = x3p;
+        const rotY = y3p;
+        const rotZ = z2p + scz;
 
         const m = (radiusSp * fLen * projectionScale) / (fLen - rotZ);
         const px = rotX * m + projCenterX;
@@ -577,7 +639,7 @@ const canvasId = `${uid}_canvas`;
         } else {
           nx = rotX / sphereRad;
           ny = rotY / sphereRad;
-          nz = z2 / sphereRad;
+          nz = z2p / sphereRad;
         }
 
         const lit = lighting(nx, ny, nz);
