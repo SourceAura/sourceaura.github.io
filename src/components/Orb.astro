@@ -56,13 +56,26 @@ interface Props {
   glowEvery?: number;
   useSquares?: boolean;
 
-  // NEW: Depth scaling controls
-  depthScaleStrength?: number; // 0..1; bigger = front LEDs larger
-  depthBrightStrength?: number; // 0..1; bigger = front LEDs brighter
+  // Depth scaling controls
+  depthScaleStrength?: number;
+  depthBrightStrength?: number;
 
-  // NEW: Dithering + contrast controls
-  ditherStrength?: number; // 0..1
-  ditherContrast?: number; // >=1 increases contrast
+  // Dithering + contrast controls
+  ditherStrength?: number;
+  ditherContrast?: number;
+
+  // Backface fade controls
+  backfaceMin?: number;
+  backfaceStrength?: number;
+
+  // Rim light controls
+  rimStrength?: number;
+  rimPower?: number;
+
+  // NEW: visibility guards
+  minPixelAlpha?: number; // absolute minimum alpha for any LED
+  minBackfaceAlpha?: number; // minimum alpha multiplier for the back side
+  ignoreTextureAlpha?: boolean; // treat texture alpha as 1 (recommended)
 }
 
 const {
@@ -70,11 +83,10 @@ const {
   width = 720,
   height = 416,
 
-  sphereRad = 280,
+  sphereRad = 210,
   radiusSp = 1,
   projectionScale = 0.88,
 
-  // Image visibility
   particlesPerFrame = 42,
   maxParticles = 2600,
   particleRad = 1.35,
@@ -93,33 +105,40 @@ const {
 
   gammaDark = 0.86,
 
-  // Drift
   lockRatio = 0.88,
   driftVelocity = 0.0018,
   driftJitter = 0.06,
   gravity = 0,
   maxDriftRadius = 2.6,
 
-  // Spring orbit
   springK = 0.0022,
   damping = 0.985,
   orbitK = 0.0014,
   targetRadiusMul = 1.02,
 
-  // Field lines
   swirlMix = 0.18,
 
-  // Perf
   glowEvery = 6,
   useSquares = true,
 
-  // NEW depth scaling
   depthScaleStrength = 0.55,
   depthBrightStrength = 0.22,
 
-  // NEW dithering
-  ditherStrength = 0.55,
+  // Make dithering less “hole-punchy” by default
+  ditherStrength = 0.45,
   ditherContrast = 1.25,
+
+  // Backface/rim tuned to shape, not vanish
+  backfaceMin = 0.35,
+  backfaceStrength = 0.65,
+
+  rimStrength = 0.22,
+  rimPower = 2.2,
+
+  // Visibility guards (these are the key fixes)
+  minPixelAlpha = 0.12,
+  minBackfaceAlpha = 0.35,
+  ignoreTextureAlpha = true,
 } = Astro.props;
 
 /* Extract first markdown image */
@@ -178,6 +197,13 @@ const canvasId = `${uid}_canvas`;
     depthBrightStrength,
     ditherStrength,
     ditherContrast,
+    backfaceMin,
+    backfaceStrength,
+    rimStrength,
+    rimPower,
+    minPixelAlpha,
+    minBackfaceAlpha,
+    ignoreTextureAlpha,
   }}
 >
   (() => {
@@ -211,14 +237,13 @@ const canvasId = `${uid}_canvas`;
     let rotYaw = 0,
       rotPitch = 0,
       rotRoll = 0;
-
     let lastTime = performance.now();
     let phase = 0;
 
     let cachedMode = "source-over";
     let cachedGlow = "off";
     let isDark = false;
-    let fallbackRGB = "0,0,0";
+    let fallbackRGB = "255,255,255";
 
     function refreshTheme() {
       const root = getComputedStyle(document.documentElement);
@@ -230,7 +255,11 @@ const canvasId = `${uid}_canvas`;
       const wrap = document.querySelector(`[data-orb-led-root="${uid}"]`);
       const c = getComputedStyle(wrap ?? document.documentElement).color;
       const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-      fallbackRGB = m ? `${m[1]},${m[2]},${m[3]}` : "0,0,0";
+      fallbackRGB = m
+        ? `${m[1]},${m[2]},${m[3]}`
+        : isDark
+          ? "255,255,255"
+          : "0,0,0";
     }
 
     refreshTheme();
@@ -248,8 +277,11 @@ const canvasId = `${uid}_canvas`;
       };
     }
 
-    // ---- Ordered dithering (Bayer 4x4) ----
-    // returns threshold in [0..1)
+    function clamp01(v) {
+      return v < 0 ? 0 : v > 1 ? 1 : v;
+    }
+
+    // Ordered dithering (Bayer 4x4)
     const BAYER4 = [
       [0, 8, 2, 10],
       [12, 4, 14, 6],
@@ -257,14 +289,10 @@ const canvasId = `${uid}_canvas`;
       [15, 7, 13, 5],
     ];
     function bayerThreshold(x, y) {
-      const v = BAYER4[y & 3][x & 3];
-      return (v + 0.5) / 16;
-    }
-    function clamp01(v) {
-      return v < 0 ? 0 : v > 1 ? 1 : v;
+      return (BAYER4[y & 3][x & 3] + 0.5) / 16;
     }
 
-    // ---- Texture sampling ----
+    // Texture sampling
     let texReady = false,
       texW = 0,
       texH = 0,
@@ -277,7 +305,6 @@ const canvasId = `${uid}_canvas`;
       img.loading = "eager";
       img.src = imageSrc;
       img.onload = () => {
-        // slightly sharper sampling for visibility
         const maxDim = 384;
         const scale = Math.min(
           1,
@@ -291,7 +318,6 @@ const canvasId = `${uid}_canvas`;
         c.height = texH;
         const ictx = c.getContext("2d", { willReadFrequently: true });
         if (!ictx) return;
-
         ictx.drawImage(img, 0, 0, texW, texH);
         texData = ictx.getImageData(0, 0, texW, texH).data;
         texReady = true;
@@ -300,8 +326,10 @@ const canvasId = `${uid}_canvas`;
 
     function sample(u, v) {
       if (!texReady || !texData) return null;
+
       u -= Math.floor(u);
       v = v < 0 ? 0 : v > 1 ? 1 : v;
+
       const x = (u * (texW - 1)) | 0;
       const y = (v * (texH - 1)) | 0;
       const i = (y * texW + x) * 4;
@@ -311,18 +339,16 @@ const canvasId = `${uid}_canvas`;
       let b = texData[i + 2];
       const a = texData[i + 3] / 255;
 
-      // Gamma correction in dark mode
       if (isDark && gammaDark !== 1) {
         const inv = 1 / 255;
         r = (255 * Math.pow(r * inv, gammaDark)) | 0;
         g = (255 * Math.pow(g * inv, gammaDark)) | 0;
         b = (255 * Math.pow(b * inv, gammaDark)) | 0;
       }
-
       return { r, g, b, a };
     }
 
-    // ---- Fibonacci spawn ----
+    // Fibonacci spawn
     let spawnIndex = 0;
     const golden = Math.PI * (3 - Math.sqrt(5));
 
@@ -344,14 +370,12 @@ const canvasId = `${uid}_canvas`;
       p.x = x;
       p.y = y;
       p.z = z;
-
       p.vx = vx;
       p.vy = vy;
       p.vz = vz;
 
       p.locked = !!locked;
 
-      // simple life for non-locked drift particles
       p.age = 0;
       p.stuck = 45 + Math.random() * 25;
       p.life = 520 + Math.random() * 220;
@@ -431,6 +455,19 @@ const canvasId = `${uid}_canvas`;
       ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
     }
 
+    function rotateVec(x, y, z, cyp, syp, cxp, sxp, czp, szp) {
+      // pitch
+      const y1 = cxp * y - sxp * z;
+      const z1 = sxp * y + cxp * z;
+      // yaw
+      const x2 = cyp * x + syp * z1;
+      const z2 = -syp * x + cyp * z1;
+      // roll
+      const x3 = czp * x2 - szp * y1;
+      const y3 = szp * x2 + czp * y1;
+      return { x: x3, y: y3, z: z2 };
+    }
+
     function draw() {
       spawn();
 
@@ -443,43 +480,25 @@ const canvasId = `${uid}_canvas`;
       rotPitch += pitchSpeed;
       rotRoll += rollSpeed;
 
-      const cy = Math.cos(rotYaw),
-        sy = Math.sin(rotYaw);
-      const cx = Math.cos(rotPitch),
-        sx = Math.sin(rotPitch);
-      const cz = Math.cos(rotRoll),
-        sz = Math.sin(rotRoll);
+      const cyp = Math.cos(rotYaw),
+        syp = Math.sin(rotYaw);
+      const cxp = Math.cos(rotPitch),
+        sxp = Math.sin(rotPitch);
+      const czp = Math.cos(rotRoll),
+        szp = Math.sin(rotRoll);
 
-      // orbit axis rotates with the orb (rotate world-up by the same chain)
-      let ax = 0,
-        ay = 1,
-        az = 0;
-
-      // pitch
-      let ay1 = cx * ay - sx * az;
-      let az1 = sx * ay + cx * az;
-      let ax1 = ax;
-
-      // yaw
-      let ax2 = cy * ax1 + sy * az1;
-      let az2 = -sy * ax1 + cy * az1;
-      let ay2 = ay1;
-
-      // roll
-      let ax3 = cz * ax2 - sz * ay2;
-      let ay3 = sz * ax2 + cz * ay2;
-      let az3 = az2;
-
-      const orbitAxisX = ax3;
-      const orbitAxisY = ay3;
-      const orbitAxisZ = az3;
+      // orbit axis is rotated world-up
+      const up = rotateVec(0, 1, 0, cyp, syp, cxp, sxp, czp, szp);
+      const orbitAxisX = up.x,
+        orbitAxisY = up.y,
+        orbitAxisZ = up.z;
 
       const scz = sphereCenterZ();
 
       ctx.clearRect(0, 0, w, h);
       ctx.globalCompositeOperation = cachedMode;
 
-      // ---------- PASS 1: base pass (NO glow) ----------
+      // Base pass (no glow)
       ctx.shadowBlur = 0;
       ctx.shadowColor = "transparent";
 
@@ -487,41 +506,37 @@ const canvasId = `${uid}_canvas`;
       while (p) {
         const next = p.next;
 
-        // drift physics for non-locked
+        // drift for non-locked
         if (!p.locked) {
           p.age++;
-
           if (p.age > p.stuck) {
-            const dx = p.x;
-            const dy = p.y;
-            const dz = p.z - scz;
+            const dx = p.x,
+              dy = p.y,
+              dz = p.z - scz;
 
             const r = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
-            const nxr = dx / r;
-            const nyr = dy / r;
-            const nzr = dz / r;
+            const nxr = dx / r,
+              nyr = dy / r,
+              nzr = dz / r;
 
-            // radial spring to target radius
             const dr = targetR - r;
             const axSpring = springK * dr * nxr;
             const aySpring = springK * dr * nyr;
             const azSpring = springK * dr * nzr;
 
-            // tangent = axis × radial
             const t = cross(orbitAxisX, orbitAxisY, orbitAxisZ, nxr, nyr, nzr);
             const tl = Math.sqrt(t.x * t.x + t.y * t.y + t.z * t.z) || 1;
             let tx = t.x / tl,
               ty = t.y / tl,
               tz = t.z / tl;
 
-            // optional corkscrew: t2 = radial × tangent
             if (swirlMix > 0.001) {
               const t2 = cross(nxr, nyr, nzr, tx, ty, tz);
               const t2l =
                 Math.sqrt(t2.x * t2.x + t2.y * t2.y + t2.z * t2.z) || 1;
-              const sx2 = t2.x / t2l;
-              const sy2 = t2.y / t2l;
-              const sz2 = t2.z / t2l;
+              const sx2 = t2.x / t2l,
+                sy2 = t2.y / t2l,
+                sz2 = t2.z / t2l;
 
               const bx = tx * (1 - swirlMix) + sx2 * swirlMix;
               const by = ty * (1 - swirlMix) + sy2 * swirlMix;
@@ -533,7 +548,6 @@ const canvasId = `${uid}_canvas`;
               tz = bz / bl;
             }
 
-            // apply forces + jitter
             p.vx +=
               axSpring + orbitK * tx + driftJitter * (Math.random() * 2 - 1);
             p.vy +=
@@ -544,17 +558,14 @@ const canvasId = `${uid}_canvas`;
             p.vz +=
               azSpring + orbitK * tz + driftJitter * (Math.random() * 2 - 1);
 
-            // damping
             p.vx *= damping;
             p.vy *= damping;
             p.vz *= damping;
 
-            // integrate
             p.x += p.vx;
             p.y += p.vy;
             p.z += p.vz;
 
-            // kill if too far
             const r2 = p.x * p.x + p.y * p.y + (p.z - scz) * (p.z - scz);
             if (r2 > maxR * maxR || p.age > p.life) {
               recycle(p);
@@ -564,33 +575,19 @@ const canvasId = `${uid}_canvas`;
           }
         }
 
-        // --- rotate current position (pitch -> yaw -> roll) ---
-        let x = p.x;
-        let y = p.y;
-        let z = p.z - scz;
+        // rotate position
+        const localZ = p.z - scz;
+        const pr = rotateVec(p.x, p.y, localZ, cyp, syp, cxp, sxp, czp, szp);
 
-        // pitch
-        let y1p = cx * y - sx * z;
-        let z1p = sx * y + cx * z;
-
-        // yaw
-        let x2p = cy * x + sy * z1p;
-        let z2p = -sy * x + cy * z1p;
-
-        // roll
-        let x3p = cz * x2p - sz * y1p;
-        let y3p = sz * x2p + cz * y1p;
-
-        const rotX = x3p;
-        const rotY = y3p;
-        const rotZ = z2p + scz;
+        const rotX = pr.x;
+        const rotY = pr.y;
+        const rotZ = pr.z + scz;
 
         if (rotZ > zMax) {
           p = next;
           continue;
         }
 
-        // projection
         const m = (radiusSp * fLen * projectionScale) / (fLen - rotZ);
         const px = rotX * m + projCenterX;
         const py = rotY * m + projCenterY + centerYOffset;
@@ -600,16 +597,46 @@ const canvasId = `${uid}_canvas`;
           continue;
         }
 
-        // depth factor (near = 1, far = 0-ish)
-        // rotZ is negative; nearer points have larger m and usually less-negative rotZ.
-        let depth = 1 - rotZ / -750; // tuned constant; stable across your prior versions
+        // depth (stable heuristic)
+        let depth = 1 - rotZ / -750;
         depth = clamp01(depth);
 
-        // Depth-based pixel scaling (front LEDs bigger)
-        const sizeBoost = 1 + depthScaleStrength * depth;
-        const baseSize = m * particleRad * sizeBoost;
+        // normal z in view space for backface/rim
+        let nxl, nyl, nzl;
+        if (p.locked) {
+          const s = Math.sin(p.phi);
+          nxl = s * Math.cos(p.theta);
+          nyl = s * Math.sin(p.theta);
+          nzl = Math.cos(p.phi);
+        } else {
+          const invR = 1 / sphereRad;
+          nxl = p.x * invR;
+          nyl = p.y * invR;
+          nzl = localZ * invR;
+        }
 
-        // UV scroll by yaw (material rotates)
+        const nr = rotateVec(nxl, nyl, nzl, cyp, syp, cxp, sxp, czp, szp);
+        const nzView = nr.z; // + = facing viewer-ish
+
+        // Backface fade (safe)
+        const faceFactor = clamp01((nzView + 1) * 0.5);
+        const backFadeRaw =
+          backfaceMin +
+          (1 - backfaceMin) *
+            (1 - backfaceStrength + backfaceStrength * faceFactor);
+
+        const backFade = Math.max(minBackfaceAlpha, backFadeRaw);
+
+        // Rim light (safe)
+        const rimBase = 1 - Math.min(1, Math.abs(nzView));
+        const rim = Math.pow(clamp01(rimBase), rimPower);
+        const rimBoost = 1 + rimStrength * rim;
+
+        // Size scaling: front bigger
+        const sizeBoost = 1 + depthScaleStrength * depth;
+        const size = m * particleRad * sizeBoost;
+
+        // UV scroll by yaw
         const u = p.theta / (Math.PI * 2) + rotYaw / (Math.PI * 2);
         const v = p.phi / Math.PI;
 
@@ -624,9 +651,8 @@ const canvasId = `${uid}_canvas`;
           r = tex.r;
           g = tex.g;
           b = tex.b;
-          a = tex.a;
+          a = ignoreTextureAlpha ? 1 : tex.a;
         } else {
-          // fallbackRGB is "r,g,b"
           const parts = fallbackRGB.split(",");
           r = +parts[0] || 0;
           g = +parts[1] || 0;
@@ -634,41 +660,41 @@ const canvasId = `${uid}_canvas`;
           a = 1;
         }
 
-        // --- Contrast curve + ordered dithering (boost perceived detail) ---
-        // luminance
+        // Dither based on luminance (but never fully “off”)
         let lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-
-        // contrast
         lum = clamp01((lum - 0.5) * ditherContrast + 0.5);
 
-        // ordered dither threshold from screen position
         const thr = bayerThreshold(px | 0, py | 0);
-
-        // dither mask: binary-ish but softened by ditherStrength
-        // when lum < thr, we reduce alpha (not fully off) to avoid holes
         const mask = lum > thr ? 1 : 0;
         const ditherAlpha =
-          1 - ditherStrength + ditherStrength * (0.28 + 0.72 * mask);
+          1 - ditherStrength + ditherStrength * (0.38 + 0.62 * mask);
 
-        // scanline shimmer (subtle)
+        // shimmer
         const scan = Math.sin(phase + v * Math.PI * 14);
         const shimmer = 1 + shimmerStrength * scan;
 
-        // depth brightening (front LEDs slightly brighter)
+        // front bright
         const brightBoost = 1 + depthBrightStrength * depth;
 
-        // final alpha
-        const finalA = clamp01(
-          a * materialStrength * shimmer * ditherAlpha * brightBoost,
-        );
+        // FINAL ALPHA (with hard floor)
+        const computedA =
+          a *
+          materialStrength *
+          shimmer *
+          ditherAlpha *
+          brightBoost *
+          backFade *
+          rimBoost;
+
+        const finalA = Math.max(minPixelAlpha, clamp01(computedA));
 
         ctx.fillStyle = `rgba(${r},${g},${b},${finalA})`;
-        drawDot(px, py, baseSize);
+        drawDot(px, py, size);
 
         p = next;
       }
 
-      // ---------- PASS 2: glow highlights (dark mode only) ----------
+      // Glow pass (dark only)
       if (cachedGlow === "on") {
         ctx.shadowBlur = glowBlur;
         ctx.shadowColor = `rgba(255,255,255,0.55)`;
@@ -676,36 +702,35 @@ const canvasId = `${uid}_canvas`;
         let q = particleList.first;
         while (q) {
           if (q.id % glowEvery === 0) {
-            const scz2 = scz;
+            const localZ2 = q.z - scz;
+            const pr2 = rotateVec(
+              q.x,
+              q.y,
+              localZ2,
+              cyp,
+              syp,
+              cxp,
+              sxp,
+              czp,
+              szp,
+            );
+            const rotZ2 = pr2.z + scz;
 
-            let x = q.x;
-            let y = q.y;
-            let z = q.z - scz2;
+            if (rotZ2 <= zMax) {
+              const m2 = (radiusSp * fLen * projectionScale) / (fLen - rotZ2);
+              const px2 = pr2.x * m2 + projCenterX;
+              const py2 = pr2.y * m2 + projCenterY + centerYOffset;
 
-            let y1p = cx * y - sx * z;
-            let z1p = sx * y + cx * z;
+              if (px2 >= 0 && px2 <= w && py2 >= 0 && py2 <= h) {
+                let depth2 = 1 - rotZ2 / -750;
+                depth2 = clamp01(depth2);
 
-            let x2p = cy * x + sy * z1p;
-            let z2p = -sy * x + cy * z1p;
+                // simpler shaping, still safe
+                const a2 = Math.max(0.08, depth2 * glowStrength);
+                ctx.fillStyle = `rgba(255,255,255,${a2})`;
 
-            let x3p = cz * x2p - sz * y1p;
-            let y3p = sz * x2p + cz * y1p;
-
-            const rotZ = z2p + scz2;
-            if (rotZ <= zMax) {
-              const m = (radiusSp * fLen * projectionScale) / (fLen - rotZ);
-              const px = x3p * m + projCenterX;
-              const py = y3p * m + projCenterY + centerYOffset;
-
-              if (px >= 0 && px <= w && py >= 0 && py <= h) {
-                let depth = 1 - rotZ / -750;
-                depth = clamp01(depth);
-
-                const a = clamp01(depth * glowStrength);
-                ctx.fillStyle = `rgba(255,255,255,${a})`;
-
-                const sizeBoost = 1 + depthScaleStrength * depth;
-                drawDot(px, py, m * particleRad * sizeBoost);
+                const sizeBoost2 = 1 + depthScaleStrength * depth2;
+                drawDot(px2, py2, m2 * particleRad * sizeBoost2);
               }
             }
           }
