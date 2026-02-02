@@ -42,15 +42,12 @@ const { posts } = Astro.props;
 <script>
   const shell = document.getElementById("petal-shell");
   const ring = document.getElementById("petal-ring");
-  if (!shell || !ring) {
-    console.warn("[Nelumbo] missing shell or ring");
-  }
-
   const items = ring ? [...ring.querySelectorAll(".carousel-item")] : [];
-  const count = items.length;
-  const step = count ? 360 / count : 360;
 
   const viewport = shell?.querySelector(".carousel-viewport");
+
+  const count = items.length;
+  const step = count ? 360 / count : 360;
 
   // E.T. Phone Home
   const onHome = location.pathname === "/";
@@ -66,12 +63,16 @@ const { posts } = Astro.props;
   }
 
   /* ───────── VISIBILITY STATE ───────── */
+
   let petalsOpen = false;
 
   function updatePetalVisibility() {
     if (!shell) return;
     shell.toggleAttribute("data-petals-open", petalsOpen);
-    if (!petalsOpen) focusedIndex = -1;
+
+    if (!petalsOpen) {
+      focusedIndex = -1;
+    }
   }
 
   /* ───────── Event Listeners  ───────── */
@@ -82,6 +83,7 @@ const { posts } = Astro.props;
     updatePetalVisibility();
   });
 
+  // Esc - And Touch/Click outside of viewport to Close
   window.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
 
@@ -98,9 +100,11 @@ const { posts } = Astro.props;
     }
   });
 
+  // Touch / click outside viewport to close
   window.addEventListener(
     "pointerdown",
     (e) => {
+      // If clicking inside active petal, ignore
       if (e.target.closest(".carousel-item.active")) return;
 
       if (isRevealed) {
@@ -125,6 +129,7 @@ const { posts } = Astro.props;
   const settleThreshold = 0.015;
 
   /* ───────────────── STATE ───────────────── */
+
   let isRevealed = false;
   const REVEAL_THRESHOLD = 96; // px upward pull
 
@@ -145,7 +150,8 @@ const { posts } = Astro.props;
   const KEY_PULL_STEP = 14;
   const KEY_PULL_MAX = 140;
 
-  let pullZ = 0;
+  // ── ACTIVE PETAL OUTWARD PULL ──
+  let pullZ = 0; // current outward pull (px)
   let pullVel = 0;
   let isPulling = false;
 
@@ -158,7 +164,8 @@ const { posts } = Astro.props;
     pullVel = 0;
 
     shell.removeAttribute("data-revealed");
-    start();
+
+    start(); // resume carousel physics
   }
 
   /* ───────────────── OM PULSE (GLOBAL) ───────────────── */
@@ -184,6 +191,27 @@ const { posts } = Astro.props;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const snapAngle = (a) => Math.round(a / step) * step;
 
+  // normalize degrees to [0..360)
+  const normDeg = (d) => ((d % 360) + 360) % 360;
+
+  // smallest angular distance between a and b (degrees)
+  const angDist = (a, b) => {
+    const d = Math.abs(a - b) % 360;
+    return d > 180 ? 360 - d : d;
+  };
+
+  // smoothstep for nicer fades
+  const smoothstep = (e0, e1, x) => {
+    const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  };
+
+  // Side-hide tuning (degrees around profile)
+  // kill = fully invisible within this many degrees of 90/270
+  // fadeEnd = fully visible again by this distance from 90/270
+  const SIDE_KILL = 43;
+  const SIDE_FADE_END = 52;
+
   function snapToIndex(index, immediate = false) {
     const target = -index * step;
     snapTarget = target;
@@ -197,8 +225,11 @@ const { posts } = Astro.props;
       return;
     }
 
+    // Small elastic offset (visual only)
     const delta = target - angle;
     snapElastic = clamp(delta * 0.12, -18, 18);
+
+    // Kill existing spin and let snap logic handle it
     vel = 0;
 
     start();
@@ -206,10 +237,12 @@ const { posts } = Astro.props;
 
   /* ───────────────── TRANSFORMS ───────────────── */
   function applyTransforms() {
-    if (!ring || angle === lastAngle) return;
+    if (!ring) return;
+    if (angle === lastAngle) return;
     lastAngle = angle;
 
     const om = getOmPulse();
+
     ring.style.transform = `translateZ(0) rotateY(${angle + snapElastic}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
@@ -229,10 +262,38 @@ const { posts } = Astro.props;
       const depth = Math.min(1, dist / maxDist);
       const prox = 1 - depth;
 
-      el.style.opacity = 1 - depth * 0.7;
       el.style.setProperty("--petal-depth", depth.toFixed(4));
       el.style.setProperty("--petal-prox", prox.toFixed(4));
-      el.style.setProperty("--panel-scale", (1 - depth * 0.12).toFixed(4));
+
+      // Existing depth-based scale
+      const baseScale = 1 - depth * 0.12;
+
+      // ─────────── NEW: SIDE PROFILE HIDING ───────────
+      // yaw: where this item is oriented around Y relative to camera
+      const yaw = normDeg(i * step + angle + snapElastic);
+
+      // how close are we to the side angles (90° and 270°)?
+      const sideDist = Math.min(angDist(yaw, 90), angDist(yaw, 270));
+
+      // sideVis: 0 near sides, 1 away from sides (smoothly)
+      const sideVis = smoothstep(SIDE_KILL, SIDE_FADE_END, sideDist);
+
+      // Keep your existing depth opacity, but multiply by sideVis
+      const depthVis = 1 - depth * 0.7;
+      const finalVis = depthVis * sideVis;
+
+      el.style.opacity = finalVis.toFixed(3);
+
+      // Optional: also shrink slightly as it turns edge-on
+      const sideScale = 0.88 + 0.12 * sideVis;
+      el.style.setProperty("--panel-scale", (baseScale * sideScale).toFixed(4));
+
+      // Optional: disable interaction when basically invisible
+      el.style.pointerEvents = sideVis < 0.08 ? "none" : "auto";
+
+      // Optional: hard-hide to prevent any edge artifacts
+      el.style.visibility = sideVis < 0.02 ? "hidden" : "visible";
+      // ────────────────────────────────────────────────
 
       const activeBias = i === active ? 22 + (om - 0.5) * 10 : 0;
       const pull = i === active ? pullZ : 0;
@@ -243,7 +304,7 @@ const { posts } = Astro.props;
     });
   }
 
-  /* ───────────────── RAF LOOP ───────────────── */
+  /* ───────────────── RAF LOOP (IDLE-AWARE + OM-SYNCED) ───────────────── */
   function tick() {
     if (!running) return;
 
@@ -263,7 +324,9 @@ const { posts } = Astro.props;
 
     if (snapTarget !== null) {
       const d = snapTarget - angle;
+
       angle += d * snapStrength;
+
       snapElastic *= 0.78;
 
       if (Math.abs(d) < 0.01 && Math.abs(snapElastic) < 0.2) {
@@ -340,7 +403,9 @@ const { posts } = Astro.props;
         angle += e.movementX * 0.12;
       }
 
-      if (e.movementY < -1) isPulling = true;
+      if (e.movementY < -1) {
+        isPulling = true;
+      }
 
       if (isPulling) {
         pullVel = clamp(-e.movementY * 0.6, -8, 14);
@@ -361,6 +426,7 @@ const { posts } = Astro.props;
     { passive: true },
   );
 
+  /* ── PETAL KEYBOARD CONTROLS ── */
   items.forEach((el) => {
     const href = el.dataset.href;
     const index = Number(el.dataset.index);
@@ -383,6 +449,7 @@ const { posts } = Astro.props;
         pullVel = 0;
 
         el.setPointerCapture?.(e.pointerId);
+
         start();
       },
       { passive: false },
@@ -481,6 +548,7 @@ const { posts } = Astro.props;
     will-change: transform;
   }
 
+  /* Items */
   .carousel-item {
     position: absolute;
     left: 50%;
@@ -499,7 +567,7 @@ const { posts } = Astro.props;
     contain: layout paint;
   }
 
-  /* Keep inner content inert (events handled on .carousel-item itself) */
+  /* Inner content stays inert visually */
   .carousel-item * {
     pointer-events: none;
   }
@@ -509,13 +577,13 @@ const { posts } = Astro.props;
     height: 100%;
     aspect-ratio: 1 / 1;
     transform: translateZ(0) scale(var(--panel-scale, 1));
-    transform-origin: 50% 50%;
     transition: transform 0.15s ease;
     display: grid;
     place-items: center;
+    transform-origin: 50% 50%;
   }
 
-  /* ✅ The key: a true square “stage” to host Orb */
+  /* Orb surface */
   .carousel-item .petal-surface {
     width: 100%;
     height: 100%;
@@ -560,6 +628,7 @@ const { posts } = Astro.props;
   }
 
   /* ───────────────── PETAL CONTENT REVEAL ───────────────── */
+
   .carousel-item .petal-content {
     position: absolute;
     inset: 0;
@@ -577,7 +646,7 @@ const { posts } = Astro.props;
     pointer-events: auto;
   }
 
-  /* Petal visibility toggle */
+  /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
   body[data-route="home"] .carousel-viewport {
     pointer-events: auto;
   }

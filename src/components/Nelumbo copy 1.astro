@@ -23,7 +23,7 @@ const { posts } = Astro.props;
                 <Orb post={post} />
 
                 <div class="petal-content">
-                  <h3>{post.data.title}</h3>
+                  <h1>{post.data.title}</h1>
                   <p>{post.data.description}</p>
                 </div>
               </div>
@@ -42,15 +42,16 @@ const { posts } = Astro.props;
 <script>
   const shell = document.getElementById("petal-shell");
   const ring = document.getElementById("petal-ring");
-  const items = [...ring.querySelectorAll(".carousel-item")];
+  const items = ring ? [...ring.querySelectorAll(".carousel-item")] : [];
 
-  const viewport = shell.querySelector(".carousel-viewport");
+  const viewport = shell?.querySelector(".carousel-viewport");
 
   const count = items.length;
-  const step = 360 / count;
+  const step = count ? 360 / count : 360;
+
   // E.T. Phone Home
   const onHome = location.pathname === "/";
-  if (onHome) {
+  if (onHome && shell) {
     shell.addEventListener(
       "click",
       (e) => {
@@ -66,6 +67,7 @@ const { posts } = Astro.props;
   let petalsOpen = false;
 
   function updatePetalVisibility() {
+    if (!shell) return;
     shell.toggleAttribute("data-petals-open", petalsOpen);
 
     if (!petalsOpen) {
@@ -154,7 +156,7 @@ const { posts } = Astro.props;
   let isPulling = false;
 
   function closeRevealedPetal() {
-    if (!isRevealed) return;
+    if (!isRevealed || !shell) return;
 
     isRevealed = false;
     isPulling = false;
@@ -189,6 +191,27 @@ const { posts } = Astro.props;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const snapAngle = (a) => Math.round(a / step) * step;
 
+  // normalize degrees to [0..360)
+  const normDeg = (d) => ((d % 360) + 360) % 360;
+
+  // smallest angular distance between a and b (degrees)
+  const angDist = (a, b) => {
+    const d = Math.abs(a - b) % 360;
+    return d > 180 ? 360 - d : d;
+  };
+
+  // smoothstep for nicer fades
+  const smoothstep = (e0, e1, x) => {
+    const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  };
+
+  // Side-hide tuning (degrees around profile)
+  // kill = fully invisible within this many degrees of 90/270
+  // fadeEnd = fully visible again by this distance from 90/270
+  const SIDE_KILL = 43;
+  const SIDE_FADE_END = 52;
+
   function snapToIndex(index, immediate = false) {
     const target = -index * step;
     snapTarget = target;
@@ -214,12 +237,13 @@ const { posts } = Astro.props;
 
   /* ───────────────── TRANSFORMS ───────────────── */
   function applyTransforms() {
+    if (!ring) return;
     if (angle === lastAngle) return;
     lastAngle = angle;
 
-    const om = getOmPulse(); // ← HERE
+    const om = getOmPulse();
 
-    ring.style.transform = `rotateY(${angle + snapElastic}deg)`;
+    ring.style.transform = `translateZ(0) rotateY(${angle + snapElastic}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
     const active = ((Math.round(-normalized / step) % count) + count) % count;
@@ -238,13 +262,40 @@ const { posts } = Astro.props;
       const depth = Math.min(1, dist / maxDist);
       const prox = 1 - depth;
 
-      el.style.opacity = 1 - depth * 0.7;
       el.style.setProperty("--petal-depth", depth.toFixed(4));
       el.style.setProperty("--petal-prox", prox.toFixed(4));
-      el.style.setProperty("--panel-scale", (1 - depth * 0.12).toFixed(4));
+
+      // Existing depth-based scale
+      const baseScale = 1 - depth * 0.12;
+
+      // ─────────── NEW: SIDE PROFILE HIDING ───────────
+      // yaw: where this item is oriented around Y relative to camera
+      const yaw = normDeg(i * step + angle + snapElastic);
+
+      // how close are we to the side angles (90° and 270°)?
+      const sideDist = Math.min(angDist(yaw, 90), angDist(yaw, 270));
+
+      // sideVis: 0 near sides, 1 away from sides (smoothly)
+      const sideVis = smoothstep(SIDE_KILL, SIDE_FADE_END, sideDist);
+
+      // Keep your existing depth opacity, but multiply by sideVis
+      const depthVis = 1 - depth * 0.7;
+      const finalVis = depthVis * sideVis;
+
+      el.style.opacity = finalVis.toFixed(3);
+
+      // Optional: also shrink slightly as it turns edge-on
+      const sideScale = 0.88 + 0.12 * sideVis;
+      el.style.setProperty("--panel-scale", (baseScale * sideScale).toFixed(4));
+
+      // Optional: disable interaction when basically invisible
+      el.style.pointerEvents = sideVis < 0.08 ? "none" : "auto";
+
+      // Optional: hard-hide to prevent any edge artifacts
+      el.style.visibility = sideVis < 0.02 ? "hidden" : "visible";
+      // ────────────────────────────────────────────────
 
       const activeBias = i === active ? 22 + (om - 0.5) * 10 : 0;
-
       const pull = i === active ? pullZ : 0;
 
       el.style.transform = `translate(-50%, -50%)
@@ -257,9 +308,8 @@ const { posts } = Astro.props;
   function tick() {
     if (!running) return;
 
-    // Om pulse coupling (subtle, symmetric)
-    const om = getOmPulse(); // 0..1
-    const breath = (om - 0.5) * 2; // -1..+1
+    const om = getOmPulse();
+    const breath = (om - 0.5) * 2;
 
     const friction = BASE_FRICTION * (1 - breath * 0.015);
     const snapStrength = BASE_SNAP * (1 + breath * 0.06);
@@ -272,16 +322,13 @@ const { posts } = Astro.props;
       angle = snapAngle(angle);
     }
 
-    // ── SNAP TARGET RESOLUTION ──
     if (snapTarget !== null) {
       const d = snapTarget - angle;
 
       angle += d * snapStrength;
 
-      // decay elastic
       snapElastic *= 0.78;
 
-      // snap complete → hard lock
       if (Math.abs(d) < 0.01 && Math.abs(snapElastic) < 0.2) {
         angle = snapTarget;
         vel = 0;
@@ -290,22 +337,20 @@ const { posts } = Astro.props;
       }
     }
 
-    // ── OUTWARD PULL RELAXATION ──
     if (!isPulling) {
       pullVel *= 0.82;
       pullZ += pullVel;
 
       pullZ += (0 - pullZ) * 0.12;
 
-      // ── REVEAL STATE ──
-      if (!isRevealed && pullZ >= REVEAL_THRESHOLD) {
+      if (!isRevealed && pullZ >= REVEAL_THRESHOLD && shell) {
         isRevealed = true;
         pullVel = 0;
         vel = 0;
         shell.setAttribute("data-revealed", "");
       }
 
-      if (isRevealed && pullZ < REVEAL_THRESHOLD * 0.6) {
+      if (isRevealed && pullZ < REVEAL_THRESHOLD * 0.6 && shell) {
         isRevealed = false;
         shell.removeAttribute("data-revealed");
       }
@@ -339,31 +384,25 @@ const { posts } = Astro.props;
     rafId = requestAnimationFrame(tick);
   }
 
-  // ── ACTIVE PETAL OUTWARD DRAG ─
-  //
-
   /* ───────────────── INPUT ───────────────── */
-
   function ensureOpen() {
     if (!petalsOpen) {
       petalsOpen = true;
       updatePetalVisibility();
-      start(); // kick the loop once
+      start();
     }
   }
 
-  shell.addEventListener(
+  shell?.addEventListener(
     "pointermove",
     (e) => {
       if (!isDragging) return;
 
-      // horizontal drag → rotate carousel (disabled while pulling)
       if (!isPulling) {
         vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
         angle += e.movementX * 0.12;
       }
 
-      // vertical drag → pull active petal outward
       if (e.movementY < -1) {
         isPulling = true;
       }
@@ -378,7 +417,7 @@ const { posts } = Astro.props;
     { passive: true },
   );
 
-  shell.addEventListener(
+  shell?.addEventListener(
     "pointerup",
     () => {
       isDragging = false;
@@ -387,14 +426,11 @@ const { posts } = Astro.props;
     { passive: true },
   );
 
-  // Expansion
-
-  // ── PETAL KEYBOARD CONTROLS ──
+  /* ── PETAL KEYBOARD CONTROLS ── */
   items.forEach((el) => {
     const href = el.dataset.href;
     const index = Number(el.dataset.index);
 
-    // Touch/click: snap this petal to focus + make it active
     el.addEventListener(
       "pointerdown",
       (e) => {
@@ -419,15 +455,12 @@ const { posts } = Astro.props;
       { passive: false },
     );
 
-    // Keyboard
     el.addEventListener("keydown", (e) => {
-      // Navigate
       if (e.key === "Enter") {
         location.href = href;
         return;
       }
 
-      // Expand / collapse
       if (e.key === " ") {
         e.preventDefault();
         isPulling = !isPulling;
@@ -436,7 +469,6 @@ const { posts } = Astro.props;
         return;
       }
 
-      // Fine depth control
       if (e.key === "ArrowUp") {
         e.preventDefault();
         pullZ = clamp(pullZ + KEY_PULL_STEP, 0, KEY_PULL_MAX);
@@ -453,7 +485,6 @@ const { posts } = Astro.props;
         return;
       }
 
-      // Collapse
       if (e.key === "Escape") {
         isPulling = false;
         pullVel = 0;
@@ -501,13 +532,13 @@ const { posts } = Astro.props;
     position: absolute;
     left: 50%;
     top: 50%;
-    /*top: var(--qi-center-y);*/
     transform: translate(-50%, -50%);
 
     width: clamp(220px, 40vw, 320px);
     height: clamp(220px, 40vw, 320px);
 
     perspective: 1200px;
+    transform-style: preserve-3d;
   }
 
   .carousel-ring {
@@ -516,7 +547,8 @@ const { posts } = Astro.props;
     transform-style: preserve-3d;
     will-change: transform;
   }
-  /*Items*/
+
+  /* Items */
   .carousel-item {
     position: absolute;
     left: 50%;
@@ -527,14 +559,15 @@ const { posts } = Astro.props;
 
     border-radius: 50%;
     overflow: visible;
-    /*background: none;
-    border: none;*/
 
     pointer-events: auto;
     will-change: transform, opacity;
+    transform-style: preserve-3d;
+
+    contain: layout paint;
   }
 
-  /* Inner content stays inert */
+  /* Inner content stays inert visually */
   .carousel-item * {
     pointer-events: none;
   }
@@ -543,8 +576,31 @@ const { posts } = Astro.props;
     width: 100%;
     height: 100%;
     aspect-ratio: 1 / 1;
-    transform: scale(var(--panel-scale, 1));
+    transform: translateZ(0) scale(var(--panel-scale, 1));
     transition: transform 0.15s ease;
+    display: grid;
+    place-items: center;
+    transform-origin: 50% 50%;
+  }
+
+  /* Orb surface */
+  .carousel-item .petal-surface {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1 / 1;
+
+    pointer-events: auto;
+    cursor: grab;
+  }
+
+  .carousel-item.active .petal-surface {
+    cursor: grab;
+  }
+
+  #petal-shell[data-revealed] .carousel-item.active .petal-surface {
+    cursor: default;
   }
 
   .carousel-item.active {
@@ -584,40 +640,13 @@ const { posts } = Astro.props;
       transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  /* Orb is the interaction surface */
-  .carousel-item .petal-surface {
-    pointer-events: auto;
-    cursor: grab;
-  }
-
-  .carousel-item.active .petal-surface {
-    cursor: grab;
-  }
-
-  #petal-shell[data-revealed] .carousel-item.active .petal-surface {
-    cursor: default;
-  }
-
   #petal-shell[data-revealed] .carousel-item.active .petal-content {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
 
-  /* soften orb when content is open */
-  #petal-shell[data-revealed] .carousel-item.active .orb-wrap {
-    filter: blur(6px) brightness(0.85);
-    transition: filter 420ms ease;
-  }
-  /* Keep visual internals inert */
-  .orb-wrap,
-  .orb-wrap *,
-  .orb-lens,
-  .orb-lens * {
-    pointer-events: none;
-  }
   /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
-  /* Home page: carousel is display-only */
   body[data-route="home"] .carousel-viewport {
     pointer-events: auto;
   }
