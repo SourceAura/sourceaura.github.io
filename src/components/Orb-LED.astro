@@ -5,14 +5,16 @@ interface Props {
   post: CollectionEntry<"petals">;
   type?: "text" | "audio" | "video" | "photo" | "project";
 
+  // Optional overrides
   width?: number;
   height?: number;
 
+  // Sphere look/perf
   sphereRad?: number;
   projectionScale?: number;
   radiusSp?: number;
 
-  // Density
+  // LED density
   particlesPerFrame?: number;
   maxParticles?: number;
   particleRad?: number;
@@ -26,28 +28,8 @@ interface Props {
   glowBlur?: number;
   glowStrength?: number;
 
-  // Material strength
+  // How strongly the sampled image color is applied (0..1)
   materialStrength?: number;
-
-  // Scanline shimmer
-  shimmerStrength?: number;
-  shimmerSpeed?: number;
-
-  // Gamma correction (dark mode pop)
-  gammaDark?: number;
-
-  // Drift physics controls
-  lockRatio?: number; // 0..1 (how many stay glued to sphere)
-  driftVelocity?: number; // initial outward velocity scale
-  driftJitter?: number; // random accel amount
-  gravity?: number; // y accel
-  maxDriftRadius?: number; // multiplier of sphereRad
-
-  // NEW: spring + orbit controls
-  springK?: number; // radial spring strength
-  damping?: number; // velocity damping per frame (0..1)
-  orbitK?: number; // tangential swirl strength
-  targetRadiusMul?: number; // target radius multiplier (near surface)
 }
 
 const {
@@ -59,37 +41,19 @@ const {
   radiusSp = 1,
   projectionScale = 0.88,
 
-  // Density for readability
-  particlesPerFrame = 77,
-  maxParticles = 2000,
-  particleRad = 1.65,
+  particlesPerFrame = 12,
+  maxParticles = 1100,
+  particleRad = 2.0,
 
   glowBlur = 7,
   glowStrength = 0.45,
 
+  // Default rotation (subtle)
   yawSpeed = (2 * Math.PI) / 1400,
   pitchSpeed = (2 * Math.PI) / 2200,
   rollSpeed = (2 * Math.PI) / 3000,
 
   materialStrength = 1,
-
-  shimmerStrength = 0.08,
-  shimmerSpeed = 1.6,
-
-  gammaDark = 0.86,
-
-  // Drift
-  lockRatio = 0.72,
-  driftVelocity = 0.0018,
-  driftJitter = 0.08,
-  gravity = 0,
-  maxDriftRadius = 2.6,
-
-  // Spring orbit (NEW)
-  springK = 0.0022,
-  damping = 0.985,
-  orbitK = 0.0014,
-  targetRadiusMul = 1.02,
 } = Astro.props;
 
 /* Extract first markdown image */
@@ -117,6 +81,8 @@ const canvasId = `${uid}_canvas`;
   define:vars={{
     uid,
     canvasId,
+    width,
+    height,
     sphereRad,
     radiusSp,
     projectionScale,
@@ -130,21 +96,10 @@ const canvasId = `${uid}_canvas`;
     rollSpeed,
     imageSrc,
     materialStrength,
-    shimmerStrength,
-    shimmerSpeed,
-    gammaDark,
-    lockRatio,
-    driftVelocity,
-    driftJitter,
-    gravity,
-    maxDriftRadius,
-    springK,
-    damping,
-    orbitK,
-    targetRadiusMul,
   }}
 >
   (() => {
+    // Prevent double-mount on Astro nav
     window.__orbLedMounted ??= new Set();
     if (window.__orbLedMounted.has(uid)) return;
     window.__orbLedMounted.add(uid);
@@ -162,22 +117,20 @@ const canvasId = `${uid}_canvas`;
     const projCenterX = displayWidth / 2;
     const projCenterY = displayHeight / 2;
 
+    // center compensation
     const centerYOffset = -sphereRad * 0.15;
-    const zMax = fLen - 2;
 
+    const zMax = fLen - 2;
     const particleAlpha = 1;
-    const zeroAlphaDepth = -750;
 
     // Rotation angles
     let rotYaw = 0;
     let rotPitch = 0;
     let rotRoll = 0;
 
-    // time for shimmer
-    let lastTime = performance.now();
-    let phase = 0;
+    const zeroAlphaDepth = -750;
 
-    // Lists
+    // Linked list + recycle bin
     const particleList = { first: null };
     const recycleBin = { first: null };
     let liveCount = 0;
@@ -185,17 +138,13 @@ const canvasId = `${uid}_canvas`;
     const sphereCenterY = 0;
     const sphereCenterZ = () => -3 - sphereRad;
 
-    const maxR = sphereRad * maxDriftRadius;
-    const targetR = sphereRad * targetRadiusMul;
-
     let raf = 0;
 
-    // Cached theme/composite + dark/light detection
+    // Cached theme/composite
     let cachedMode = "source-over";
     let cachedGlow = "off";
-    let isDark = false;
 
-    // Fallback if no image
+    // Fallback color if no image
     let fallbackRGB = "0,0,0";
 
     function refreshRenderStyle() {
@@ -211,7 +160,6 @@ const canvasId = `${uid}_canvas`;
         rootStyle.getPropertyValue("--ps-composite-mode").trim() ||
         "source-over";
       cachedGlow = rootStyle.getPropertyValue("--ps-glow").trim() || "off";
-      isDark = document.documentElement.classList.contains("dark");
     }
 
     refreshRenderStyle();
@@ -224,18 +172,19 @@ const canvasId = `${uid}_canvas`;
 
     const wrapEl = document.querySelector(`[data-orb-led-root="${uid}"]`);
     const moWrap = new MutationObserver(refreshRenderStyle);
-    if (wrapEl) {
+    if (wrapEl)
       moWrap.observe(wrapEl, {
         attributes: true,
         attributeFilter: ["style", "class"],
       });
-    }
 
     // ---- Material image sampling (offscreen canvas) ----
     let texReady = false;
     let texW = 0;
     let texH = 0;
-    let texData = null;
+    let texData = null; // Uint8ClampedArray
+    let texCanvas = null;
+    let texCtx = null;
 
     function loadTexture(src) {
       if (!src) return;
@@ -247,7 +196,8 @@ const canvasId = `${uid}_canvas`;
       img.src = src;
 
       img.onload = () => {
-        const maxDim = 320;
+        // Keep texture modest to reduce memory + sampling cost
+        const maxDim = 256;
         const scale = Math.min(
           1,
           maxDim / Math.max(img.naturalWidth, img.naturalHeight),
@@ -255,10 +205,11 @@ const canvasId = `${uid}_canvas`;
         texW = Math.max(1, Math.floor(img.naturalWidth * scale));
         texH = Math.max(1, Math.floor(img.naturalHeight * scale));
 
-        const texCanvas = document.createElement("canvas");
+        texCanvas = document.createElement("canvas");
         texCanvas.width = texW;
         texCanvas.height = texH;
-        const texCtx = texCanvas.getContext("2d", { willReadFrequently: true });
+        texCtx = texCanvas.getContext("2d", { willReadFrequently: true });
+
         if (!texCtx) return;
 
         texCtx.drawImage(img, 0, 0, texW, texH);
@@ -275,8 +226,10 @@ const canvasId = `${uid}_canvas`;
     loadTexture(imageSrc);
 
     function sampleTexture(u, v) {
+      // u,v in [0,1]
       if (!texReady || !texData) return null;
 
+      // wrap horizontally, clamp vertically
       u = u - Math.floor(u);
       v = Math.max(0, Math.min(1, v));
 
@@ -284,24 +237,16 @@ const canvasId = `${uid}_canvas`;
       const y = Math.floor(v * (texH - 1));
       const idx = (y * texW + x) * 4;
 
-      let r = texData[idx];
-      let g = texData[idx + 1];
-      let b = texData[idx + 2];
+      const r = texData[idx];
+      const g = texData[idx + 1];
+      const b = texData[idx + 2];
       const a = texData[idx + 3] / 255;
-
-      // Gamma correction in dark mode
-      if (isDark && gammaDark !== 1) {
-        const inv = 1 / 255;
-        r = Math.round(255 * Math.pow(r * inv, gammaDark));
-        g = Math.round(255 * Math.pow(g * inv, gammaDark));
-        b = Math.round(255 * Math.pow(b * inv, gammaDark));
-      }
 
       return { r, g, b, a };
     }
 
-    // ---- Particles: each has material coords (theta/phi) + drift position ----
-    function addParticle(theta, phi, x, y, z, vx, vy, vz, locked) {
+    // ---- Particles are "LEDs" on a sphere: store theta/phi so they stay on surface ----
+    function addParticle(theta, phi) {
       let p = recycleBin.first || {};
       if (recycleBin.first) {
         recycleBin.first = p.next;
@@ -313,30 +258,21 @@ const canvasId = `${uid}_canvas`;
       particleList.first = p;
       p.prev = null;
 
-      p.theta = theta;
-      p.phi = phi;
-
-      p.x = x;
-      p.y = y;
-      p.z = z;
-
-      p.velX = vx;
-      p.velY = vy;
-      p.velZ = vz;
-
-      p.locked = !!locked;
+      p.theta = theta; // 0..2pi
+      p.phi = phi; // 0..pi
 
       p.age = 0;
-      p.alpha = 0;
+      p.dead = false;
 
       p.attack = 40;
-      p.hold = 140;
+      p.hold = 120;
       p.decay = 140;
       p.initValue = 0;
       p.holdValue = particleAlpha;
       p.lastValue = 0;
 
-      p.stuckTime = 50 + Math.random() * 30;
+      // Keep them basically always alive, but still cycle alpha slightly
+      p.stuckTime = 0;
 
       liveCount++;
       return p;
@@ -361,50 +297,18 @@ const canvasId = `${uid}_canvas`;
 
     function spawn() {
       if (liveCount >= maxParticles) return;
-
       const remaining = maxParticles - liveCount;
       const n = Math.min(particlesPerFrame, remaining);
-
-      const scz = sphereCenterZ();
 
       for (let i = 0; i < n; i++) {
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(Math.random() * 2 - 1);
-
-        // initial surface vector
-        const x0 = sphereRad * Math.sin(phi) * Math.cos(theta);
-        const y0 = sphereRad * Math.sin(phi) * Math.sin(theta);
-        const z0 = sphereRad * Math.cos(phi);
-
-        const locked = Math.random() < lockRatio;
-
-        const x = x0;
-        const y = y0;
-        const z = scz + z0;
-
-        // outward initial push
-        const vx = locked ? 0 : driftVelocity * x0;
-        const vy = locked ? 0 : driftVelocity * y0;
-        const vz = locked ? 0 : driftVelocity * z0;
-
-        addParticle(theta, phi, x, y, z, vx, vy, vz, locked);
+        addParticle(theta, phi);
       }
-    }
-
-    function lighting(nx, ny, nz) {
-      let lit = nx * -0.35 + ny * -0.25 + nz * 0.9;
-      lit = Math.max(0, lit);
-      return Math.pow(lit, 1.25);
     }
 
     function draw() {
       spawn();
-
-      const now = performance.now();
-      const dt = Math.min(0.05, (now - lastTime) / 1000);
-      lastTime = now;
-
-      phase += dt * shimmerSpeed;
 
       rotYaw = (rotYaw + yawSpeed) % (Math.PI * 2);
       rotPitch = (rotPitch + pitchSpeed) % (Math.PI * 2);
@@ -418,11 +322,12 @@ const canvasId = `${uid}_canvas`;
         sz = Math.sin(rotRoll);
 
       ctx.clearRect(0, 0, displayWidth, displayHeight);
+
       ctx.globalCompositeOperation = cachedMode;
 
       if (cachedGlow === "on") {
         ctx.shadowBlur = glowBlur;
-        ctx.shadowColor = `rgba(255,255,255,0.55)`;
+        ctx.shadowColor = `rgba(255,255,255,0.55)`; // neutral glow, material provides color
       } else {
         ctx.shadowBlur = 0;
         ctx.shadowColor = "transparent";
@@ -435,86 +340,39 @@ const canvasId = `${uid}_canvas`;
         const next = p.next;
         p.age++;
 
-        // Drift physics with inward spring + orbit (non-locked only)
-        if (!p.locked && p.age > p.stuckTime) {
-          // local radial vector from sphere center
-          const dx = p.x;
-          const dy = p.y;
-          const dz = p.z - scz;
+        // spherical position (sphere surface)
+        const x0 = sphereRad * Math.sin(p.phi) * Math.cos(p.theta);
+        const y0 = sphereRad * Math.sin(p.phi) * Math.sin(p.theta);
+        const z0 = sphereRad * Math.cos(p.phi);
 
-          const r = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+        // local coords
+        let x = x0;
+        let y = y0;
+        let z = z0;
 
-          const nxr = dx / r;
-          const nyr = dy / r;
-          const nzr = dz / r;
-
-          // radial spring back to target radius (positive if outside, negative if inside)
-          const dr = targetR - r;
-          const axSpring = springK * dr * nxr;
-          const aySpring = springK * dr * nyr;
-          const azSpring = springK * dr * nzr;
-
-          // tangential swirl around the Y axis to create orbiting motion
-          // tangent = up × radial = (0,1,0) × (nx,ny,nz) = (nz,0,-nx)
-          const tx = nzr;
-          const ty = 0;
-          const tz = -nxr;
-
-          // add forces + jitter
-          p.velX +=
-            axSpring + orbitK * tx + driftJitter * (Math.random() * 2 - 1);
-          p.velY +=
-            aySpring +
-            orbitK * ty +
-            gravity +
-            driftJitter * (Math.random() * 2 - 1);
-          p.velZ +=
-            azSpring + orbitK * tz + driftJitter * (Math.random() * 2 - 1);
-
-          // damping for stability
-          p.velX *= damping;
-          p.velY *= damping;
-          p.velZ *= damping;
-
-          // integrate
-          p.x += p.velX;
-          p.y += p.velY;
-          p.z += p.velZ;
-
-          // recycle if too far
-          const r2 = p.x * p.x + p.y * p.y + (p.z - scz) * (p.z - scz);
-          if (r2 > maxR * maxR) {
-            recycle(p);
-            p = next;
-            continue;
-          }
-        }
-
-        // --- TRUE 3D rotation of current position ---
-        let x = p.x;
-        let y = p.y;
-        let z = p.z - scz;
-
-        // pitch
+        // pitch X
         let y1 = cx * y - sx * z;
         let z1 = sx * y + cx * z;
 
-        // yaw
+        // yaw Y
         let x2 = cy * x + sy * z1;
         let z2 = -sy * x + cy * z1;
 
-        // roll
+        // roll Z
         let x3 = cz * x2 - sz * y1;
         let y3 = sz * x2 + cz * y1;
 
+        // world z
         const rotX = x3;
         const rotY = y3;
         const rotZ = z2 + scz;
 
+        // projection
         const m = (radiusSp * fLen * projectionScale) / (fLen - rotZ);
         const px = rotX * m + projCenterX;
         const py = rotY * m + projCenterY + centerYOffset;
 
+        // cull
         if (
           px < 0 ||
           px > displayWidth ||
@@ -522,12 +380,12 @@ const canvasId = `${uid}_canvas`;
           py > displayHeight ||
           rotZ > zMax
         ) {
-          if (!p.locked) recycle(p);
+          // For a rigid display sphere, don't recycle; just skip drawing.
           p = next;
           continue;
         }
 
-        // Envelope alpha
+        // envelope alpha (gentle)
         if (p.age < p.attack + p.hold + p.decay) {
           if (p.age < p.attack) p.alpha = (p.holdValue / p.attack) * p.age;
           else if (p.age < p.attack + p.hold) p.alpha = p.holdValue;
@@ -538,84 +396,57 @@ const canvasId = `${uid}_canvas`;
               p.holdValue;
           }
         } else {
-          if (p.locked) {
-            p.age = 0;
-            p.alpha = 0;
-          } else {
-            recycle(p);
-            p = next;
-            continue;
-          }
+          // loop the envelope instead of killing
+          p.age = 0;
+          p.alpha = 0;
         }
 
-        // Depth
+        // Depth term
         let depth = 1 - rotZ / zeroAlphaDepth;
         depth = Math.max(0, Math.min(1, depth));
-        const depthAlpha = Math.pow(depth, 1.25);
+        const depthAlpha = Math.pow(depth, 1.35);
 
-        // Lighting normal
-        let nx, ny, nz;
-        if (p.locked) {
-          const sx0 = Math.sin(p.phi);
-          nx = sx0 * Math.cos(p.theta);
-          ny = sx0 * Math.sin(p.theta);
-          nz = Math.cos(p.phi);
-
-          // rotate normal with same rotation chain
-          let ny1n = cx * ny - sx * nz;
-          let nz1n = sx * ny + cx * nz;
-
-          let nx2n = cy * nx + sy * nz1n;
-          let nz2n = -sy * nx + cy * nz1n;
-
-          let nx3n = cz * nx2n - sz * ny1n;
-          let ny3n = sz * nx2n + cz * ny1n;
-
-          nx = nx3n;
-          ny = ny3n;
-          nz = nz2n;
-        } else {
-          nx = rotX / sphereRad;
-          ny = rotY / sphereRad;
-          nz = z2 / sphereRad;
-        }
-
-        const lit = lighting(nx, ny, nz);
-        const lightingBoost = 0.35 + 0.85 * lit;
-
-        // UV anchored to particle material coords, scrolled by yaw
+        // Compute UV: theta wraps, phi maps vertically
+        // As the sphere rotates, the LED’s “world” theta changes; easiest is to offset u by yaw.
         const u = p.theta / (Math.PI * 2) + rotYaw / (Math.PI * 2);
         const v = p.phi / Math.PI;
 
         const tex = sampleTexture(u, v);
 
-        let rgb = fallbackRGB;
+        let rgb;
         let texAlpha = 1;
 
         if (tex) {
           rgb = `${tex.r},${tex.g},${tex.b}`;
           texAlpha = tex.a;
+        } else {
+          rgb = fallbackRGB;
         }
 
-        // Scanline shimmer
-        const scan = Math.sin(phase + v * Math.PI * 14);
-        const shimmer = 1 + shimmerStrength * scan;
+        // Simple lighting using normal (rotated point on sphere)
+        // Normal approx is (rotX,rotY,z2) normalized by sphereRad
+        const nx = rotX / sphereRad;
+        const ny = rotY / sphereRad;
+        const nz = z2 / sphereRad;
+
+        let lit = nx * -0.35 + ny * -0.25 + nz * 0.9;
+        lit = Math.max(0, lit);
+        lit = Math.pow(lit, 1.25);
+
+        const lightingBoost = 0.35 + 0.85 * lit;
 
         const alphaBoost = cachedGlow === "on" ? glowStrength : 1;
 
-        const baseA =
-          texAlpha *
-          p.alpha *
-          depthAlpha *
-          lightingBoost *
-          alphaBoost *
-          materialStrength;
+        // Final alpha: materialAlpha * envelope * depth * lighting
+        const a = texAlpha * p.alpha * depthAlpha * lightingBoost * alphaBoost;
 
-        const ledAlpha = Math.max(0, Math.min(1, baseA * shimmer));
+        // LED-ish: clamp alpha so points look like lit pixels
+        const ledAlpha = Math.min(1, a * materialStrength);
 
         ctx.fillStyle = `rgba(${rgb}, ${ledAlpha})`;
 
-        const nearBoost = 0.78 + depth * 0.52;
+        // Slight depth-based size scaling
+        const nearBoost = 0.75 + depth * 0.55;
 
         ctx.beginPath();
         ctx.arc(px, py, m * particleRad * nearBoost, 0, Math.PI * 2);

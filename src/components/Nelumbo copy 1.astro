@@ -20,14 +20,7 @@ const { posts } = Astro.props;
           >
             <div class="parallax-layer">
               <div class="petal-surface">
-                <Orb
-                  post={post}
-                  lockRatio={0.82}
-                  driftVelocity={0.0013}
-                  driftJitter={0.05}
-                  maxParticles={3600}
-                  particlesPerFrame={27}
-                />
+                <Orb post={post} />
 
                 <div class="petal-content">
                   <h3>{post.data.title}</h3>
