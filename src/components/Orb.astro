@@ -37,20 +37,24 @@ interface Props {
   gammaDark?: number;
 
   // Drift physics controls
-  lockRatio?: number; // 0..1 (how many stay glued to sphere)
-  driftVelocity?: number; // initial outward velocity scale
-  driftJitter?: number; // random accel amount
-  gravity?: number; // y accel
-  maxDriftRadius?: number; // multiplier of sphereRad
+  lockRatio?: number;
+  driftVelocity?: number;
+  driftJitter?: number;
+  gravity?: number;
+  maxDriftRadius?: number;
 
   // Spring + orbit controls
-  springK?: number; // radial spring strength
-  damping?: number; // velocity damping per frame (0..1)
-  orbitK?: number; // tangential swirl strength
-  targetRadiusMul?: number; // target radius multiplier (near surface)
+  springK?: number;
+  damping?: number;
+  orbitK?: number;
+  targetRadiusMul?: number;
 
-  // NEW: secondary swirl for "field line" vibe (0..1)
-  swirlMix?: number;
+  // Secondary swirl (field lines)
+  swirlMix?: number; // 0..1
+
+  // NEW perf knobs
+  glowEvery?: number; // glow 1 in N particles
+  useSquares?: boolean; // squares are faster and more LED-like
 }
 
 const {
@@ -62,9 +66,9 @@ const {
   radiusSp = 1,
   projectionScale = 0.88,
 
-  // Density for readability
-  particlesPerFrame = 77,
-  maxParticles = 2000,
+  // PERF: slower ramp, slightly smaller pool
+  particlesPerFrame = 28,
+  maxParticles = 1600,
   particleRad = 1.65,
 
   glowBlur = 7,
@@ -81,21 +85,23 @@ const {
 
   gammaDark = 0.86,
 
-  // Drift
   lockRatio = 0.72,
   driftVelocity = 0.0018,
   driftJitter = 0.08,
   gravity = 0,
   maxDriftRadius = 2.6,
 
-  // Spring orbit
   springK = 0.0022,
   damping = 0.985,
   orbitK = 0.0014,
   targetRadiusMul = 1.02,
 
-  // Secondary swirl mix (field-line feel)
-  swirlMix = 0.35,
+  // PERF: keep subtle, optional
+  swirlMix = 0.18,
+
+  // NEW perf knobs
+  glowEvery = 4,
+  useSquares = true,
 } = Astro.props;
 
 /* Extract first markdown image */
@@ -149,6 +155,8 @@ const canvasId = `${uid}_canvas`;
     orbitK,
     targetRadiusMul,
     swirlMix,
+    glowEvery,
+    useSquares,
   }}
 >
   (() => {
@@ -175,21 +183,17 @@ const canvasId = `${uid}_canvas`;
     const particleAlpha = 1;
     const zeroAlphaDepth = -750;
 
-    // Rotation angles
     let rotYaw = 0;
     let rotPitch = 0;
     let rotRoll = 0;
 
-    // time for shimmer
     let lastTime = performance.now();
     let phase = 0;
 
-    // Lists
     const particleList = { first: null };
     const recycleBin = { first: null };
     let liveCount = 0;
 
-    const sphereCenterY = 0;
     const sphereCenterZ = () => -3 - sphereRad;
 
     const maxR = sphereRad * maxDriftRadius;
@@ -197,12 +201,10 @@ const canvasId = `${uid}_canvas`;
 
     let raf = 0;
 
-    // Cached theme/composite + dark/light detection
     let cachedMode = "source-over";
     let cachedGlow = "off";
     let isDark = false;
 
-    // Fallback if no image
     let fallbackRGB = "0,0,0";
 
     function refreshRenderStyle() {
@@ -238,7 +240,6 @@ const canvasId = `${uid}_canvas`;
       });
     }
 
-    // Vector helpers
     function cross(ax, ay, az, bx, by, bz) {
       return {
         x: ay * bz - az * by,
@@ -247,7 +248,7 @@ const canvasId = `${uid}_canvas`;
       };
     }
 
-    // ---- Material image sampling (offscreen canvas) ----
+    // --- texture sampling (offscreen) ---
     let texReady = false;
     let texW = 0;
     let texH = 0;
@@ -296,8 +297,8 @@ const canvasId = `${uid}_canvas`;
       u = u - Math.floor(u);
       v = Math.max(0, Math.min(1, v));
 
-      const x = Math.floor(u * (texW - 1));
-      const y = Math.floor(v * (texH - 1));
+      const x = (u * (texW - 1)) | 0;
+      const y = (v * (texH - 1)) | 0;
       const idx = (y * texW + x) * 4;
 
       let r = texData[idx];
@@ -305,18 +306,17 @@ const canvasId = `${uid}_canvas`;
       let b = texData[idx + 2];
       const a = texData[idx + 3] / 255;
 
-      // Gamma correction in dark mode
       if (isDark && gammaDark !== 1) {
         const inv = 1 / 255;
-        r = Math.round(255 * Math.pow(r * inv, gammaDark));
-        g = Math.round(255 * Math.pow(g * inv, gammaDark));
-        b = Math.round(255 * Math.pow(b * inv, gammaDark));
+        r = (255 * Math.pow(r * inv, gammaDark)) | 0;
+        g = (255 * Math.pow(g * inv, gammaDark)) | 0;
+        b = (255 * Math.pow(b * inv, gammaDark)) | 0;
       }
 
       return { r, g, b, a };
     }
 
-    // ---- Particles: each has material coords (theta/phi) + drift position ----
+    // --- particles ---
     function addParticle(theta, phi, x, y, z, vx, vy, vz, locked) {
       let p = recycleBin.first || {};
       if (recycleBin.first) {
@@ -348,11 +348,13 @@ const canvasId = `${uid}_canvas`;
       p.attack = 40;
       p.hold = 140;
       p.decay = 140;
-      p.initValue = 0;
       p.holdValue = particleAlpha;
       p.lastValue = 0;
 
       p.stuckTime = 50 + Math.random() * 30;
+
+      // index used for glow subsampling
+      p._id = (Math.random() * 1e9) | 0;
 
       liveCount++;
       return p;
@@ -380,14 +382,12 @@ const canvasId = `${uid}_canvas`;
 
       const remaining = maxParticles - liveCount;
       const n = Math.min(particlesPerFrame, remaining);
-
       const scz = sphereCenterZ();
 
       for (let i = 0; i < n; i++) {
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(Math.random() * 2 - 1);
 
-        // initial surface vector
         const x0 = sphereRad * Math.sin(phi) * Math.cos(theta);
         const y0 = sphereRad * Math.sin(phi) * Math.sin(theta);
         const z0 = sphereRad * Math.cos(phi);
@@ -398,7 +398,6 @@ const canvasId = `${uid}_canvas`;
         const y = y0;
         const z = scz + z0;
 
-        // outward initial push
         const vx = locked ? 0 : driftVelocity * x0;
         const vy = locked ? 0 : driftVelocity * y0;
         const vz = locked ? 0 : driftVelocity * z0;
@@ -409,8 +408,20 @@ const canvasId = `${uid}_canvas`;
 
     function lighting(nx, ny, nz) {
       let lit = nx * -0.35 + ny * -0.25 + nz * 0.9;
-      lit = Math.max(0, lit);
+      lit = lit < 0 ? 0 : lit;
       return Math.pow(lit, 1.25);
+    }
+
+    // Render helper (fast LED squares)
+    function drawDot(px, py, r) {
+      if (!useSquares) {
+        ctx.beginPath();
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+      const s = Math.max(1, r | 0);
+      ctx.fillRect(px - s * 0.5, py - s * 0.5, s, s);
     }
 
     function draw() {
@@ -433,8 +444,7 @@ const canvasId = `${uid}_canvas`;
       const cz = Math.cos(rotRoll),
         sz = Math.sin(rotRoll);
 
-      // NEW: orbit axis rotates with the orb
-      // Start with (0,1,0) and rotate it with the same chain (pitch -> yaw -> roll)
+      // orbit axis rotates with orb (0,1,0 rotated)
       let ax = 0,
         ay = 1,
         az = 0;
@@ -458,27 +468,21 @@ const canvasId = `${uid}_canvas`;
       const orbitAxisY = ay3;
       const orbitAxisZ = az3;
 
+      const scz = sphereCenterZ();
+
       ctx.clearRect(0, 0, displayWidth, displayHeight);
       ctx.globalCompositeOperation = cachedMode;
 
-      if (cachedGlow === "on") {
-        ctx.shadowBlur = glowBlur;
-        ctx.shadowColor = `rgba(255,255,255,0.55)`;
-      } else {
-        ctx.shadowBlur = 0;
-        ctx.shadowColor = "transparent";
-      }
-
-      const scz = sphereCenterZ();
+      // -------- PASS 1: base (NO glow) --------
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
 
       let p = particleList.first;
       while (p) {
         const next = p.next;
         p.age++;
 
-        // Drift physics with inward spring + orbit (non-locked only)
         if (!p.locked && p.age > p.stuckTime) {
-          // local radial vector from sphere center
           const dx = p.x;
           const dy = p.y;
           const dz = p.z - scz;
@@ -489,32 +493,29 @@ const canvasId = `${uid}_canvas`;
           const nyr = dy / r;
           const nzr = dz / r;
 
-          // radial spring back to target radius
           const dr = targetR - r;
           const axSpring = springK * dr * nxr;
           const aySpring = springK * dr * nyr;
           const azSpring = springK * dr * nzr;
 
-          // NEW: tangential swirl around the orb's rotating axis
           // tangent = axis × radial
           const t = cross(orbitAxisX, orbitAxisY, orbitAxisZ, nxr, nyr, nzr);
           const tl = Math.sqrt(t.x * t.x + t.y * t.y + t.z * t.z) || 1;
-          let tx = t.x / tl;
-          let ty = t.y / tl;
-          let tz = t.z / tl;
+          let tx = t.x / tl,
+            ty = t.y / tl,
+            tz = t.z / tl;
 
-          // Optional: secondary swirl (field-line corkscrew)
-          // t2 = radial × tangent
-          if (swirlMix > 0) {
+          // optional corkscrew
+          if (swirlMix > 0.001) {
             const t2 = cross(nxr, nyr, nzr, tx, ty, tz);
             const t2l = Math.sqrt(t2.x * t2.x + t2.y * t2.y + t2.z * t2.z) || 1;
-            const sx2 = t2.x / t2l;
-            const sy2 = t2.y / t2l;
-            const sz2 = t2.z / t2l;
+            const sx2v = t2.x / t2l,
+              sy2v = t2.y / t2l,
+              sz2v = t2.z / t2l;
 
-            const bx = tx * (1 - swirlMix) + sx2 * swirlMix;
-            const by = ty * (1 - swirlMix) + sy2 * swirlMix;
-            const bz = tz * (1 - swirlMix) + sz2 * swirlMix;
+            const bx = tx * (1 - swirlMix) + sx2v * swirlMix;
+            const by = ty * (1 - swirlMix) + sy2v * swirlMix;
+            const bz = tz * (1 - swirlMix) + sz2v * swirlMix;
 
             const bl = Math.sqrt(bx * bx + by * by + bz * bz) || 1;
             tx = bx / bl;
@@ -522,7 +523,6 @@ const canvasId = `${uid}_canvas`;
             tz = bz / bl;
           }
 
-          // add forces + jitter
           p.velX +=
             axSpring + orbitK * tx + driftJitter * (Math.random() * 2 - 1);
           p.velY +=
@@ -533,17 +533,14 @@ const canvasId = `${uid}_canvas`;
           p.velZ +=
             azSpring + orbitK * tz + driftJitter * (Math.random() * 2 - 1);
 
-          // damping for stability
           p.velX *= damping;
           p.velY *= damping;
           p.velZ *= damping;
 
-          // integrate
           p.x += p.velX;
           p.y += p.velY;
           p.z += p.velZ;
 
-          // recycle if too far
           const r2 = p.x * p.x + p.y * p.y + (p.z - scz) * (p.z - scz);
           if (r2 > maxR * maxR) {
             recycle(p);
@@ -552,20 +549,17 @@ const canvasId = `${uid}_canvas`;
           }
         }
 
-        // --- TRUE 3D rotation of current position ---
+        // rotate current position
         let x = p.x;
         let y = p.y;
         let z = p.z - scz;
 
-        // pitch
         let y1p = cx * y - sx * z;
         let z1p = sx * y + cx * z;
 
-        // yaw
         let x2p = cy * x + sy * z1p;
         let z2p = -sy * x + cy * z1p;
 
-        // roll
         let x3p = cz * x2p - sz * y1p;
         let y3p = sz * x2p + cz * y1p;
 
@@ -589,7 +583,7 @@ const canvasId = `${uid}_canvas`;
           continue;
         }
 
-        // Envelope alpha
+        // envelope
         if (p.age < p.attack + p.hold + p.decay) {
           if (p.age < p.attack) p.alpha = (p.holdValue / p.attack) * p.age;
           else if (p.age < p.attack + p.hold) p.alpha = p.holdValue;
@@ -610,12 +604,11 @@ const canvasId = `${uid}_canvas`;
           }
         }
 
-        // Depth
         let depth = 1 - rotZ / zeroAlphaDepth;
-        depth = Math.max(0, Math.min(1, depth));
+        depth = depth < 0 ? 0 : depth > 1 ? 1 : depth;
         const depthAlpha = Math.pow(depth, 1.25);
 
-        // Lighting normal
+        // lighting normal
         let nx, ny, nz;
         if (p.locked) {
           const sx0 = Math.sin(p.phi);
@@ -623,7 +616,6 @@ const canvasId = `${uid}_canvas`;
           ny = sx0 * Math.sin(p.theta);
           nz = Math.cos(p.phi);
 
-          // rotate normal with same rotation chain
           let ny1n = cx * ny - sx * nz;
           let nz1n = sx * ny + cx * nz;
 
@@ -645,7 +637,6 @@ const canvasId = `${uid}_canvas`;
         const lit = lighting(nx, ny, nz);
         const lightingBoost = 0.35 + 0.85 * lit;
 
-        // UV anchored to particle material coords, scrolled by yaw
         const u = p.theta / (Math.PI * 2) + rotYaw / (Math.PI * 2);
         const v = p.phi / Math.PI;
 
@@ -659,34 +650,80 @@ const canvasId = `${uid}_canvas`;
           texAlpha = tex.a;
         }
 
-        // Scanline shimmer
         const scan = Math.sin(phase + v * Math.PI * 14);
         const shimmer = 1 + shimmerStrength * scan;
 
-        const alphaBoost = cachedGlow === "on" ? glowStrength : 1;
-
         const baseA =
-          texAlpha *
-          p.alpha *
-          depthAlpha *
-          lightingBoost *
-          alphaBoost *
-          materialStrength;
+          texAlpha * p.alpha * depthAlpha * lightingBoost * materialStrength;
 
-        const ledAlpha = Math.max(0, Math.min(1, baseA * shimmer));
-
-        ctx.fillStyle = `rgba(${rgb}, ${ledAlpha})`;
+        const a = Math.max(0, Math.min(1, baseA * shimmer));
+        ctx.fillStyle = `rgba(${rgb}, ${a})`;
 
         const nearBoost = 0.78 + depth * 0.52;
-
-        ctx.beginPath();
-        ctx.arc(px, py, m * particleRad * nearBoost, 0, Math.PI * 2);
-        ctx.fill();
+        drawDot(px, py, m * particleRad * nearBoost);
 
         p = next;
       }
 
+      // -------- PASS 2: glow highlights only (dark mode) --------
+      if (cachedGlow === "on") {
+        ctx.shadowBlur = glowBlur;
+        ctx.shadowColor = `rgba(255,255,255,0.55)`;
+
+        // redraw a subset as glow “sparkle”
+        let q = particleList.first;
+        while (q) {
+          // glow 1 in N particles
+          if (q._id % glowEvery === 0) {
+            const scz2 = scz;
+
+            let x = q.x;
+            let y = q.y;
+            let z = q.z - scz2;
+
+            let y1p = cx * y - sx * z;
+            let z1p = sx * y + cx * z;
+
+            let x2p = cy * x + sy * z1p;
+            let z2p = -sy * x + cy * z1p;
+
+            let x3p = cz * x2p - sz * y1p;
+            let y3p = sz * x2p + cz * y1p;
+
+            const rotX = x3p;
+            const rotY = y3p;
+            const rotZ = z2p + scz2;
+
+            const m = (radiusSp * fLen * projectionScale) / (fLen - rotZ);
+            const px = rotX * m + projCenterX;
+            const py = rotY * m + projCenterY + centerYOffset;
+
+            if (
+              px >= 0 &&
+              px <= displayWidth &&
+              py >= 0 &&
+              py <= displayHeight &&
+              rotZ <= zMax
+            ) {
+              let depth = 1 - rotZ / zeroAlphaDepth;
+              depth = depth < 0 ? 0 : depth > 1 ? 1 : depth;
+
+              // glow alpha is cheaper and simpler: rely on existing alpha + depth
+              const a = Math.min(1, q.alpha * depth * glowStrength);
+              ctx.fillStyle = `rgba(255,255,255, ${a})`;
+
+              const nearBoost = 0.78 + depth * 0.52;
+              drawDot(px, py, m * particleRad * nearBoost);
+            }
+          }
+          q = q.next;
+        }
+      }
+
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
       ctx.globalCompositeOperation = "source-over";
+
       raf = requestAnimationFrame(draw);
     }
 
