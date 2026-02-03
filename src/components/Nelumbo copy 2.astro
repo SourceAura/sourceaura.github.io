@@ -2,30 +2,78 @@
 /* Nelumbo
 Rose Lotus - Rotating LED Display.
 Nelumbo is a component that displays a carousel of petals.
+
+Interaction:
+- Double click OR long press on the ACTIVE petal/orb to open the HUD.
+- Esc / click outside / gesture:close-petals closes.
+
+HUD layout (under PageFind input):
+- Left column: Title (top), Image (below), Description (below)
+- Right column: Article content
+- Bottom: Stat cluster (date + read time + open link)
+
+Notes:
+- “Scanline” only applies to the image block.
+- No HUD border (clean HUD segments).
+- Side-profile hiding keeps petals from showing “flat” edges.
 */
 import Orb from "@components/Orb.astro";
-const { posts } = Astro.props;
+import type { CollectionEntry } from "astro:content";
+import { readingTime } from "@utils/utils";
+
+const { posts } = Astro.props as { posts: CollectionEntry<"petals">[] };
+
+// Precompute per-post HUD assets (first image + rendered article)
+const enriched = await Promise.all(
+  posts.map(async (post) => {
+    const { Content } = await post.render();
+
+    // Extract first markdown image
+    let imageSrc: string | null = null;
+    const match = post.body.match(/!\[.*?\]\((.*?)\)/);
+    if (match?.[1]) {
+      const raw = match[1].trim();
+      imageSrc =
+        raw.startsWith("http") || raw.startsWith("/")
+          ? raw
+          : `/images/${raw.replace(/^\.?\//, "")}`;
+    }
+
+    const d = new Date(post.data.date);
+    const dateLabel = d.toLocaleDateString(undefined, {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+
+    const rt = `${readingTime(post.body)} min`;
+
+    return {
+      post,
+      Content,
+      imageSrc,
+      dateLabel,
+      rt,
+      href: `/petals/${post.slug}`,
+    };
+  }),
+);
 ---
 
 <div class="carousel-layer" id="petal-shell">
-  <div class="carousel-viewport">
+  <div class="carousel-viewport" aria-label="Petal carousel">
     <div class="carousel-ring" id="petal-ring">
       {
-        posts.map((post, i) => (
+        enriched.map((p, i) => (
           <div
             class="carousel-item"
             tabindex="0"
             data-index={i}
-            data-href={`/petals/${post.slug}`}
+            data-href={p.href}
           >
             <div class="parallax-layer">
-              <div class="petal-surface">
-                <Orb post={post} />
-
-                <div class="petal-content">
-                  <h1>{post.data.title}</h1>
-                  <p>{post.data.description}</p>
-                </div>
+              <div class="petal-surface" data-open-hud>
+                <Orb post={p.post} />
               </div>
             </div>
           </div>
@@ -34,22 +82,101 @@ const { posts } = Astro.props;
     </div>
   </div>
 
-  <div class="carousel-hint" aria-hidden="true">
-    <!--  -->
+  {/* HUD Overlay (renders all panels; only active shows) */}
+  <div class="hud-layer" id="hud-layer" aria-hidden="true">
+    <div class="hud-scrim" data-hud-close></div>
+
+    <section class="hud" role="dialog" aria-label="Petal HUD" aria-modal="true">
+      <button class="hud-close" type="button" aria-label="Close" data-hud-close>
+        ✕
+      </button>
+
+      <div class="hud-grid">
+        {
+          enriched.map((p, i) => (
+            <article class="hud-panel" data-hud-panel data-index={i}>
+              {/* Title (above image, top-left, just under PageFind input) */}
+              <header class="hud-title">
+                <h2>{p.post.data.title}</h2>
+
+                <a class="hud-open" href={p.href} aria-label="Open post">
+                  OPEN
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </header>
+
+              {/* Left column (image + description) */}
+              <div class="hud-left">
+                <div class="hud-image-wrap">
+                  {p.imageSrc ? (
+                    <img
+                      class="hud-image"
+                      src={p.imageSrc}
+                      alt={p.post.data.title}
+                      loading="eager"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div class="hud-image-fallback" aria-hidden="true" />
+                  )}
+                </div>
+
+                {p.post.data.description && (
+                  <p class="hud-desc">{p.post.data.description}</p>
+                )}
+              </div>
+
+              {/* Right column (article content) */}
+              <div class="hud-right">
+                <div
+                  class="hud-article prose dark:prose-invert"
+                  data-hud-article
+                >
+                  <p.Content />
+                </div>
+              </div>
+
+              {/* Bottom cluster (stats) */}
+              <footer class="hud-stats" aria-label="Post stats">
+                <div class="hud-stat">
+                  <span class="hud-k">DATE</span>
+                  <span class="hud-v">{p.dateLabel}</span>
+                </div>
+                <div class="hud-stat">
+                  <span class="hud-k">READ</span>
+                  <span class="hud-v">{p.rt}</span>
+                </div>
+                <div class="hud-stat">
+                  <span class="hud-k">TYPE</span>
+                  <span class="hud-v">PETAL</span>
+                </div>
+              </footer>
+            </article>
+          ))
+        }
+      </div>
+    </section>
   </div>
+
+  <div class="carousel-hint" aria-hidden="true"></div>
 </div>
 
 <script>
   const shell = document.getElementById("petal-shell");
   const ring = document.getElementById("petal-ring");
   const items = ring ? [...ring.querySelectorAll(".carousel-item")] : [];
-
-  const viewport = shell?.querySelector(".carousel-viewport");
+  const hudLayer = document.getElementById("hud-layer");
+  const panels = hudLayer
+    ? [...hudLayer.querySelectorAll("[data-hud-panel]")]
+    : [];
+  const closeEls = hudLayer
+    ? [...hudLayer.querySelectorAll("[data-hud-close]")]
+    : [];
 
   const count = items.length;
   const step = count ? 360 / count : 360;
 
-  // E.T. Phone Home
+  // E.T. Phone Home (homepage display-only)
   const onHome = location.pathname === "/";
   if (onHome && shell) {
     shell.addEventListener(
@@ -63,76 +190,21 @@ const { posts } = Astro.props;
   }
 
   /* ───────── VISIBILITY STATE ───────── */
-
   let petalsOpen = false;
 
   function updatePetalVisibility() {
     if (!shell) return;
     shell.toggleAttribute("data-petals-open", petalsOpen);
-
-    if (!petalsOpen) {
-      focusedIndex = -1;
-    }
+    if (!petalsOpen) focusedIndex = -1;
   }
 
-  /* ───────── Event Listeners  ───────── */
-  window.addEventListener("gesture:close-petals", () => {
-    isPulling = false;
-    pullVel = 0;
-    petalsOpen = false;
-    updatePetalVisibility();
-  });
-
-  // Esc - And Touch/Click outside of viewport to Close
-  window.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-
-    if (isRevealed) {
-      closeRevealedPetal();
-      return;
-    }
-
-    if (petalsOpen) {
-      isPulling = false;
-      pullVel = 0;
-      petalsOpen = false;
-      updatePetalVisibility();
-    }
-  });
-
-  // Touch / click outside viewport to close
-  window.addEventListener(
-    "pointerdown",
-    (e) => {
-      // If clicking inside active petal, ignore
-      if (e.target.closest(".carousel-item.active")) return;
-
-      if (isRevealed) {
-        closeRevealedPetal();
-        return;
-      }
-
-      if (petalsOpen) {
-        isPulling = false;
-        pullVel = 0;
-        petalsOpen = false;
-        updatePetalVisibility();
-      }
-    },
-    { passive: true },
-  );
-
-  /* ───────────────── BASE PHYSICS ───────────────── */
+  /* ───────── Base physics ───────── */
   const BASE_FRICTION = 0.96;
   const BASE_SNAP = 0.06;
   const velClamp = 3.2;
   const settleThreshold = 0.015;
 
-  /* ───────────────── STATE ───────────────── */
-
   let isRevealed = false;
-  const REVEAL_THRESHOLD = 96; // px upward pull
-
   let angle = 0;
   let vel = 0;
   let isDragging = false;
@@ -147,25 +219,23 @@ const { posts } = Astro.props;
   let rafId = 0;
   let running = false;
 
+  // ── ACTIVE PETAL OUTWARD PULL (kept for the carousel feel) ──
+  const REVEAL_THRESHOLD = 96;
   const KEY_PULL_STEP = 14;
   const KEY_PULL_MAX = 140;
 
-  // ── ACTIVE PETAL OUTWARD PULL ──
-  let pullZ = 0; // current outward pull (px)
+  let pullZ = 0;
   let pullVel = 0;
   let isPulling = false;
 
   function closeRevealedPetal() {
     if (!isRevealed || !shell) return;
-
     isRevealed = false;
     isPulling = false;
     pullZ = 0;
     pullVel = 0;
-
     shell.removeAttribute("data-revealed");
-
-    start(); // resume carousel physics
+    start();
   }
 
   /* ───────────────── OM PULSE (GLOBAL) ───────────────── */
@@ -180,14 +250,13 @@ const { posts } = Astro.props;
   /* ───────────────── RADIUS (CACHED) ───────────────── */
   let radius = 300;
   const mq = matchMedia("(max-width: 768px)");
-
   function updateRadius() {
     radius = mq.matches ? 220 : 300;
   }
   mq.addEventListener("change", updateRadius);
   updateRadius();
 
-  /* ───────────────── HELPERS ───────────────── */
+  /* Helpers */
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const snapAngle = (a) => Math.round(a / step) * step;
 
@@ -207,8 +276,6 @@ const { posts } = Astro.props;
   };
 
   // Side-hide tuning (degrees around profile)
-  // kill = fully invisible within this many degrees of 90/270
-  // fadeEnd = fully visible again by this distance from 90/270
   const SIDE_KILL = 43;
   const SIDE_FADE_END = 52;
 
@@ -225,15 +292,104 @@ const { posts } = Astro.props;
       return;
     }
 
-    // Small elastic offset (visual only)
     const delta = target - angle;
     snapElastic = clamp(delta * 0.12, -18, 18);
-
-    // Kill existing spin and let snap logic handle it
     vel = 0;
-
     start();
   }
+
+  /* ───────────────── HUD controls ───────────────── */
+  let hudOpen = false;
+  let hudIndex = 0;
+
+  function setHudIndex(i) {
+    hudIndex = i;
+    panels.forEach((p) => {
+      const idx = Number(p.getAttribute("data-index"));
+      p.toggleAttribute("data-active", idx === hudIndex);
+    });
+  }
+
+  function openHud(i) {
+    if (!hudLayer) return;
+    hudOpen = true;
+    setHudIndex(i);
+    hudLayer.setAttribute("data-open", "");
+    hudLayer.removeAttribute("aria-hidden");
+    // stop carousel motion while HUD is open (prevents “drift” while reading)
+    vel = 0;
+    running = false;
+    cancelAnimationFrame(rafId);
+    applyTransforms();
+  }
+
+  function closeHud() {
+    if (!hudLayer) return;
+    hudOpen = false;
+    hudLayer.removeAttribute("data-open");
+    hudLayer.setAttribute("aria-hidden", "true");
+    // resume carousel loop
+    start();
+  }
+
+  closeEls.forEach((el) => el.addEventListener("click", closeHud));
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+
+    if (hudOpen) {
+      closeHud();
+      return;
+    }
+
+    if (isRevealed) {
+      closeRevealedPetal();
+      return;
+    }
+
+    if (petalsOpen) {
+      isPulling = false;
+      pullVel = 0;
+      petalsOpen = false;
+      updatePetalVisibility();
+    }
+  });
+
+  window.addEventListener("gesture:close-petals", () => {
+    if (hudOpen) closeHud();
+    isPulling = false;
+    pullVel = 0;
+    petalsOpen = false;
+    updatePetalVisibility();
+  });
+
+  // Touch/click outside viewport to close (also closes HUD)
+  window.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (hudOpen) {
+        // if clicking inside hud, ignore
+        if (e.target.closest(".hud")) return;
+        closeHud();
+        return;
+      }
+
+      if (e.target.closest(".carousel-item.active")) return;
+
+      if (isRevealed) {
+        closeRevealedPetal();
+        return;
+      }
+
+      if (petalsOpen) {
+        isPulling = false;
+        pullVel = 0;
+        petalsOpen = false;
+        updatePetalVisibility();
+      }
+    },
+    { passive: true },
+  );
 
   /* ───────────────── TRANSFORMS ───────────────── */
   function applyTransforms() {
@@ -260,40 +416,26 @@ const { posts } = Astro.props;
       dist = Math.min(dist, count - dist);
 
       const depth = Math.min(1, dist / maxDist);
-      const prox = 1 - depth;
 
-      el.style.setProperty("--petal-depth", depth.toFixed(4));
-      el.style.setProperty("--petal-prox", prox.toFixed(4));
-
-      // Existing depth-based scale
-      const baseScale = 1 - depth * 0.12;
-
-      // ─────────── NEW: SIDE PROFILE HIDING ───────────
-      // yaw: where this item is oriented around Y relative to camera
+      // Side-profile hiding
       const yaw = normDeg(i * step + angle + snapElastic);
-
-      // how close are we to the side angles (90° and 270°)?
       const sideDist = Math.min(angDist(yaw, 90), angDist(yaw, 270));
-
-      // sideVis: 0 near sides, 1 away from sides (smoothly)
       const sideVis = smoothstep(SIDE_KILL, SIDE_FADE_END, sideDist);
 
-      // Keep your existing depth opacity, but multiply by sideVis
       const depthVis = 1 - depth * 0.7;
       const finalVis = depthVis * sideVis;
 
       el.style.opacity = finalVis.toFixed(3);
 
-      // Optional: also shrink slightly as it turns edge-on
+      // scale: depth scale + small edge-on shrink
+      const baseScale = 1 - depth * 0.12;
       const sideScale = 0.88 + 0.12 * sideVis;
+
       el.style.setProperty("--panel-scale", (baseScale * sideScale).toFixed(4));
 
-      // Optional: disable interaction when basically invisible
+      // disable interaction when basically invisible
       el.style.pointerEvents = sideVis < 0.08 ? "none" : "auto";
-
-      // Optional: hard-hide to prevent any edge artifacts
       el.style.visibility = sideVis < 0.02 ? "hidden" : "visible";
-      // ────────────────────────────────────────────────
 
       const activeBias = i === active ? 22 + (om - 0.5) * 10 : 0;
       const pull = i === active ? pullZ : 0;
@@ -307,6 +449,13 @@ const { posts } = Astro.props;
   /* ───────────────── RAF LOOP (IDLE-AWARE + OM-SYNCED) ───────────────── */
   function tick() {
     if (!running) return;
+
+    // if HUD is open, pause carousel
+    if (hudOpen) {
+      running = false;
+      applyTransforms();
+      return;
+    }
 
     const om = getOmPulse();
     const breath = (om - 0.5) * 2;
@@ -324,9 +473,7 @@ const { posts } = Astro.props;
 
     if (snapTarget !== null) {
       const d = snapTarget - angle;
-
       angle += d * snapStrength;
-
       snapElastic *= 0.78;
 
       if (Math.abs(d) < 0.01 && Math.abs(snapElastic) < 0.2) {
@@ -337,10 +484,10 @@ const { posts } = Astro.props;
       }
     }
 
+    // Outward pull relax
     if (!isPulling) {
       pullVel *= 0.82;
       pullZ += pullVel;
-
       pullZ += (0 - pullZ) * 0.12;
 
       if (!isRevealed && pullZ >= REVEAL_THRESHOLD && shell) {
@@ -393,10 +540,11 @@ const { posts } = Astro.props;
     }
   }
 
+  // Drag still rotates carousel
   shell?.addEventListener(
     "pointermove",
     (e) => {
-      if (!isDragging) return;
+      if (!isDragging || hudOpen) return;
 
       if (!isPulling) {
         vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
@@ -426,11 +574,31 @@ const { posts } = Astro.props;
     { passive: true },
   );
 
-  /* ── PETAL KEYBOARD CONTROLS ── */
+  // Double click + Long press: open HUD on ACTIVE item
+  let pressTimer = 0;
+  let pressStart = 0;
+  const LONG_PRESS_MS = 420;
+
+  function armLongPress(index, el) {
+    clearTimeout(pressTimer);
+    pressStart = performance.now();
+
+    pressTimer = window.setTimeout(() => {
+      // only open if still active and visible
+      if (!el.classList.contains("active")) return;
+      openHud(index);
+    }, LONG_PRESS_MS);
+  }
+
+  function disarmLongPress() {
+    clearTimeout(pressTimer);
+    pressTimer = 0;
+  }
+
   items.forEach((el) => {
-    const href = el.dataset.href;
     const index = Number(el.dataset.index);
 
+    // Pointer down: focus + snap (like before)
     el.addEventListener(
       "pointerdown",
       (e) => {
@@ -450,17 +618,43 @@ const { posts } = Astro.props;
 
         el.setPointerCapture?.(e.pointerId);
 
+        // long press only for the active petal surface
+        armLongPress(index, el);
+
         start();
       },
       { passive: false },
     );
 
+    el.addEventListener("pointerup", disarmLongPress, { passive: true });
+    el.addEventListener("pointercancel", disarmLongPress, { passive: true });
+    el.addEventListener("pointerleave", disarmLongPress, { passive: true });
+
+    // Double click opens HUD if this becomes active
+    el.addEventListener(
+      "dblclick",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!el.classList.contains("active")) return;
+        openHud(index);
+      },
+      { passive: false },
+    );
+
+    // Keyboard controls
     el.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        location.href = href;
+        // Enter opens HUD for the active petal
+        if (el.classList.contains("active")) {
+          openHud(index);
+        } else {
+          snapToIndex(index, false);
+        }
         return;
       }
 
+      // Expand / collapse (space toggles pull)
       if (e.key === " ") {
         e.preventDefault();
         isPulling = !isPulling;
@@ -469,6 +663,7 @@ const { posts } = Astro.props;
         return;
       }
 
+      // Fine depth control
       if (e.key === "ArrowUp") {
         e.preventDefault();
         pullZ = clamp(pullZ + KEY_PULL_STEP, 0, KEY_PULL_MAX);
@@ -486,6 +681,7 @@ const { posts } = Astro.props;
       }
 
       if (e.key === "Escape") {
+        if (hudOpen) closeHud();
         isPulling = false;
         pullVel = 0;
         start();
@@ -493,13 +689,14 @@ const { posts } = Astro.props;
     });
   });
 
-  /* ───────────────── INIT ───────────────── */
+  /* INIT */
   applyTransforms();
   updatePetalVisibility();
 
-  /* ───────────────── CLEANUP (ASTRO ROUTES) ───────────────── */
+  /* CLEANUP (ASTRO ROUTES) */
   function cleanup() {
     closeRevealedPetal();
+    disarmLongPress();
     cancelAnimationFrame(rafId);
     mq.removeEventListener("change", updateRadius);
   }
@@ -507,7 +704,10 @@ const { posts } = Astro.props;
   window.addEventListener("astro:before-swap", cleanup);
 
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) closeRevealedPetal();
+    if (document.hidden) {
+      closeRevealedPetal();
+      if (hudOpen) closeHud();
+    }
   });
 </script>
 
@@ -531,7 +731,7 @@ const { posts } = Astro.props;
     pointer-events: auto;
     position: absolute;
     left: 50%;
-    top: 50%;
+    top: calc(50% + 12px);
     transform: translate(-50%, -50%);
 
     width: clamp(220px, 40vw, 320px);
@@ -607,50 +807,305 @@ const { posts } = Astro.props;
     box-shadow: none;
   }
 
-  .carousel-hint {
-    pointer-events: none;
-    position: absolute;
-    bottom: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 0.4rem;
-    opacity: 0.55;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  @media (max-width: 768px) {
-    .carousel-viewport {
-      height: 320px;
-    }
-  }
-
-  /* ───────────────── PETAL CONTENT REVEAL ───────────────── */
-
-  .carousel-item .petal-content {
-    position: absolute;
+  /* ───────────────── HUD LAYER ───────────────── */
+  .hud-layer {
+    position: fixed;
     inset: 0;
-    padding: 1.4rem;
+    z-index: 20;
+    pointer-events: none;
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(6px);
     transition:
-      opacity 420ms ease,
-      transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      opacity 220ms ease,
+      transform 220ms ease;
   }
 
-  #petal-shell[data-revealed] .carousel-item.active .petal-content {
+  .hud-layer[data-open] {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
 
-  /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
-  body[data-route="home"] .carousel-viewport {
+  .hud-scrim {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklch, black 62%, transparent);
+    opacity: 0.62;
+  }
+
+  :global(html.light) .hud-scrim {
+    background: color-mix(in oklch, white 70%, transparent);
+    opacity: 0.62;
+  }
+
+  /* Position HUD under PageFind input: PageFind uses z-40; we keep this below it. */
+  .hud {
+    position: absolute;
+    left: 50%;
+    top: clamp(72px, 10vh, 110px);
+    transform: translateX(-50%);
+
+    width: min(1080px, calc(100vw - 2.25rem));
+    max-height: calc(100vh - 130px);
+
+    /* no border (per request) */
+    background: color-mix(in oklch, black 18%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  :global(html.light) .hud {
+    background: color-mix(in oklch, white 16%, transparent);
+  }
+
+  .hud-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(360px, 1.35fr);
+    grid-template-rows: auto 1fr auto;
+    gap: 0.9rem;
+
+    padding: 0.95rem 1rem 1rem;
+  }
+
+  .hud-panel {
+    display: none;
+  }
+  .hud-panel[data-active] {
+    display: contents;
+  }
+
+  /* Title above image, aligned left, under PageFind input */
+  .hud-title {
+    grid-column: 1 / 2;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.1rem;
+    padding: 0.55rem 0.55rem 0.15rem;
+  }
+
+  .hud-title h2 {
+    margin: 0;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.92;
+    flex: 1;
+  }
+
+  /* Left block: image then description */
+  .hud-left {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    display: grid;
+    gap: 0.65rem;
+    padding: 0 0.55rem 0.25rem;
+    align-content: start;
+  }
+
+  .hud-image-wrap {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+
+    background: color-mix(in oklch, currentColor 8%, transparent);
+  }
+
+  /* Scanline ONLY on images */
+  .hud-image-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    background: repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, currentColor 18%, transparent) 0px,
+      transparent 2px,
+      transparent 6px
+    );
+    mix-blend-mode: overlay;
+    opacity: 0.22;
+  }
+
+  .hud-image-wrap::after {
+    content: "";
+    position: absolute;
+    inset: -20% 0 auto 0;
+    height: 40%;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in oklch, currentColor 20%, transparent),
+      transparent
+    );
+    opacity: 0.22;
+    animation: hudScan 3.1s linear infinite;
+  }
+
+  @keyframes hudScan {
+    0% {
+      transform: translateY(-30%);
+    }
+    100% {
+      transform: translateY(180%);
+    }
+  }
+
+  .hud-image {
+    display: block;
+    width: 100%;
+    height: clamp(180px, 28vh, 260px);
+    object-fit: cover;
+    transform: translateZ(0);
+  }
+
+  .hud-image-fallback {
+    width: 100%;
+    height: clamp(180px, 28vh, 260px);
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, currentColor 12%, transparent),
+      transparent
+    );
+  }
+
+  .hud-desc {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    opacity: 0.85;
+    padding: 0.1rem 0.05rem 0.25rem;
+  }
+
+  /* Right: article (scrollable) */
+  .hud-right {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    padding: 0.55rem 0.55rem 0.25rem;
+    min-width: 0;
+  }
+
+  .hud-article {
+    max-height: calc(100vh - 240px);
+    overflow: auto;
+    padding-right: 10px;
+    scrollbar-width: thin;
+  }
+
+  .hud-article::-webkit-scrollbar {
+    width: 8px;
+  }
+  .hud-article::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, currentColor 26%, transparent);
+    border-radius: 999px;
+  }
+
+  /* Bottom stat cluster (below both columns) */
+  .hud-stats {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+    padding: 0.15rem 0.55rem 0.15rem;
+  }
+
+  .hud-stat {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, currentColor 10%, transparent);
+  }
+
+  .hud-k {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .hud-v {
+    font-size: 0.78rem;
+    opacity: 0.92;
+  }
+
+  .hud-open {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 999px;
+    text-decoration: none;
+    background: color-mix(in oklch, currentColor 14%, transparent);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.92;
+  }
+
+  .hud-open:hover {
+    background: color-mix(in oklch, currentColor 22%, transparent);
+  }
+
+  .hud-close {
+    position: absolute;
+    right: 0.55rem;
+    top: 4.55rem;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: none;
+    background: color-mix(in oklch, currentColor 12%, transparent);
+    color: currentColor;
+    cursor: pointer;
     pointer-events: auto;
   }
 
+  .hud-close:hover {
+    background: color-mix(in oklch, currentColor 20%, transparent);
+  }
+
+  @media (max-width: 920px) {
+    .hud-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto 1fr auto;
+    }
+
+    .hud-title,
+    .hud-left,
+    .hud-right {
+      grid-column: 1;
+    }
+
+    .hud-title {
+      grid-row: 1;
+    }
+    .hud-left {
+      grid-row: 2;
+    }
+    .hud-right {
+      grid-row: 3;
+    }
+    .hud-stats {
+      grid-row: 4;
+    }
+
+    .hud-close {
+      top: 4.35rem;
+    }
+  }
+
+  /* PETAL VISIBILITY TOGGLE */
   #petal-shell {
     transition:
       opacity 420ms ease,

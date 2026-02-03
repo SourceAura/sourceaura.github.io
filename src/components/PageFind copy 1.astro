@@ -1,0 +1,79 @@
+---
+/* PageFind.astro
+   - Renders a fixed PageFind bar directly under the header
+   - Publishes CSS var: --pagefind-h (measured)
+*/
+---
+
+<div class="pagefind-bar" id="pagefind-bar" data-pagefind-bar>
+  <div class="pagefind-inner">
+    <div id="pagefind-ui" data-pagefind-ui></div>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const bar = document.querySelector("[data-pagefind-bar]");
+    if (!bar) return;
+
+    const set = () => {
+      const r = bar.getBoundingClientRect();
+      document.documentElement.style.setProperty(
+        "--pagefind-h",
+        `${Math.ceil(r.height)}px`,
+      );
+
+      const cs = getComputedStyle(document.documentElement);
+      const hh = parseFloat(cs.getPropertyValue("--header-h")) || 0;
+      const ph = parseFloat(cs.getPropertyValue("--pagefind-h")) || 0;
+      document.documentElement.style.setProperty(
+        "--ui-top",
+        `${hh + ph + 12}px`,
+      );
+    };
+
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    window.addEventListener("resize", set, { passive: true });
+
+    // Initialize PageFind UI if available
+    // (If you already initialize PageFind elsewhere, remove this block.)
+    window.addEventListener("DOMContentLoaded", async () => {
+      const mount = document.querySelector("[data-pagefind-ui]");
+      if (!mount) return;
+
+      // If PagefindUI is globally available (common pattern)
+      if (window.PagefindUI) {
+        new window.PagefindUI({
+          element: "#pagefind-ui",
+          showSubResults: true,
+          resetStyles: false,
+        });
+      }
+    });
+  })();
+</script>
+
+<style>
+  .pagefind-bar {
+    position: sticky;
+    top: var(--header-h, 64px);
+    z-index: 70;
+    pointer-events: auto;
+
+    background: color-mix(in oklch, transparent 45%, black);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+  }
+
+  .pagefind-inner {
+    padding: 10px 18px 12px;
+  }
+
+  /* Optional: tighten Pagefind UI a bit */
+  :global(.pagefind-ui__search-input) {
+    border-radius: 12px !important;
+  }
+</style>
