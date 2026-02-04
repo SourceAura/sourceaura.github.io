@@ -1,49 +1,201 @@
 ---
 /* Nelumbo
-Rose Lotus
-Nelumbo is a component that displays a carousel of petals.
+Rose Lotus - Rotating LED Display.
+Nelumbo displays a 3D carousel of petals + a HUD.
+
+Updates:
+- HUD is docked under PageFind input (#hud-dock) at all times
+- Per-segment micro parallax (title slower than image)
+- Image depth shimmer tied to --pulse
+- Glyph noise reveal on article text
+- HUD “signal loss” when active petal rotates away
+- UI tweaks:
+  - Title overlays ON the image (with stats)
+  - Stats chips smaller + one line at bottom of image
+  - OPEN moved to bottom-right control cluster with CLOSE,
+    aligned with article scrollbar corner
 */
-import PetalCard from "@components/PetalCard.astro";
+import Orb from "@components/Orb.astro";
 const { posts } = Astro.props;
+
+// ───────────────── helpers (Astro-side) ─────────────────
+function extractFirstImageFromMarkdown(md = ""): string | null {
+  const m = md.match(/!\[.*?\]\((.*?)\)/);
+  if (!m?.[1]) return null;
+  const raw = String(m[1]).trim();
+  if (raw.startsWith("http") || raw.startsWith("/")) return raw;
+  return `/images/${raw.replace(/^\.?\//, "")}`;
+}
+
+// fairly robust “good enough” markdown → text (keeps paragraphs)
+function stripMarkdownToText(md = ""): string {
+  let t = String(md);
+
+  t = t.replace(/^---[\s\S]*?---\s*/g, "");
+  t = t.replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1");
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
+  t = t.replace(/`([^`]+)`/g, "$1");
+  t = t.replace(/^\s{0,3}#{1,6}\s+/gm, "");
+  t = t.replace(/^\s{0,3}>\s?/gm, "");
+  t = t.replace(/^\s*[-*+]\s+/gm, "");
+  t = t.replace(/^\s*\d+\.\s+/gm, "");
+  t = t.replace(/(\*\*|__)(.*?)\1/g, "$2");
+  t = t.replace(/(\*|_)(.*?)\1/g, "$2");
+  t = t.replace(/^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/gm, "");
+  t = t.replace(/\n{3,}/g, "\n\n");
+
+  return t.trim();
+}
+
+function readingTimeMinutes(md = ""): string {
+  const words = stripMarkdownToText(md).split(/\s+/).filter(Boolean).length;
+  const mins = Math.max(1, Math.round(words / 200));
+  return `${mins} min`;
+}
+
+function formatDate(d: any): string {
+  try {
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(undefined, {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return "";
+  }
+}
 ---
 
 <div class="carousel-layer" id="petal-shell">
   <div class="carousel-viewport">
     <div class="carousel-ring" id="petal-ring">
       {
-        posts.map((post, i) => (
-          <div
-            class="carousel-item"
-            tabindex="0"
-            data-index={i}
-            data-href={`/petals/${post.slug}`}
-          >
-            <div class="parallax-layer">
-              <PetalCard post={post} />
+        posts.map((post, i) => {
+          const img = extractFirstImageFromMarkdown(post.body) ?? "";
+          const articleText = stripMarkdownToText(post.body);
+          const dateLabel = formatDate(post.data.date);
+          const rt = readingTimeMinutes(post.body);
+
+          return (
+            <div
+              class="carousel-item"
+              tabindex="0"
+              data-index={i}
+              data-href={`/petals/${post.slug}`}
+              data-title={post.data.title}
+              data-desc={post.data.description}
+              data-img={img}
+              data-article={articleText}
+              data-date={dateLabel}
+              data-rt={rt}
+            >
+              <div class="parallax-layer">
+                <div class="petal-surface" data-petal-surface>
+                  <Orb post={post} />
+                  <div class="petal-content">
+                    <h1>{post.data.title}</h1>
+                    <p>{post.data.description}</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       }
     </div>
   </div>
 
-  <div class="carousel-hint" aria-hidden="true">
-    <!--  -->
+  <!-- HUD Overlay (DOCKED under PageFind input) -->
+  <div class="hud" id="petal-hud" aria-hidden="true">
+    <div class="hud-frame">
+      <!-- MERGED: Image + Title + Stats -->
+      <div class="hud-seg hud-mediaStats">
+        <div class="hud-media-wrap">
+          <img data-hud-img alt="" />
+          <div class="hud-scan" aria-hidden="true"></div>
+
+          <!-- Title overlays TOP of image -->
+          <div class="hud-titleOverlay" aria-hidden="true">
+            <div class="hud-titleText" data-hud-title></div>
+          </div>
+
+          <!-- Stat chips: single line at BOTTOM of image -->
+          <div class="hud-chips" aria-label="Post stats">
+            <div class="hud-chip">
+              <span class="hud-chip-k">DATE</span>
+              <span class="hud-chip-v" data-hud-date></span>
+            </div>
+            <div class="hud-chip">
+              <span class="hud-chip-k">READ</span>
+              <span class="hud-chip-v" data-hud-rt></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-desc" data-hud-desc></div>
+      </div>
+
+      <!-- Article (text only, scrollable) -->
+      <div class="hud-seg hud-article">
+        <div class="hud-sub">ARTICLE</div>
+        <div class="hud-article-body" data-hud-article></div>
+      </div>
+
+      <!-- Controls cluster: bottom-right, aligned with article scrollbar corner -->
+      <div class="hud-controls" aria-label="HUD controls">
+        <a
+          class="hud-ctl hud-open"
+          data-hud-link
+          href="#"
+          aria-label="Open post"
+        >
+          ↗
+        </a>
+        <button
+          class="hud-ctl hud-close"
+          type="button"
+          id="hud-close"
+          aria-label="Close HUD"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="hud-glow" aria-hidden="true"></div>
+      <div class="hud-specks" aria-hidden="true"></div>
+      <div class="hud-signalNoise" aria-hidden="true"></div>
+    </div>
   </div>
 </div>
 
-<script>
+<script is:inline>
   const shell = document.getElementById("petal-shell");
   const ring = document.getElementById("petal-ring");
-  const items = [...ring.querySelectorAll(".carousel-item")];
+  const items = ring ? [...ring.querySelectorAll(".carousel-item")] : [];
 
-  const viewport = shell.querySelector(".carousel-viewport");
+  const hud = document.getElementById("petal-hud");
+  const hudClose = document.getElementById("hud-close");
+
+  const hudTitle = hud?.querySelector("[data-hud-title]");
+  const hudImg = hud?.querySelector("[data-hud-img]");
+  const hudDesc = hud?.querySelector("[data-hud-desc]");
+  const hudArticle = hud?.querySelector("[data-hud-article]");
+  const hudDate = hud?.querySelector("[data-hud-date]");
+  const hudRT = hud?.querySelector("[data-hud-rt]");
+  const hudLink = hud?.querySelector("[data-hud-link]");
 
   const count = items.length;
-  const step = 360 / count;
-  // E.T. Phone Home
+  const step = count ? 360 / count : 360;
+
+  // Dock target under PageFind input (from PageFind.astro)
+  const getHudDock = () =>
+    document.getElementById("hud-dock") ||
+    document.querySelector("[data-hud-dock]");
+
   const onHome = location.pathname === "/";
-  if (onHome) {
+  if (onHome && shell) {
     shell.addEventListener(
       "click",
       (e) => {
@@ -54,54 +206,86 @@ const { posts } = Astro.props;
     );
   }
 
-  /* ───────── VISIBILITY STATE ───────── */
-
   let petalsOpen = false;
 
   function updatePetalVisibility() {
+    if (!shell) return;
     shell.toggleAttribute("data-petals-open", petalsOpen);
+    if (!petalsOpen) focusedIndex = -1;
+  }
 
-    if (!petalsOpen) {
-      focusedIndex = -1;
+  let hudOpen = false;
+  let hudBootToken = 0;
+
+  function setHudOpen(next) {
+    hudOpen = !!next;
+    if (!hud) return;
+
+    hud.classList.toggle("is-open", hudOpen);
+    hud.setAttribute("aria-hidden", hudOpen ? "false" : "true");
+
+    if (hudOpen) {
+      hudBootToken = (hudBootToken + 1) % 1000;
+      hud.dataset.boot = String(hudBootToken);
+
+      hud.classList.remove("is-booting");
+      void hud.offsetWidth;
+      hud.classList.add("is-booting");
+
+      snapHudToDock(true);
     }
   }
 
-  // Esc - And Touch/Click outside of viewport to Close
-  window.addEventListener("keydown", (e) => {
-    if (!petalsOpen) return;
+  function closeHud() {
+    setHudOpen(false);
+  }
 
-    if (e.key === "Escape") {
-      isPulling = false;
-      pullVel = 0;
-      petalsOpen = false;
-      updatePetalVisibility();
-    }
+  hudClose?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeHud();
   });
-  // Touch / click outside viewport to close
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (hudOpen) closeHud();
+  });
+
+  window.addEventListener("gesture:close-petals", () => {
+    isPulling = false;
+    pullVel = 0;
+    petalsOpen = false;
+    updatePetalVisibility();
+    closeHud();
+  });
+
   window.addEventListener(
     "pointerdown",
     (e) => {
-      if (!petalsOpen) return;
+      if (!shell) return;
+      if (e.target.closest?.("#petal-hud")) return;
+      if (e.target.closest?.(".carousel-item.active")) return;
 
-      // If the click started inside the carousel, ignore
-      if (viewport.contains(e.target)) return;
+      if (hudOpen) closeHud();
 
-      // Otherwise, close
-      isPulling = false;
-      pullVel = 0;
-      petalsOpen = false;
-      updatePetalVisibility();
+      if (petalsOpen) {
+        isPulling = false;
+        pullVel = 0;
+        petalsOpen = false;
+        updatePetalVisibility();
+      }
     },
     { passive: true },
   );
 
-  /* ───────────────── BASE PHYSICS ───────────────── */
   const BASE_FRICTION = 0.96;
   const BASE_SNAP = 0.06;
   const velClamp = 3.2;
   const settleThreshold = 0.015;
 
-  /* ───────────────── STATE ───────────────── */
+  let isRevealed = false;
+  const REVEAL_THRESHOLD = 96;
+
   let angle = 0;
   let vel = 0;
   let isDragging = false;
@@ -119,11 +303,23 @@ const { posts } = Astro.props;
   const KEY_PULL_STEP = 14;
   const KEY_PULL_MAX = 140;
 
-  // ── ACTIVE PETAL OUTWARD PULL ──
-  let pullZ = 0; // current outward pull (px)
+  let pullZ = 0;
   let pullVel = 0;
   let isPulling = false;
-  /* ───────────────── OM PULSE (GLOBAL) ───────────────── */
+
+  function closeRevealedPetal() {
+    if (!isRevealed || !shell) return;
+
+    isRevealed = false;
+    isPulling = false;
+    pullZ = 0;
+    pullVel = 0;
+
+    shell.removeAttribute("data-revealed");
+    closeHud();
+    start();
+  }
+
   function getOmPulse() {
     const v = getComputedStyle(document.documentElement).getPropertyValue(
       "--pulse",
@@ -132,7 +328,6 @@ const { posts } = Astro.props;
     return Number.isFinite(p) ? p : 0.5;
   }
 
-  /* ───────────────── RADIUS (CACHED) ───────────────── */
   let radius = 300;
   const mq = matchMedia("(max-width: 768px)");
 
@@ -142,9 +337,22 @@ const { posts } = Astro.props;
   mq.addEventListener("change", updateRadius);
   updateRadius();
 
-  /* ───────────────── HELPERS ───────────────── */
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const snapAngle = (a) => Math.round(a / step) * step;
+  const normDeg = (d) => ((d % 360) + 360) % 360;
+
+  const angDist = (a, b) => {
+    const d = Math.abs(a - b) % 360;
+    return d > 180 ? 360 - d : d;
+  };
+
+  const smoothstep = (e0, e1, x) => {
+    const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  };
+
+  const SIDE_KILL = 43;
+  const SIDE_FADE_END = 52;
 
   function snapToIndex(index, immediate = false) {
     const target = -index * step;
@@ -159,31 +367,223 @@ const { posts } = Astro.props;
       return;
     }
 
-    // Small elastic offset (visual only)
     const delta = target - angle;
     snapElastic = clamp(delta * 0.12, -18, 18);
-
-    // Kill existing spin and let snap logic handle it
     vel = 0;
-
     start();
   }
 
-  /* ───────────────── TRANSFORMS ───────────────── */
+  function stripToText(html = "") {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = String(html);
+    return (tmp.innerText || tmp.textContent || "").trim();
+  }
+
+  function setHudDataFromItem(el) {
+    if (!el || !hud) return;
+
+    const title =
+      el.getAttribute("data-title") ||
+      el.querySelector(".petal-content h1")?.textContent ||
+      "Untitled";
+
+    const desc =
+      el.getAttribute("data-desc") ||
+      el.querySelector(".petal-content p")?.textContent ||
+      "";
+
+    const date = el.getAttribute("data-date") || "";
+    const rt = el.getAttribute("data-rt") || "";
+    const href = el.getAttribute("data-href") || "#";
+
+    const articleRaw = el.getAttribute("data-article") || "";
+    const articleText = stripToText(articleRaw);
+
+    const img = el.getAttribute("data-img") || "";
+
+    if (hudTitle) hudTitle.textContent = title;
+    if (hudDesc) hudDesc.textContent = desc;
+    if (hudDate) hudDate.textContent = date;
+    if (hudRT) hudRT.textContent = rt;
+
+    if (hudLink) {
+      hudLink.setAttribute("href", href);
+      hudLink.setAttribute("aria-label", `Open ${title}`);
+    }
+
+    if (hudArticle)
+      hudArticle.textContent = articleText || "No article loaded yet.";
+
+    if (hudImg) {
+      if (img) {
+        hudImg.src = img;
+        hudImg.alt = title;
+        hudImg.style.display = "block";
+      } else {
+        hudImg.removeAttribute("src");
+        hudImg.alt = "";
+        hudImg.style.display = "none";
+      }
+    }
+  }
+
+  function clampToViewport(x, y) {
+    const pad = 16;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const pfBottomVar = getComputedStyle(document.documentElement)
+      .getPropertyValue("--pagefind-bottom")
+      .trim();
+
+    const pfBottom = Number.parseFloat(pfBottomVar);
+    const minY = Number.isFinite(pfBottom) ? pfBottom + 12 : pad;
+
+    const cx = Math.max(pad, Math.min(vw - pad, x));
+    const cy = Math.max(minY, Math.min(vh - pad, y));
+
+    return { cx, cy };
+  }
+
+  function snapHudToDock(immediate = false) {
+    if (!hudOpen || !hud) return;
+
+    const dock = getHudDock();
+    if (!dock) {
+      hud.style.setProperty("--hud-x", `50%`);
+      hud.style.setProperty("--hud-y", `140px`);
+      return;
+    }
+
+    const r = dock.getBoundingClientRect();
+    const x = r.left + r.width * 0.5;
+    const y = r.bottom + 12 + 220 * 0.5;
+
+    const { cx, cy } = clampToViewport(x, y);
+    hud.style.setProperty("--hud-x", `${cx}px`);
+    hud.style.setProperty("--hud-y", `${cy}px`);
+
+    if (immediate) hud.classList.add("no-snap");
+    else hud.classList.remove("no-snap");
+  }
+
+  function updateHudEffects(activeSideVis = 1) {
+    if (!hudOpen || !hud) return;
+
+    const om = getOmPulse();
+    hud.style.setProperty("--hud-pulse", String(om));
+
+    hud.style.setProperty("--hud-signal", String(activeSideVis));
+    hud.classList.toggle("is-signal-loss", activeSideVis < 0.35);
+
+    const yaw = normDeg(
+      (lastActive >= 0 ? lastActive : 0) * step + angle + snapElastic,
+    );
+    const t = (yaw - 180) / 180;
+
+    const imgX = clamp(t, -1, 1) * 8;
+    const imgY = Math.sin((angle * Math.PI) / 180) * 5;
+
+    hud.style.setProperty("--seg-img-x", `${imgX.toFixed(2)}px`);
+    hud.style.setProperty("--seg-img-y", `${imgY.toFixed(2)}px`);
+    hud.style.setProperty("--seg-title-x", `${(imgX * 0.35).toFixed(2)}px`);
+    hud.style.setProperty("--seg-title-y", `${(imgY * 0.35).toFixed(2)}px`);
+    hud.style.setProperty("--seg-chips-x", `${(imgX * 0.55).toFixed(2)}px`);
+    hud.style.setProperty("--seg-chips-y", `${(imgY * 0.55).toFixed(2)}px`);
+    hud.style.setProperty("--seg-article-x", `${(imgX * 0.25).toFixed(2)}px`);
+    hud.style.setProperty("--seg-article-y", `${(imgY * 0.25).toFixed(2)}px`);
+  }
+
+  window.addEventListener("resize", () => snapHudToDock(true));
+  window.addEventListener("scroll", () => snapHudToDock(true), {
+    passive: true,
+  });
+
+  let pressTimer = 0;
+  let pressStartX = 0;
+  let pressStartY = 0;
+
+  function openHudForIndex(i) {
+    const el = items[i];
+    if (!el) return;
+
+    if (!petalsOpen) {
+      petalsOpen = true;
+      updatePetalVisibility();
+    }
+
+    focusedIndex = i;
+    snapToIndex(i, false);
+
+    setHudDataFromItem(el);
+
+    setHudOpen(true);
+    snapHudToDock(true);
+    start();
+  }
+
+  function armLongPress(el, index) {
+    el.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+
+        pressStartX = e.clientX;
+        pressStartY = e.clientY;
+
+        clearTimeout(pressTimer);
+        pressTimer = window.setTimeout(() => openHudForIndex(index), 420);
+
+        el.setPointerCapture?.(e.pointerId);
+      },
+      { passive: true },
+    );
+
+    el.addEventListener(
+      "pointermove",
+      (e) => {
+        const dx = e.clientX - pressStartX;
+        const dy = e.clientY - pressStartY;
+        if (Math.abs(dx) + Math.abs(dy) > 10) clearTimeout(pressTimer);
+      },
+      { passive: true },
+    );
+
+    el.addEventListener("pointerup", () => clearTimeout(pressTimer), {
+      passive: true,
+    });
+    el.addEventListener("pointercancel", () => clearTimeout(pressTimer), {
+      passive: true,
+    });
+
+    el.addEventListener(
+      "dblclick",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openHudForIndex(index);
+      },
+      { passive: false },
+    );
+  }
+
   function applyTransforms() {
+    if (!ring) return;
     if (angle === lastAngle) return;
     lastAngle = angle;
 
-    const om = getOmPulse(); // ← HERE
-
-    ring.style.transform = `rotateY(${angle + snapElastic}deg)`;
+    const om = getOmPulse();
+    ring.style.transform = `translateZ(0) rotateY(${angle + snapElastic}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
     const active = ((Math.round(-normalized / step) % count) + count) % count;
 
+    let activeSideVis = 1;
+
     if (active !== lastActive) {
       lastActive = active;
       items.forEach((el, i) => el.classList.toggle("active", i === active));
+      if (hudOpen) setHudDataFromItem(items[active]);
     }
 
     const maxDist = Math.floor(count / 2 || 1);
@@ -193,47 +593,61 @@ const { posts } = Astro.props;
       dist = Math.min(dist, count - dist);
 
       const depth = Math.min(1, dist / maxDist);
-      const prox = 1 - depth;
-
-      el.style.opacity = 1 - depth * 0.7;
       el.style.setProperty("--petal-depth", depth.toFixed(4));
-      el.style.setProperty("--petal-prox", prox.toFixed(4));
-      el.style.setProperty("--panel-scale", (1 - depth * 0.12).toFixed(4));
+      el.style.setProperty("--petal-prox", (1 - depth).toFixed(4));
+
+      const baseScale = 1 - depth * 0.12;
+
+      const yaw = normDeg(i * step + angle + snapElastic);
+      const sideDist = Math.min(angDist(yaw, 90), angDist(yaw, 270));
+      const sideVis = smoothstep(SIDE_KILL, SIDE_FADE_END, sideDist);
+
+      if (i === active) activeSideVis = sideVis;
+
+      const depthVis = 1 - depth * 0.7;
+      const finalVis = depthVis * sideVis;
+      el.style.opacity = finalVis.toFixed(3);
+
+      const sideScale = 0.88 + 0.12 * sideVis;
+      el.style.setProperty("--panel-scale", (baseScale * sideScale).toFixed(4));
+
+      el.style.pointerEvents = sideVis < 0.08 ? "none" : "auto";
+      el.style.visibility = sideVis < 0.02 ? "hidden" : "visible";
 
       const activeBias = i === active ? 22 + (om - 0.5) * 10 : 0;
-
       const pull = i === active ? pullZ : 0;
 
       el.style.transform = `translate(-50%, -50%)
-         rotateY(${i * step}deg)
-         translateZ(${radius + activeBias + pull}px)`;
+        rotateY(${i * step}deg)
+        translateZ(${radius + activeBias + pull}px)`;
     });
+
+    snapHudToDock(false);
+    updateHudEffects(activeSideVis);
   }
 
-  /* ───────────────── RAF LOOP (IDLE-AWARE + OM-SYNCED) ───────────────── */
   function tick() {
     if (!running) return;
 
-    // Om pulse coupling (subtle, symmetric)
-    const om = getOmPulse(); // 0..1
-    const breath = (om - 0.5) * 2; // -1..+1
+    const om = getOmPulse();
+    const breath = (om - 0.5) * 2;
 
     const friction = BASE_FRICTION * (1 - breath * 0.015);
     const snapStrength = BASE_SNAP * (1 + breath * 0.06);
 
-    angle += vel;
-    vel *= friction;
+    if (!isRevealed) {
+      angle += vel;
+      vel *= friction;
+    } else {
+      vel = 0;
+      angle = snapAngle(angle);
+    }
 
-    // ── SNAP TARGET RESOLUTION ──
     if (snapTarget !== null) {
       const d = snapTarget - angle;
-
       angle += d * snapStrength;
-
-      // decay elastic
       snapElastic *= 0.78;
 
-      // snap complete → hard lock
       if (Math.abs(d) < 0.01 && Math.abs(snapElastic) < 0.2) {
         angle = snapTarget;
         vel = 0;
@@ -242,12 +656,22 @@ const { posts } = Astro.props;
       }
     }
 
-    // ── OUTWARD PULL RELAXATION ──
     if (!isPulling) {
       pullVel *= 0.82;
       pullZ += pullVel;
-
       pullZ += (0 - pullZ) * 0.12;
+
+      if (!isRevealed && pullZ >= REVEAL_THRESHOLD && shell) {
+        isRevealed = true;
+        pullVel = 0;
+        vel = 0;
+        shell.setAttribute("data-revealed", "");
+      }
+
+      if (isRevealed && pullZ < REVEAL_THRESHOLD * 0.6 && shell) {
+        isRevealed = false;
+        shell.removeAttribute("data-revealed");
+      }
 
       if (Math.abs(pullZ) < 0.2) {
         pullZ = 0;
@@ -278,45 +702,27 @@ const { posts } = Astro.props;
     rafId = requestAnimationFrame(tick);
   }
 
-  // ── ACTIVE PETAL OUTWARD DRAG ─
-  //
-
-  /* ───────────────── INPUT ───────────────── */
-
   function ensureOpen() {
     if (!petalsOpen) {
       petalsOpen = true;
       updatePetalVisibility();
-      start(); // kick the loop once
+      start();
     }
   }
 
-  // viewport - rotation only
-  viewport.addEventListener(
-    "pointerdown",
-    (e) => {
-      // If a petal handled this, don't rotate
-      if (e.target.closest(".carousel-item")) return;
-
-      ensureOpen();
-      isDragging = true;
-      viewport.setPointerCapture?.(e.pointerId);
-    },
-    { passive: true },
-  );
-
-  viewport.addEventListener(
+  shell?.addEventListener(
     "pointermove",
     (e) => {
       if (!isDragging) return;
+      if (hudOpen) return;
 
-      // horizontal drag → rotate carousel (disabled while pulling)
       if (!isPulling) {
         vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
         angle += e.movementX * 0.12;
       }
 
-      // vertical drag → pull active petal outward
+      if (e.movementY < -1) isPulling = true;
+
       if (isPulling) {
         pullVel = clamp(-e.movementY * 0.6, -8, 14);
         pullZ = clamp(pullZ + pullVel, 0, 140);
@@ -327,7 +733,7 @@ const { posts } = Astro.props;
     { passive: true },
   );
 
-  viewport.addEventListener(
+  shell?.addEventListener(
     "pointerup",
     () => {
       isDragging = false;
@@ -336,62 +742,50 @@ const { posts } = Astro.props;
     { passive: true },
   );
 
-  // Expansion
-
-  // ── PETAL KEYBOARD CONTROLS ──
   items.forEach((el) => {
-    const href = el.dataset.href;
     const index = Number(el.dataset.index);
+    const surface = el.querySelector("[data-petal-surface]") || el;
+    armLongPress(surface, index);
 
-    // Touch/click: snap this petal to focus + make it active
     el.addEventListener(
       "pointerdown",
       (e) => {
         if (e.pointerType === "mouse" && e.button !== 0) return;
+        if (hudOpen) return;
 
         e.preventDefault();
         e.stopPropagation();
 
         ensureOpen();
 
-        // SECOND TAP → navigate
-        if (focusedIndex === index) {
-          const href = el.dataset.href;
-          if (href) location.href = href;
-          return;
-        }
-
-        // FIRST TAP → focus only
         focusedIndex = index;
+        snapToIndex(index, false);
 
-        snapToIndex(index, false); // smooth snap (see Part B)
-
+        isDragging = true;
         isPulling = false;
         pullVel = 0;
 
+        el.setPointerCapture?.(e.pointerId);
         start();
       },
       { passive: false },
     );
 
-    // Keyboard
     el.addEventListener("keydown", (e) => {
-      // Navigate
-      if (e.key === "Enter") {
+      const href = el.dataset.href;
+
+      if (e.key === "Enter" && href) {
         location.href = href;
         return;
       }
 
-      // Expand / collapse
       if (e.key === " ") {
         e.preventDefault();
-        isPulling = !isPulling;
-        pullVel = 0;
-        start();
+        if (hudOpen) closeHud();
+        else openHudForIndex(index);
         return;
       }
 
-      // Fine depth control
       if (e.key === "ArrowUp") {
         e.preventDefault();
         pullZ = clamp(pullZ + KEY_PULL_STEP, 0, KEY_PULL_MAX);
@@ -408,28 +802,49 @@ const { posts } = Astro.props;
         return;
       }
 
-      // Collapse
       if (e.key === "Escape") {
-        isPulling = false;
-        pullVel = 0;
-        start();
+        if (hudOpen) closeHud();
+        else {
+          isPulling = false;
+          pullVel = 0;
+          start();
+        }
       }
     });
   });
 
-  /* ───────────────── INIT ───────────────── */
   applyTransforms();
   updatePetalVisibility();
 
-  /* ───────────────── CLEANUP (ASTRO ROUTES) ───────────────── */
   function cleanup() {
+    closeRevealedPetal();
     cancelAnimationFrame(rafId);
     mq.removeEventListener("change", updateRadius);
   }
+
   window.addEventListener("astro:before-swap", cleanup);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      closeRevealedPetal();
+      closeHud();
+    }
+  });
 </script>
 
 <style>
+  :root {
+    --hud-top-offset: 96px; /* adjust freely */
+  }
+
+  /* Carousel styles unchanged */
+  .carousel-layer,
+  .carousel-viewport,
+  .carousel-ring {
+    background: transparent;
+    border: none;
+  }
+
   .carousel-layer {
     position: fixed;
     inset: 0;
@@ -442,11 +857,14 @@ const { posts } = Astro.props;
     pointer-events: auto;
     position: absolute;
     left: 50%;
-    top: var(--qi-center-y);
-    transform: translate(-50%, -50%);
-    width: min(100%, 900px);
-    height: 360px;
-    perspective: 1400px;
+    top: 50%;
+    transform: translate3d(-50%, -50%, 0);
+
+    width: clamp(220px, 40vw, 320px);
+    height: clamp(220px, 40vw, 320px);
+
+    perspective: 1200px;
+    transform-style: preserve-3d;
   }
 
   .carousel-ring {
@@ -455,23 +873,20 @@ const { posts } = Astro.props;
     transform-style: preserve-3d;
     will-change: transform;
   }
-  /*Items*/
+
   .carousel-item {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: clamp(250px, 44vw, 380px);
-    height: 130px;
-    border-radius: 14px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(6px);
-    pointer-events: auto;
+    width: clamp(180px, 32vw, 240px);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: visible;
     will-change: transform, opacity;
+    transform-style: preserve-3d;
+    contain: layout paint;
   }
 
-  /* Inner content stays inert */
   .carousel-item * {
     pointer-events: none;
   }
@@ -479,29 +894,29 @@ const { posts } = Astro.props;
   .parallax-layer {
     width: 100%;
     height: 100%;
-    transform: scale(var(--panel-scale, 1));
+    aspect-ratio: 1 / 1;
+    transform: translateZ(0) scale(var(--panel-scale, 1));
     transition: transform 0.15s ease;
+    display: grid;
+    place-items: center;
+    transform-origin: 50% 50%;
   }
 
-  .carousel-item.active {
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.18),
-      0 0 30px rgba(255, 255, 255, 0.14),
-      0 0 60px rgba(255, 255, 255, 0.06);
+  .carousel-item .petal-surface {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1 / 1;
+    pointer-events: auto;
+    cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
   }
 
-  .carousel-hint {
-    pointer-events: none;
-    position: absolute;
-    bottom: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 0.4rem;
-    opacity: 0.55;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  .carousel-item .petal-content {
+    display: none;
   }
 
   @media (max-width: 768px) {
@@ -510,21 +925,491 @@ const { posts } = Astro.props;
     }
   }
 
-  /* ───────────────── PETAL VISIBILITY TOGGLE ───────────────── */
-  /* Home page: carousel is display-only */
-  body[data-route="home"] .carousel-viewport {
-    pointer-events: auto;
-  }
+  /* HUD: transparent, borderless, docked under Pagefind via JS */
+  .hud {
+    position: fixed;
+    left: var(--hud-x, 50%);
+    top: calc(var(--hud-y, 50%) + var(--hud-top-offset));
+    transform: translate3d(-50%, -50%, 0);
 
-  #petal-shell {
-    transition:
-      opacity 420ms ease,
-      transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
+    z-index: 60;
 
-  #petal-shell:not([data-petals-open]) {
-    opacity: 0;
+    width: clamp(312px, 33.6vw, 624px);
+    height: clamp(240px, 26.4vh, 432px);
+
     pointer-events: none;
-    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 220ms ease,
+      visibility 0ms linear 220ms,
+      left 260ms cubic-bezier(0.2, 0.9, 0.2, 1),
+      top 260ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+
+  .hud.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 220ms ease,
+      visibility 0ms linear 0ms,
+      left 260ms cubic-bezier(0.2, 0.9, 0.2, 1),
+      top 260ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+
+  .hud.no-snap {
+    transition:
+      opacity 220ms ease,
+      visibility 0ms linear 0ms;
+  }
+
+  .hud-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+
+    border: none;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+
+    border-radius: 0px;
+    overflow: visible;
+
+    display: grid;
+    grid-template-columns: 1.15fr 1.55fr;
+    grid-template-rows: 1fr;
+    gap: 10px;
+    padding: 12px;
+
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* ambient accents */
+  .hud-glow {
+    position: absolute;
+    inset: -30%;
+    background:
+      radial-gradient(
+        circle at 30% 30%,
+        color-mix(in oklch, currentColor 22%, transparent) 0,
+        transparent 55%
+      ),
+      radial-gradient(
+        circle at 70% 60%,
+        color-mix(in oklch, currentColor 18%, transparent) 0,
+        transparent 55%
+      );
+    opacity: 0.55;
+    filter: blur(10px);
+    pointer-events: none;
+    animation: hudGlow 3.8s ease-in-out infinite;
+  }
+
+  @keyframes hudGlow {
+    0% {
+      opacity: 0.35;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.65;
+      transform: scale(1.03);
+    }
+    100% {
+      opacity: 0.35;
+      transform: scale(1);
+    }
+  }
+
+  .hud-specks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.55;
+    background:
+      radial-gradient(
+        circle at 12% 18%,
+        color-mix(in oklch, currentColor 35%, transparent) 0 1px,
+        transparent 2px
+      ),
+      radial-gradient(
+        circle at 72% 22%,
+        color-mix(in oklch, currentColor 30%, transparent) 0 1px,
+        transparent 2px
+      ),
+      radial-gradient(
+        circle at 38% 72%,
+        color-mix(in oklch, currentColor 25%, transparent) 0 1px,
+        transparent 2px
+      ),
+      radial-gradient(
+        circle at 86% 66%,
+        color-mix(in oklch, currentColor 22%, transparent) 0 1px,
+        transparent 2px
+      );
+    animation: hudSpecks 2.6s linear infinite;
+  }
+
+  @keyframes hudSpecks {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-18px, 12px, 0);
+    }
+  }
+
+  /* Signal noise overlay (used for “signal loss”) */
+  .hud-signalNoise {
+    position: absolute;
+    inset: -10%;
+    pointer-events: none;
+    opacity: calc((1 - var(--hud-signal, 1)) * 0.65);
+    background:
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in oklch, currentColor 18%, transparent) 0px,
+        transparent 2px,
+        transparent 6px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklch, currentColor 12%, transparent) 0px,
+        transparent 2px,
+        transparent 10px
+      );
+    mix-blend-mode: overlay;
+    filter: blur(0.4px);
+    animation: sigDrift 0.7s steps(10) infinite;
+  }
+
+  @keyframes sigDrift {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-16px, 10px, 0);
+    }
+  }
+
+  .hud.is-signal-loss {
+    opacity: 0.85;
+  }
+
+  .hud-seg {
+    position: relative;
+    border-radius: 12px;
+    background: transparent;
+    box-shadow: none;
+    overflow: hidden;
+    padding: 10px;
+    min-width: 0;
+  }
+
+  .hud-mediaStats {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .hud-article {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 8px;
+    min-width: 0;
+    transform: translate3d(
+      var(--seg-article-x, 0px),
+      var(--seg-article-y, 0px),
+      0
+    );
+  }
+
+  .hud-sub {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    opacity: 0.65;
+    text-transform: uppercase;
+  }
+
+  .hud-media-wrap {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: transparent;
+    min-height: 140px;
+
+    transform: translate3d(var(--seg-img-x, 0px), var(--seg-img-y, 0px), 0);
+  }
+
+  /* Image depth shimmer tied to --pulse */
+  .hud-mediaStats img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: saturate(1.1) contrast(1.05)
+      brightness(calc(0.92 + (var(--hud-pulse, 0.5) * 0.22)));
+    transform: scale(calc(1.01 + (var(--hud-pulse, 0.5) * 0.01)));
+  }
+
+  .hud-scan {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, currentColor 16%, transparent) 0px,
+      transparent 2px,
+      transparent 6px
+    );
+    mix-blend-mode: overlay;
+    opacity: 0.35;
+    animation: scanDrift 1.1s linear infinite;
+  }
+
+  @keyframes scanDrift {
+    from {
+      transform: translateY(-10px);
+    }
+    to {
+      transform: translateY(10px);
+    }
+  }
+
+  /* Title overlay ON image */
+  .hud-titleOverlay {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklch, currentColor 14%, transparent),
+      color-mix(in oklch, transparent 86%, black)
+    );
+    pointer-events: none;
+  }
+
+  .hud-titleText {
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 700;
+    text-transform: uppercase;
+    transform: translate3d(var(--seg-title-x, 0px), var(--seg-title-y, 0px), 0);
+    text-shadow: 0 0 10px color-mix(in oklch, currentColor 30%, transparent);
+    display: block;
+  }
+
+  /* Chips: smaller + single line */
+  .hud-chips {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    align-items: center;
+    pointer-events: auto;
+
+    transform: translate3d(var(--seg-chips-x, 0px), var(--seg-chips-y, 0px), 0);
+  }
+
+  .hud-chip {
+    display: inline-flex;
+    gap: 6px;
+    align-items: baseline;
+
+    padding: 5px 8px; /* smaller */
+    border-radius: 999px;
+
+    background: transparent;
+    box-shadow: none;
+    text-shadow: 0 0 8px color-mix(in oklch, currentColor 35%, transparent);
+
+    text-decoration: none;
+    color: inherit;
+
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+
+    white-space: nowrap;
+  }
+
+  .hud-chip-k {
+    font-size: 9px; /* smaller */
+    letter-spacing: 0.14em;
+    opacity: 0.72;
+    text-transform: uppercase;
+  }
+
+  .hud-chip-v {
+    font-size: 11px; /* smaller */
+    font-variant-numeric: tabular-nums;
+    opacity: 0.95;
+  }
+
+  .hud-desc {
+    font-size: 12px;
+    line-height: 1.35;
+    opacity: 0.85;
+    text-shadow: 0 0 10px color-mix(in oklch, currentColor 18%, transparent);
+  }
+
+  /* Glyph noise reveal on article text */
+  .hud-article-body {
+    position: relative;
+    overflow: auto;
+
+    padding-right: 18px; /* gives a little room so controls align w/ scrollbar corner */
+    scrollbar-width: thin;
+
+    font-size: 12px;
+    line-height: 1.45;
+    opacity: 0.92;
+    white-space: pre-wrap;
+    text-shadow: 0 0 10px color-mix(in oklch, currentColor 16%, transparent);
+  }
+
+  .hud-article-body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.14;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklch, currentColor 22%, transparent) 0px,
+        transparent 2px,
+        transparent 8px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in oklch, currentColor 12%, transparent) 0px,
+        transparent 2px,
+        transparent 10px
+      );
+    mix-blend-mode: overlay;
+    animation: glyphNoise 1.3s steps(12) infinite;
+  }
+
+  @keyframes glyphNoise {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-14px, 10px, 0);
+    }
+  }
+
+  .hud.is-booting .hud-article-body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in oklch, currentColor 18%, transparent),
+      transparent
+    );
+    opacity: 0.55;
+    transform: translateY(-110%);
+    animation: revealSweep 740ms cubic-bezier(0.2, 0.9, 0.2, 1) 1 forwards;
+  }
+
+  @keyframes revealSweep {
+    to {
+      transform: translateY(110%);
+      opacity: 0;
+    }
+  }
+
+  .hud-article-body::-webkit-scrollbar {
+    width: 8px;
+  }
+  .hud-article-body::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, currentColor 30%, transparent);
+    border-radius: 999px;
+  }
+
+  /* Bottom-right control cluster (OPEN + CLOSE) */
+  .hud-controls {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    pointer-events: auto;
+    z-index: 10;
+  }
+
+  .hud-ctl {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+
+    border: none;
+    background: color-mix(in oklch, transparent 82%, currentColor 10%);
+    color: inherit;
+
+    cursor: pointer;
+    text-decoration: none;
+
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .hud-ctl:hover {
+    background: color-mix(in oklch, transparent 74%, currentColor 12%);
+  }
+
+  .hud-open {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .hud-close {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  /* Boot stagger unchanged */
+  .hud.is-open .hud-seg {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .hud.is-booting .hud-seg {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+    animation: bootIn 520ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  }
+
+  .hud.is-booting .hud-mediaStats {
+    animation-delay: 70ms;
+  }
+  .hud.is-booting .hud-article {
+    animation-delay: 160ms;
+  }
+
+  @keyframes bootIn {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0) scale(0.99);
+      filter: blur(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      filter: blur(0px);
+    }
   }
 </style>
