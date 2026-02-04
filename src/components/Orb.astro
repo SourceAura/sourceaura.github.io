@@ -40,19 +40,18 @@ const {
   radiusSp = 1,
   projectionScale = 0.86,
 
-  maxParticles = 3200,
-  particlesPerFrame = 28,
-
-  particleRad = 1.9,
+  particlesPerFrame = 56,
+  maxParticles = 4800,
+  lockRatio = 0.72,
+  driftVelocity = 0.016,
+  driftJitter = 0.035,
+  particleRad = 2.2,
 
   turnSpeed = (2 * Math.PI) / 1200,
 
   materialStrength = 1.1,
   gammaDark = 0.86,
 
-  lockRatio = 0.62,
-  driftVelocity = 0.012,
-  driftJitter = 0.028,
   gravity = 0,
   damping = 0.985,
 
@@ -267,14 +266,8 @@ const cap = Math.max(1, Math.min(width, height));
       return Math.random() * 2 - 1;
     }
 
-    function makeTangential(i, nx, ny, nz) {
-      const dot = vx[i] * nx + vy[i] * ny + vz[i] * nz;
-      vx[i] -= dot * nx;
-      vy[i] -= dot * ny;
-      vz[i] -= dot * nz;
-    }
-
     function resetParticle(i) {
+      // random point on sphere surface
       const th = Math.random() * Math.PI * 2;
       const ph = Math.acos(Math.random() * 2 - 1);
 
@@ -288,17 +281,27 @@ const cap = Math.max(1, Math.min(width, height));
 
       const scz = sphereCenterZ();
 
+      // start ON the surface
       x[i] = sphereRad * nx;
       y[i] = sphereRad * ny;
       z[i] = scz + sphereRad * nz;
 
+      // keep your "locked specks" behavior exactly as before
       const isLocked = Math.random() < lockRatio;
       locked[i] = isLocked ? 1 : 0;
 
-      vx[i] = isLocked ? 0 : driftVelocity * randn();
-      vy[i] = isLocked ? 0 : driftVelocity * randn();
-      vz[i] = isLocked ? 0 : driftVelocity * randn();
-      if (!isLocked) makeTangential(i, nx, ny, nz);
+      // ✅ CHANGE: emitted particles move OUTWARD from the surface (Test.astro vibe)
+      if (isLocked) {
+        vx[i] = 0;
+        vy[i] = 0;
+        vz[i] = 0;
+      } else {
+        // outward push along normal + tiny randomness so it breathes
+        const base = driftVelocity * (0.85 + Math.random() * 0.35);
+        vx[i] = base * nx + driftVelocity * 0.15 * randn();
+        vy[i] = base * ny + driftVelocity * 0.15 * randn();
+        vz[i] = base * nz + driftVelocity * 0.15 * randn();
+      }
 
       age[i] = 0;
       stuck[i] = (50 + Math.random() * 30) | 0;
@@ -360,20 +363,10 @@ const cap = Math.max(1, Math.min(width, height));
         age[i]++;
 
         if (!locked[i] && age[i] > stuck[i]) {
-          const dx = x[i];
-          const dy = y[i];
-          const dz = z[i] - scz;
-
-          const r = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
-          const nx = dx / r;
-          const ny = dy / r;
-          const nz = dz / r;
-
+          // emitted motion: outward + jitter, no re-projection to the sphere
           vx[i] += driftJitter * randn();
           vy[i] += driftJitter * randn() + gravity;
           vz[i] += driftJitter * randn();
-
-          makeTangential(i, nx, ny, nz);
 
           vx[i] *= damping;
           vy[i] *= damping;
@@ -382,16 +375,6 @@ const cap = Math.max(1, Math.min(width, height));
           x[i] += vx[i];
           y[i] += vy[i];
           z[i] += vz[i];
-
-          const dx2 = x[i];
-          const dy2 = y[i];
-          const dz2 = z[i] - scz;
-          const r2 = Math.sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2) || 1;
-
-          const s2 = sphereRad / r2;
-          x[i] = dx2 * s2;
-          y[i] = dy2 * s2;
-          z[i] = scz + dz2 * s2;
 
           if (
             !Number.isFinite(x[i]) ||

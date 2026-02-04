@@ -1,20 +1,66 @@
 ---
-/*
-Orb:
-Plasma Orb - Petal
-*/
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
   post: CollectionEntry<"petals">;
   type?: "text" | "audio" | "video" | "photo" | "project";
+
+  width?: number;
+  height?: number;
+
+  sphereRad?: number;
+  radiusSp?: number;
+  projectionScale?: number;
+
+  maxParticles?: number;
+  particlesPerFrame?: number;
+
+  particleRad?: number;
+
+  turnSpeed?: number;
+
+  materialStrength?: number;
+  gammaDark?: number;
+
+  lockRatio?: number;
+  driftVelocity?: number;
+  driftJitter?: number;
+  gravity?: number;
+  damping?: number;
+
+  nearPlaneEpsilon?: number;
 }
 
-const { post } = Astro.props;
+const {
+  post,
+  width = 720,
+  height = 416,
+
+  sphereRad = 105,
+  radiusSp = 1,
+  projectionScale = 0.86,
+
+  maxParticles = 3200,
+  particlesPerFrame = 28,
+
+  particleRad = 1.9,
+
+  turnSpeed = (2 * Math.PI) / 1200,
+
+  materialStrength = 1.1,
+  gammaDark = 0.86,
+
+  lockRatio = 0.62,
+  driftVelocity = 0.012,
+  driftJitter = 0.028,
+  gravity = 0,
+  damping = 0.985,
+
+  nearPlaneEpsilon = 24,
+} = Astro.props;
 
 /* Extract first markdown image */
 let imageSrc: string | null = null;
-
 const match = post.body.match(/!\[.*?\]\((.*?)\)/);
 if (match?.[1]) {
   const raw = match[1].trim();
@@ -23,289 +69,426 @@ if (match?.[1]) {
       ? raw
       : `/images/${raw.replace(/^\.?\//, "")}`;
 }
+
+const uid = `orb_${Math.random().toString(16).slice(2)}`;
+const canvasId = `${uid}_canvas`;
+const cap = Math.max(1, Math.min(width, height));
 ---
 
-<article
-  class="orb-card"
-  data-orb
-  data-has-image={imageSrc ? "true" : "false"}
-  data-seed={Math.floor(Math.random() * 1000)}
+<div class="ps-wrap" data-ps-root={uid} style={`max-width:${cap}px;`}>
+  <canvas id={canvasId}></canvas>
+</div>
+
+<script
+  is:inline
+  define:vars={{
+    uid,
+    canvasId,
+    sphereRad,
+    radiusSp,
+    projectionScale,
+    maxParticles,
+    particlesPerFrame,
+    particleRad,
+    turnSpeed,
+    imageSrc,
+    materialStrength,
+    gammaDark,
+    lockRatio,
+    driftVelocity,
+    driftJitter,
+    gravity,
+    damping,
+    nearPlaneEpsilon,
+  }}
 >
-  <div class="orb-surface">
-    <div class="orb-wrap">
-      <svg
-        viewBox="0 0 200 200"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <defs>
-          <!-- Plasma filter -->
-          <filter id="orbFX" x="0%" y="0%" width="100%" height="100%">
-            <!-- 1. Base noise -->
-            <feTurbulence
-              id="orbNoise"
-              type="fractalNoise"
-              baseFrequency="0.015 0.019"
-              numOctaves="2"
-              seed="1"
-              result="noise"></feTurbulence>
+  (() => {
+    window.__orbMounted ??= new Set();
+    if (window.__orbMounted.has(uid)) return;
+    window.__orbMounted.add(uid);
 
-            <!-- 2. Rolling flow: animate baseFrequency, NOT seed -->
-            <animate
-              xlink:href="#orbFX feTurbulence"
-              attributeName="baseFrequency"
-              dur="37s"
-              values="
-                0.014 0.018;
-                0.017 0.021;
-                0.015 0.019;
-                0.018 0.016;
-                0.016 0.020
-              "
-              repeatCount="indefinite"></animate>
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas?.getContext("2d");
+    const wrap = document.querySelector(`[data-ps-root="${uid}"]`);
 
-            <!-- 3. Directional drift -->
-            <feOffset in="SourceGraphic" dx="0" dy="0" result="drifted">
-              <animate
-                attributeName="dx"
-                dur="29s"
-                values="0;6;2;9;4;11;7"
-                repeatCount="indefinite"></animate>
-              <animate
-                attributeName="dy"
-                dur="41s"
-                values="0;3;8;1;10;5;12"
-                repeatCount="indefinite"></animate>
-            </feOffset>
+    if (!canvas || !ctx || !wrap) return;
 
-            <!-- 4. Displace AFTER drift -->
-            <feDisplacementMap
-              in="drifted"
-              in2="noise"
-              scale="38"
-              xChannelSelector="R"
-              yChannelSelector="G"
-              result="warped"></feDisplacementMap>
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-            <!-- 5. Light shaping -->
-            <feColorMatrix
-              in="warped"
-              type="matrix"
-              values="
-                1.04 0    0    0   -0.02
-                0    1.04 0    0   -0.02
-                0    0    1.04 0   -0.02
-                0    0    0    1    0
-              "
-              result="colored"></feColorMatrix>
+    // ---------- Theme cache ----------
+    let cachedMode = "source-over";
+    let isDark = false;
+    let fallbackRGB = "0,0,0";
 
-            <feSpecularLighting
-              in="colored"
-              surfaceScale="1"
-              specularConstant="0.32"
-              specularExponent="22"
-              lighting-color="rgb(var(--orb-glow))"
-              result="light"
-            >
-              <fePointLight x="100" y="100" z="160"></fePointLight>
-            </feSpecularLighting>
+    function refreshRenderStyle() {
+      const rootStyle = getComputedStyle(document.documentElement);
+      const wrapStyle = getComputedStyle(wrap);
 
-            <feComposite in="light" in2="colored" operator="in" result="lit"
-            ></feComposite>
-            <feBlend in="colored" in2="lit" mode="screen"></feBlend>
-          </filter>
+      const c = wrapStyle.color;
+      const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      fallbackRGB = m ? `${m[1]},${m[2]},${m[3]}` : "0,0,0";
 
-          <!-- Orb mask -->
-          <mask id="orbMask">
-            <rect width="100%" height="100%" fill="black"></rect>
-            <circle cx="100" cy="100" r="62" fill="white"></circle>
-          </mask>
+      cachedMode =
+        rootStyle.getPropertyValue("--ps-composite-mode").trim() ||
+        "source-over";
+      isDark = document.documentElement.classList.contains("dark");
+    }
 
-          <!-- Fallback gradient -->
-          <radialGradient id="orbGradient">
-            <stop
-              offset="0%"
-              stop-color="rgb(var(--orb-ink))"
-              stop-opacity="0.18"></stop>
-            <stop
-              offset="55%"
-              stop-color="rgb(var(--orb-ink))"
-              stop-opacity="0.38"></stop>
-            <stop
-              offset="100%"
-              stop-color="rgb(var(--orb-ink))"
-              stop-opacity="var(--orb-bg-opacity)"></stop>
-          </radialGradient>
-        </defs>
+    refreshRenderStyle();
+    const moTheme = new MutationObserver(refreshRenderStyle);
+    moTheme.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "style"],
+    });
 
-        <!-- ALWAYS render fallback -->
-        <g filter="url(#orbFX)" mask="url(#orbMask)">
-          {
-            imageSrc && (
-              <image
-                href={imageSrc}
-                x="38"
-                y="38"
-                width="124"
-                height="124"
-                preserveAspectRatio="xMidYMid slice"
-                onerror="this.remove()"
-              />
-            )
-          }
+    // ---------- Texture ----------
+    let texReady = false;
+    let texW = 0,
+      texH = 0;
+    let texData = null;
 
-          <circle cx="100" cy="100" r="62" fill="url(#orbGradient)"></circle>
-        </g>
-      </svg>
+    function loadTexture(src) {
+      if (!src) return;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.decoding = "async";
+      img.loading = "eager";
+      img.src = src;
 
-      <div class="orb-lens">
-        <svg
-          viewBox="0 0 200 200"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <slot />
-        </svg>
-      </div>
-    </div>
-
-    <script>
-      const root = document.documentElement;
-      let lastScrollY = window.scrollY;
-      let scrollBias = 0;
-
-      function syncOrbTheme() {
-        const isLight = root.classList.contains("light");
-        document.querySelectorAll("[data-orb]").forEach((orb) => {
-          orb.style.setProperty("--orb-energy", isLight ? "0.85" : "1");
-        });
-      }
-
-      syncOrbTheme();
-      new MutationObserver(syncOrbTheme).observe(root, {
-        attributes: true,
-        attributeFilter: ["class"],
-      });
-
-      window.addEventListener(
-        "scroll",
-        () => {
-          const y = window.scrollY;
-          const dy = y - lastScrollY;
-          lastScrollY = y;
-
-          scrollBias += Math.sign(dy) * 0.05;
-          scrollBias *= 0.9;
-
-          root.style.setProperty("--orb-scroll-bias", scrollBias.toFixed(4));
-        },
-        { passive: true },
-      );
-
-      const prefersReduced = matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-
-      if (!prefersReduced) {
-        window.addEventListener(
-          "pointermove",
-          (e) => {
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-
-            document.querySelectorAll("[data-orb]").forEach((orb) => {
-              const r = orb.getBoundingClientRect();
-              const cx = r.left + r.width / 2;
-              const cy = r.top + r.height / 2;
-
-              const dx = (e.clientX - cx) / vw;
-              const dy = (e.clientY - cy) / vh;
-
-              const dist = Math.hypot(dx, dy);
-              const proximity = Math.max(0, 1 - dist * 3.2);
-
-              orb.style.setProperty("--orb-proximity", proximity.toFixed(4));
-            });
-          },
-          { passive: true },
+      img.onload = () => {
+        const maxDim = 340;
+        const scale = Math.min(
+          1,
+          maxDim / Math.max(img.naturalWidth, img.naturalHeight),
         );
-      }
-    </script>
+        texW = Math.max(1, Math.floor(img.naturalWidth * scale));
+        texH = Math.max(1, Math.floor(img.naturalHeight * scale));
 
-    <style>
-      :root {
-        --orb-ink: 255, 255, 255;
-        --orb-glow: 255, 255, 255;
-        --orb-bg-opacity: 0.55;
-      }
+        const tcan = document.createElement("canvas");
+        tcan.width = texW;
+        tcan.height = texH;
+        const tctx = tcan.getContext("2d", { willReadFrequently: true });
+        if (!tctx) return;
 
-      html.light {
-        --orb-ink: 0, 0, 0;
-        --orb-glow: 0, 0, 0;
-        --orb-bg-opacity: 0.45;
-      }
+        tctx.drawImage(img, 0, 0, texW, texH);
+        texData = tctx.getImageData(0, 0, texW, texH).data;
+        texReady = true;
+      };
 
-      /* Image-less or broken-image orbs are always white */
-      .orb-card[data-has-image="false"] {
-        --orb-ink: 255, 255, 255;
-        --orb-glow: 255, 255, 255;
-        --orb-bg-opacity: 0.55;
-      }
+      img.onerror = () => {
+        texReady = false;
+        texData = null;
+      };
+    }
 
-      .orb-card {
-        width: 100%;
-        height: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 50%;
-        pointer-events: none;
-        --orb-proximity: 0;
-        --orb-scroll-bias: 0;
-        --orb-mouse-x: 0;
-        --orb-mouse-y: 0;
+    loadTexture(imageSrc);
 
-        /* per-orb micro variance */
-        /*filter: hue-rotate(calc(attr(data-seed number) * 0.02deg));*/
-      }
+    function sampleTexture(u, v) {
+      if (!texReady || !texData) return null;
 
-      .orb-surface {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-      }
+      u = u - Math.floor(u);
+      v = v < 0 ? 0 : v > 1 ? 1 : v;
 
-      .orb-wrap {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        filter: brightness(var(--orb-energy, 1));
+      const x = Math.floor(u * (texW - 1));
+      const y = Math.floor(v * (texH - 1));
+      const idx = (y * texW + x) * 4;
+
+      let r = texData[idx];
+      let g = texData[idx + 1];
+      let b = texData[idx + 2];
+      const a = texData[idx + 3] / 255;
+
+      if (isDark && gammaDark !== 1) {
+        const inv = 1 / 255;
+        r = Math.round(255 * Math.pow(r * inv, gammaDark));
+        g = Math.round(255 * Math.pow(g * inv, gammaDark));
+        b = Math.round(255 * Math.pow(b * inv, gammaDark));
       }
 
-      .orb-wrap svg {
-        width: 100%;
-        height: 100%;
-        display: block;
+      return { r, g, b, a };
+    }
+
+    // ---------- Square sizing (IMPORTANT: measure layout size, not transformed rect) ----------
+    let S = 256;
+    let dpr = 1;
+    let W = 256,
+      H = 256;
+
+    function resizeToLayoutSquare() {
+      // offsetWidth/clientWidth are NOT affected by 3D transforms
+      const cssW = Math.max(1, wrap.clientWidth || wrap.offsetWidth || 1);
+      const cssH = Math.max(1, wrap.clientHeight || wrap.offsetHeight || 1);
+
+      S = Math.floor(Math.min(cssW, cssH));
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+      const px = Math.floor(S * dpr);
+
+      if (canvas.width !== px || canvas.height !== px) {
+        canvas.width = px;
+        canvas.height = px;
       }
 
-      .orb-lens {
-        position: absolute;
-        inset: 18%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-      }
+      W = S;
+      H = S;
+    }
 
-      .orb-wrap {
-        filter: brightness(calc(0.96 + var(--orb-energy, 1) * 0.06))
-          contrast(1.03) saturate(1.04);
-      }
+    const ro = new ResizeObserver(resizeToLayoutSquare);
+    ro.observe(wrap);
+    resizeToLayoutSquare();
 
-      @media (prefers-reduced-motion: reduce) {
-        svg animate {
-          display: none;
+    // ---------- Projection ----------
+    const fLen = 320;
+    const zMax = fLen - 2;
+    const sphereCenterZ = () => -3 - sphereRad;
+
+    // ---------- Particle pool ----------
+    const N = Math.max(1, maxParticles | 0);
+
+    const x = new Float32Array(N);
+    const y = new Float32Array(N);
+    const z = new Float32Array(N);
+
+    const vx = new Float32Array(N);
+    const vy = new Float32Array(N);
+    const vz = new Float32Array(N);
+
+    const theta = new Float32Array(N);
+    const phi = new Float32Array(N);
+
+    const age = new Uint16Array(N);
+    const stuck = new Uint16Array(N);
+    const locked = new Uint8Array(N);
+    const alive = new Uint8Array(N);
+
+    let writeIndex = 0;
+
+    function randn() {
+      return Math.random() * 2 - 1;
+    }
+
+    function makeTangential(i, nx, ny, nz) {
+      const dot = vx[i] * nx + vy[i] * ny + vz[i] * nz;
+      vx[i] -= dot * nx;
+      vy[i] -= dot * ny;
+      vz[i] -= dot * nz;
+    }
+
+    function resetParticle(i) {
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(Math.random() * 2 - 1);
+
+      theta[i] = th;
+      phi[i] = ph;
+
+      const s = Math.sin(ph);
+      const nx = s * Math.cos(th);
+      const ny = s * Math.sin(th);
+      const nz = Math.cos(ph);
+
+      const scz = sphereCenterZ();
+
+      x[i] = sphereRad * nx;
+      y[i] = sphereRad * ny;
+      z[i] = scz + sphereRad * nz;
+
+      const isLocked = Math.random() < lockRatio;
+      locked[i] = isLocked ? 1 : 0;
+
+      vx[i] = isLocked ? 0 : driftVelocity * randn();
+      vy[i] = isLocked ? 0 : driftVelocity * randn();
+      vz[i] = isLocked ? 0 : driftVelocity * randn();
+      if (!isLocked) makeTangential(i, nx, ny, nz);
+
+      age[i] = 0;
+      stuck[i] = (50 + Math.random() * 30) | 0;
+
+      alive[i] = 1;
+    }
+
+    function spawnSome() {
+      const n = particlesPerFrame | 0;
+      for (let k = 0; k < n; k++) {
+        const i = writeIndex;
+        writeIndex = (writeIndex + 1) % N;
+        resetParticle(i);
+      }
+    }
+
+    for (let i = 0; i < Math.min(N, 1100); i++) resetParticle(i);
+
+    // ---------- Render loop ----------
+    let turnAngle = 0;
+    let raf = 0;
+
+    function beginFrame() {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+
+      ctx.globalCompositeOperation = "source-over";
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.globalCompositeOperation = cachedMode;
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
+    }
+
+    function endFrame() {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
+    }
+
+    function draw() {
+      spawnSome();
+
+      turnAngle = (turnAngle + turnSpeed) % (Math.PI * 2);
+      const sinA = Math.sin(turnAngle);
+      const cosA = Math.cos(turnAngle);
+
+      beginFrame();
+
+      const scz = sphereCenterZ();
+      const inv2pi = 1 / (Math.PI * 2);
+
+      const projCenterX = W / 2;
+      const projCenterY = H / 2;
+
+      for (let i = 0; i < N; i++) {
+        if (!alive[i]) continue;
+
+        age[i]++;
+
+        if (!locked[i] && age[i] > stuck[i]) {
+          const dx = x[i];
+          const dy = y[i];
+          const dz = z[i] - scz;
+
+          const r = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+          const nx = dx / r;
+          const ny = dy / r;
+          const nz = dz / r;
+
+          vx[i] += driftJitter * randn();
+          vy[i] += driftJitter * randn() + gravity;
+          vz[i] += driftJitter * randn();
+
+          makeTangential(i, nx, ny, nz);
+
+          vx[i] *= damping;
+          vy[i] *= damping;
+          vz[i] *= damping;
+
+          x[i] += vx[i];
+          y[i] += vy[i];
+          z[i] += vz[i];
+
+          const dx2 = x[i];
+          const dy2 = y[i];
+          const dz2 = z[i] - scz;
+          const r2 = Math.sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2) || 1;
+
+          const s2 = sphereRad / r2;
+          x[i] = dx2 * s2;
+          y[i] = dy2 * s2;
+          z[i] = scz + dz2 * s2;
+
+          if (
+            !Number.isFinite(x[i]) ||
+            !Number.isFinite(y[i]) ||
+            !Number.isFinite(z[i])
+          ) {
+            resetParticle(i);
+            continue;
+          }
         }
+
+        const rotX = cosA * x[i] + sinA * (z[i] - scz);
+        const rotZ = -sinA * x[i] + cosA * (z[i] - scz) + scz;
+
+        const denom = fLen - rotZ;
+        if (denom < nearPlaneEpsilon || rotZ > zMax) continue;
+
+        const m = (radiusSp * fLen * projectionScale) / denom;
+        if (!(m > 0 && m < 10)) continue;
+
+        const px = rotX * m + projCenterX;
+        const py = y[i] * m + projCenterY;
+        if (px < -2 || px > W + 2 || py < -2 || py > H + 2) continue;
+
+        let depth = 1 - rotZ / -750;
+        depth = depth < 0 ? 0 : depth > 1 ? 1 : depth;
+
+        const u = theta[i] * inv2pi + turnAngle * inv2pi;
+        const v = phi[i] / Math.PI;
+
+        const tex = sampleTexture(u, v);
+
+        let rgb = fallbackRGB;
+        let texA = 1;
+
+        if (tex) {
+          rgb = `${tex.r},${tex.g},${tex.b}`;
+          texA = Math.max(0.5, tex.a);
+        }
+
+        const a = Math.min(1, Math.max(0.1, depth * texA * materialStrength));
+
+        ctx.fillStyle = `rgba(${rgb}, ${a})`;
+        ctx.beginPath();
+        ctx.arc(px, py, m * particleRad, 0, Math.PI * 2);
+        ctx.fill();
       }
-    </style>
-  </div>
-</article>
+
+      endFrame();
+      raf = requestAnimationFrame(draw);
+    }
+
+    if (!reduceMotion) draw();
+
+    window.addEventListener(
+      "astro:before-swap",
+      () => {
+        cancelAnimationFrame(raf);
+        moTheme.disconnect();
+        ro.disconnect();
+        window.__orbMounted.delete(uid);
+      },
+      { once: true },
+    );
+  })();
+</script>
+
+<style>
+  .ps-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+    color: inherit;
+
+    border-radius: 50%;
+    overflow: hidden;
+
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: transparent;
+    border-radius: 50%;
+  }
+
+  :global(html.dark) {
+    --ps-composite-mode: lighter;
+    --ps-glow: off;
+  }
+
+  :global(html.light) {
+    --ps-composite-mode: multiply;
+    --ps-glow: off;
+  }
+</style>

@@ -106,6 +106,7 @@ function formatDate(d: any): string {
   <div class="petal-scanners petal-scanners-back" aria-hidden="true">
     <div class="petal-scan-wrap petal-scan-left petal-scan-outer">
       <div class="petal-scan" data-scan-side="left" data-scan-depth="back">
+        <!-- exactly ONE beam element per side layer -->
         <span class="petal-beam"></span>
       </div>
     </div>
@@ -210,7 +211,7 @@ function formatDate(d: any): string {
   const scanL = document.getElementById("petal-scan-left");
   const scanR = document.getElementById("petal-scan-right");
 
-  // Also grab the BACK beams (outer) by side
+  // Back beams (outer, behind orbs)
   const scanBackLeft = document.querySelector(
     '.petal-scanners-back [data-scan-side="left"]',
   );
@@ -288,8 +289,11 @@ function formatDate(d: any): string {
 
     petalsOpen = false;
     isDragging = false;
-    isPulling = false;
+    isPointerDown = false;
+    didMove = false;
     pullVel = 0;
+
+    cancelLongPress();
     closeHud();
     updatePetalVisibility();
     stop();
@@ -314,7 +318,6 @@ function formatDate(d: any): string {
       if (!petalsOpen) return;
 
       const t = e.target;
-
       if (t && hud && hud.contains(t)) return;
 
       const inPetalSurface =
@@ -340,7 +343,11 @@ function formatDate(d: any): string {
 
   let angle = 0;
   let vel = 0;
+
+  // Drag state
   let isDragging = false;
+  let isPointerDown = false;
+  let didMove = false;
 
   let lastAngle = null;
   let lastActive = -1;
@@ -388,7 +395,7 @@ function formatDate(d: any): string {
   const SIDE_KILL = 43;
   const SIDE_FADE_END = 52;
 
-  // NEW: remember previous side distances so we can detect crossing events
+  // Remember previous side distances so we can detect crossing events
   const lastSideDist = new Array(count).fill(null);
   let scanLToken = 0;
   let scanRToken = 0;
@@ -405,7 +412,7 @@ function formatDate(d: any): string {
       el.classList.add("is-pulsing", mode === "out" ? "is-out" : "is-in");
     }
 
-    // Particles only on the FRONT beam so it reads like “inside the portal”
+    // Particles only on the FRONT beam
     if (front) burstParticles(front, which, mode);
 
     if (front) {
@@ -418,13 +425,9 @@ function formatDate(d: any): string {
     const wrap = scanEl.closest(".petal-scan-wrap");
     if (!wrap) return;
 
-    // How many particles per pulse
     const N = 16;
-
-    // Direction bias: left pulses drift left, right pulses drift right
     const dir = which === "left" ? -1 : 1;
 
-    // Spawn around mid-height with a little randomness
     const h = wrap.clientHeight || 300;
     const baseY = h * (0.5 + (Math.random() - 0.5) * 0.18);
 
@@ -432,24 +435,20 @@ function formatDate(d: any): string {
       const p = document.createElement("i");
       p.className = "petal-particle";
 
-      // Position at the scan line (x=0), at a jittered Y
       const y0 = baseY + (Math.random() - 0.5) * 90;
       p.style.top = `${y0}px`;
       p.style.left = `0px`;
 
-      // Random travel vector
       const spreadX =
         (18 + Math.random() * 48) * dir * (0.75 + Math.random() * 0.5);
       const spreadY = (Math.random() - 0.5) * 80;
 
-      // OUT = explode outward; IN = implode inward (reverse)
       const fromX = mode === "out" ? 0 : spreadX;
       const toX = mode === "out" ? spreadX : 0;
 
       const fromY = mode === "out" ? 0 : spreadY;
       const toY = mode === "out" ? spreadY : 0;
 
-      // Slight per-particle delay so it feels “granular”
       const delay = Math.random() * 90;
 
       wrap.appendChild(p);
@@ -509,6 +508,49 @@ function formatDate(d: any): string {
     return (tmp.innerText || tmp.textContent || "").trim();
   }
 
+  // --- draggable HUD scroll (installed once) ---
+  function enableDragScroll(scroller) {
+    if (!scroller) return;
+    if (scroller.dataset.dragScroll === "1") return;
+    scroller.dataset.dragScroll = "1";
+
+    let down = false;
+    let startY = 0;
+    let startScroll = 0;
+
+    scroller.style.cursor = "grab";
+
+    scroller.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        down = true;
+        startY = e.clientY;
+        startScroll = scroller.scrollTop;
+        scroller.style.cursor = "grabbing";
+        scroller.setPointerCapture?.(e.pointerId);
+      },
+      { passive: true },
+    );
+
+    scroller.addEventListener(
+      "pointermove",
+      (e) => {
+        if (!down) return;
+        const dy = e.clientY - startY;
+        scroller.scrollTop = startScroll - dy;
+      },
+      { passive: true },
+    );
+
+    function end() {
+      down = false;
+      scroller.style.cursor = "grab";
+    }
+    scroller.addEventListener("pointerup", end, { passive: true });
+    scroller.addEventListener("pointercancel", end, { passive: true });
+  }
+
   function setHudDataFromItem(el) {
     if (!el || !hud) return;
 
@@ -543,50 +585,6 @@ function formatDate(d: any): string {
 
     if (hudArticle)
       hudArticle.textContent = articleText || "No article loaded yet.";
-
-    function enableDragScroll(scroller) {
-      if (!scroller) return;
-
-      let down = false;
-      let startY = 0;
-      let startScroll = 0;
-
-      scroller.style.cursor = "grab";
-
-      scroller.addEventListener(
-        "pointerdown",
-        (e) => {
-          // only left mouse / touch
-          if (e.pointerType === "mouse" && e.button !== 0) return;
-
-          down = true;
-          startY = e.clientY;
-          startScroll = scroller.scrollTop;
-          scroller.style.cursor = "grabbing";
-          scroller.setPointerCapture?.(e.pointerId);
-        },
-        { passive: true },
-      );
-
-      scroller.addEventListener(
-        "pointermove",
-        (e) => {
-          if (!down) return;
-          const dy = e.clientY - startY;
-          scroller.scrollTop = startScroll - dy;
-        },
-        { passive: true },
-      );
-
-      function end() {
-        down = false;
-        scroller.style.cursor = "grab";
-      }
-
-      scroller.addEventListener("pointerup", end, { passive: true });
-      scroller.addEventListener("pointercancel", end, { passive: true });
-    }
-
     enableDragScroll(hudArticle);
 
     if (hudImg) {
@@ -674,9 +672,15 @@ function formatDate(d: any): string {
     passive: true,
   });
 
+  // --- Long press (HUD only) + drag initiation (carousel) ---
   let pressTimer = 0;
   let pressStartX = 0;
   let pressStartY = 0;
+
+  function cancelLongPress() {
+    clearTimeout(pressTimer);
+    pressTimer = 0;
+  }
 
   function openHudForIndex(i) {
     const el = items[i];
@@ -698,68 +702,80 @@ function formatDate(d: any): string {
     start();
   }
 
-  function cancelLongPress() {
-    clearTimeout(pressTimer);
-    pressTimer = 0;
-  }
-
-  function armLongPress(el, index) {
-    el.addEventListener(
-      "pointerdown",
-      (e) => {
-        if (e.pointerType === "mouse" && e.button !== 0) return;
-        if (hudOpen) return;
-
-        pressStartX = e.clientX;
-        pressStartY = e.clientY;
-
-        cancelLongPress();
-        pressTimer = window.setTimeout(() => {
-          // Only open if we are NOT dragging
-          if (!isDragging) openHudForIndex(index);
-        }, 420);
-
-        el.setPointerCapture?.(e.pointerId);
-      },
-      { passive: true },
-    );
-
-    el.addEventListener(
-      "pointermove",
-      (e) => {
-        const dx = e.clientX - pressStartX;
-        const dy = e.clientY - pressStartY;
-        if (Math.abs(dx) + Math.abs(dy) > 10) cancelLongPress();
-      },
-      { passive: true },
-    );
-
-    el.addEventListener("pointerup", cancelLongPress, { passive: true });
-    el.addEventListener("pointercancel", cancelLongPress, { passive: true });
-    el.addEventListener(
+  function armSurfaceInteractions(surfaceEl, index) {
+    surfaceEl.addEventListener(
       "pointerdown",
       (e) => {
         if (!petalsOpen) return;
         if (e.pointerType === "mouse" && e.button !== 0) return;
         if (hudOpen) return;
 
-        cancelLongPress(); // ✅ prevents HUD during click/drag
-
-        e.preventDefault();
-        e.stopPropagation();
+        // arm long press
+        isPointerDown = true;
+        didMove = false;
+        pressStartX = e.clientX;
+        pressStartY = e.clientY;
 
         focusedIndex = index;
         snapToIndex(index, false);
-
-        isDragging = true;
-        isPulling = false;
-        pullVel = 0;
-
-        el.setPointerCapture?.(e.pointerId);
         start();
+
+        cancelLongPress();
+        pressTimer = window.setTimeout(() => {
+          // HUD opens only if still down and we did NOT move (no drag)
+          if (isPointerDown && !didMove && !hudOpen) openHudForIndex(index);
+        }, 420);
+
+        surfaceEl.setPointerCapture?.(e.pointerId);
       },
-      { passive: false },
+      { passive: true },
     );
+
+    surfaceEl.addEventListener(
+      "pointermove",
+      (e) => {
+        if (!isPointerDown) return;
+        if (hudOpen) return;
+
+        const dx = e.clientX - pressStartX;
+        const dy = e.clientY - pressStartY;
+
+        if (!didMove && Math.abs(dx) + Math.abs(dy) > 10) {
+          didMove = true;
+          cancelLongPress();
+
+          // now we are officially dragging the carousel
+          isDragging = true;
+          isPulling = false;
+          pullVel = 0;
+        }
+      },
+      { passive: true },
+    );
+
+    function endPointer() {
+      isPointerDown = false;
+      cancelLongPress();
+      isDragging = false;
+      isPulling = false;
+    }
+
+    surfaceEl.addEventListener("pointerup", endPointer, { passive: true });
+    surfaceEl.addEventListener("pointercancel", endPointer, { passive: true });
+
+    surfaceEl.addEventListener("keydown", (e) => {
+      const el = items[index];
+      const href = el?.dataset?.href;
+
+      if (e.key === "Enter" && href) {
+        location.href = href;
+        return;
+      }
+
+      if (e.key === "Escape") {
+        if (hudOpen) closeHud();
+      }
+    });
   }
 
   function applyTransforms() {
@@ -793,13 +809,11 @@ function formatDate(d: any): string {
       const yawTotal = i * step + angle + snapElastic;
       const yaw = normDeg(yawTotal);
 
-      // fade-zone geometry (same as before)
       const d90 = angDist(yaw, 90);
       const d270 = angDist(yaw, 270);
       const sideDist = Math.min(d90, d270);
       const sideVis = smoothstep(SIDE_KILL, SIDE_FADE_END, sideDist);
 
-      // NEW: pulse scanner when we cross the fade boundary
       const prev = lastSideDist[i];
       if (prev !== null) {
         const crossedIntoKill = prev > SIDE_KILL && sideDist <= SIDE_KILL;
@@ -807,7 +821,7 @@ function formatDate(d: any): string {
 
         if (crossedIntoKill || crossedOutOfKill) {
           const which = d270 < d90 ? "left" : "right";
-          const mode = crossedIntoKill ? "out" : "in"; // out = fadeout, in = fadein
+          const mode = crossedIntoKill ? "out" : "in";
           pulseScan(which, mode);
         }
       }
@@ -822,18 +836,10 @@ function formatDate(d: any): string {
       el.style.pointerEvents = sideVis < 0.08 ? "none" : "auto";
       el.style.visibility = sideVis < 0.02 ? "hidden" : "visible";
 
-      // keep faces round
       el.style.setProperty("--item-yaw", `${yawTotal}deg`);
 
-      // (existing) perspective compensation var for orb surface
-      // (existing) perspective compensation var for orb surface
       const PERSPECTIVE = 1200;
-
-      // z is the Z of the item relative to the viewport camera.
-      // Positive z => CSS makes it look bigger. We counter-scale by (P - z)/P.
       const z = Math.cos((yawTotal * Math.PI) / 180) * radius;
-
-      // No clamp. Let it be the real inverse perspective scale.
       const sizeFix = (PERSPECTIVE - z) / PERSPECTIVE;
 
       el.style.setProperty("--size-fix", sizeFix.toFixed(6));
@@ -900,6 +906,7 @@ function formatDate(d: any): string {
     cancelAnimationFrame(rafId);
   }
 
+  // Drag rotate (works once isDragging is set after move threshold)
   shell?.addEventListener(
     "pointermove",
     (e) => {
@@ -920,53 +927,31 @@ function formatDate(d: any): string {
     () => {
       isDragging = false;
       isPulling = false;
+      isPointerDown = false;
+      cancelLongPress();
     },
     { passive: true },
   );
 
+  shell?.addEventListener(
+    "pointercancel",
+    () => {
+      isDragging = false;
+      isPulling = false;
+      isPointerDown = false;
+      cancelLongPress();
+    },
+    { passive: true },
+  );
+
+  // Install per-item interactions
   items.forEach((el) => {
     const index = Number(el.dataset.index);
     const surface = el.querySelector("[data-petal-surface]") || el;
-    armLongPress(surface, index);
-
-    el.addEventListener(
-      "pointerdown",
-      (e) => {
-        if (!petalsOpen) return;
-        if (e.pointerType === "mouse" && e.button !== 0) return;
-        if (hudOpen) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        focusedIndex = index;
-        snapToIndex(index, false);
-
-        isDragging = true;
-        isPulling = false;
-        pullVel = 0;
-
-        el.setPointerCapture?.(e.pointerId);
-        start();
-      },
-      { passive: false },
-    );
-
-    el.addEventListener("keydown", (e) => {
-      const href = el.dataset.href;
-
-      if (e.key === "Enter" && href) {
-        location.href = href;
-        return;
-      }
-
-      if (e.key === "Escape") {
-        if (hudOpen) closeHud();
-      }
-    });
+    armSurfaceInteractions(surface, index);
   });
 
-  // initial state: hidden
+  // initial state
   applyTransforms();
   updatePetalVisibility();
   stop();
