@@ -823,6 +823,12 @@ function formatDate(d: any): string {
           const which = d270 < d90 ? "left" : "right";
           const mode = crossedIntoKill ? "out" : "in";
           pulseScan(which, mode);
+          // Tell the active orb to "disintegrate" when it hits the scanner boundary
+          window.dispatchEvent(
+            new CustomEvent("nelumbo:scan", {
+              detail: { index: i, which, mode },
+            }),
+          );
         }
       }
       lastSideDist[i] = sideDist;

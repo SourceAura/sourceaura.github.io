@@ -114,6 +114,62 @@ const cap = Math.max(1, Math.min(width, height));
 
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // ---------- Pulse (from CSS var --pulse) ----------
+    function getPulse() {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(
+        "--pulse",
+      );
+      const p = Number(v);
+      return Number.isFinite(p) ? Math.max(0, Math.min(1, p)) : 0.5;
+    }
+
+    let lastPulse = getPulse();
+
+    // ---------- Identify which carousel item this orb belongs to ----------
+    const hostItem = wrap.closest?.(".carousel-item");
+    const orbIndex = hostItem ? Number(hostItem.dataset.index) : -1;
+
+    // ---------- Disintegration state ----------
+    let dis = {
+      active: false,
+      t0: 0,
+      dur: 520, // match your scanner pulse timing
+      which: "left",
+      mode: "out", // "out" => disintegrate, "in" => re-form (optional)
+    };
+
+    function disLevel(now) {
+      if (!dis.active) return 0;
+      const t = (now - dis.t0) / dis.dur;
+      if (t >= 1) {
+        dis.active = false;
+        return 0;
+      }
+      // smooth fade curve
+      return t * t * (3 - 2 * t);
+    }
+
+    // Listen for scanner pulses coming from Nelumbo
+    function onScan(ev) {
+      const d = ev?.detail;
+      if (!d) return;
+      if (orbIndex < 0 || d.index !== orbIndex) return;
+
+      // Only disintegrate on OUT (when crossing into the kill zone)
+      if (d.mode === "out") {
+        dis.active = true;
+        dis.t0 = performance.now();
+        dis.which = d.which;
+        dis.mode = d.mode;
+
+        // Kick more particles loose for a crispy "break apart"
+        // (do NOT change your core look; this just temporarily unlocks movement)
+        for (let k = 0; k < Math.min(N, 900); k++) locked[k] = 0;
+      }
+    }
+
+    window.addEventListener("nelumbo:scan", onScan);
+
     // ---------- Theme cache ----------
     let cachedMode = "source-over";
     let isDark = false;
@@ -309,8 +365,15 @@ const cap = Math.max(1, Math.min(width, height));
       alive[i] = 1;
     }
 
-    function spawnSome() {
-      const n = particlesPerFrame | 0;
+    function spawnSome(extra = 0) {
+      // Base emission scales with --pulse (0..1)
+      const p = getPulse();
+
+      // 0.65..1.85 multiplier (tweak to taste)
+      const mult = 0.65 + p * 1.2;
+
+      const n = Math.max(0, ((particlesPerFrame * mult) | 0) + (extra | 0));
+
       for (let k = 0; k < n; k++) {
         const i = writeIndex;
         writeIndex = (writeIndex + 1) % N;
@@ -343,7 +406,15 @@ const cap = Math.max(1, Math.min(width, height));
     }
 
     function draw() {
-      spawnSome();
+      // "Thump" burst when pulse crosses upward (optional but fun)
+      const p = getPulse();
+      const burst = lastPulse < 0.78 && p >= 0.78 ? 18 : 0; // tweak threshold + size
+      lastPulse = p;
+
+      spawnSome(burst);
+
+      const now = performance.now();
+      const dl = disLevel(now); // 0..1 when disintegrating
 
       turnAngle = (turnAngle + turnSpeed) % (Math.PI * 2);
       const sinA = Math.sin(turnAngle);
@@ -361,6 +432,29 @@ const cap = Math.max(1, Math.min(width, height));
         if (!alive[i]) continue;
 
         age[i]++;
+
+        if (dl > 0 && !locked[i]) {
+          // Push outward from sphere surface while fading
+          const dx = x[i];
+          const dy = y[i];
+          const dz = z[i] - scz;
+
+          const r = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+          const nx = dx / r;
+          const ny = dy / r;
+          const nz = dz / r;
+
+          // Outward impulse grows with dl
+          const kick = (0.1 + dl * 0.55) * driftVelocity;
+          vx[i] += nx * kick;
+          vy[i] += ny * kick;
+          vz[i] += nz * kick;
+
+          // Make it “dusty”
+          vx[i] += driftJitter * 2.2 * randn();
+          vy[i] += driftJitter * 2.2 * randn();
+          vz[i] += driftJitter * 2.2 * randn();
+        }
 
         if (!locked[i] && age[i] > stuck[i]) {
           // emitted motion: outward + jitter, no re-projection to the sphere
@@ -415,7 +509,12 @@ const cap = Math.max(1, Math.min(width, height));
           texA = Math.max(0.5, tex.a);
         }
 
-        const a = Math.min(1, Math.max(0.1, depth * texA * materialStrength));
+        // Fade away during disintegration (never changes normal look when dl=0)
+        const fade = dl > 0 ? 1 - dl : 1;
+        const a = Math.min(
+          1,
+          Math.max(0.1, depth * texA * materialStrength * fade),
+        );
 
         ctx.fillStyle = `rgba(${rgb}, ${a})`;
         ctx.beginPath();
@@ -435,6 +534,7 @@ const cap = Math.max(1, Math.min(width, height));
         cancelAnimationFrame(raf);
         moTheme.disconnect();
         ro.disconnect();
+        window.removeEventListener("nelumbo:scan", onScan);
         window.__orbMounted.delete(uid);
       },
       { once: true },
