@@ -1,1 +1,138 @@
-what we need are
+:root {
+  --hud-top-offset: 96px;
+
+  /* Shared size vars so scanners line up with carousel */
+  --nel-vp: clamp(176px, 32vw, 256px);
+  --nel-item: clamp(144px, 26vw, 192px);
+
+  /* Scanner geometry: sit at the viewport edges (fade boundary) */
+  --nel-scan-offset: calc((var(--nel-vp) / 2) - 6px);
+  --nel-scan-h: calc(var(--nel-vp) + 140px);
+}
+
+/* ────────────────────────────────────────────────────────── */
+/* SIDE CARD-SCANNER LINES (pulse when crossing fade)         */
+/* ────────────────────────────────────────────────────────── */
+
+.petal-scanners {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  z-index: 7;
+  pointer-events: none;
+  transform: translate3d(-50%, -50%, 0);
+}
+
+.petal-scan {
+  position: absolute;
+  top: calc(var(--nel-scan-h) * -0.5);
+  height: var(--nel-scan-h);
+  width: 2px;
+
+  /* IMPORTANT: positioning is stored in --scan-x so animation won't wipe it */
+  transform: translate3d(var(--scan-x, 0px), 0, 0);
+
+  opacity: 0;
+  filter: blur(0.1px);
+  mix-blend-mode: screen;
+
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in oklch, currentColor 55%, transparent) 18%,
+    color-mix(in oklch, currentColor 85%, transparent) 50%,
+    color-mix(in oklch, currentColor 55%, transparent) 82%,
+    transparent 100%
+  );
+
+  box-shadow:
+    0 0 10px color-mix(in oklch, currentColor 35%, transparent),
+    0 0 24px color-mix(in oklch, currentColor 20%, transparent);
+
+  overflow: visible;
+}
+
+.petal-scan::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -12%;
+  width: 16px;
+  height: 24%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklch, currentColor 70%, transparent) 0%,
+    transparent 60%
+  );
+
+  opacity: 0;
+  filter: blur(2px);
+}
+
+/* LEFT + RIGHT rails, pinned to viewport sides */
+.petal-scan-left {
+  --scan-x: calc(var(--nel-scan-offset) * -1);
+}
+
+.petal-scan-right {
+  --scan-x: var(--nel-scan-offset);
+}
+
+/* Pulse animation = rail flashes + scan head travels */
+.petal-scan.is-pulsing {
+  opacity: 1;
+  animation: nelScanRail 520ms ease-out both;
+}
+
+.petal-scan.is-pulsing::before {
+  opacity: 1;
+  animation: nelScanHead 520ms ease-out both;
+}
+
+/* KEY: keep translateX(var(--scan-x)) inside keyframes so it never recenters */
+@keyframes nelScanRail {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--scan-x, 0px), 0, 0) scaleY(0.82);
+    filter: blur(0.6px);
+  }
+  12% {
+    opacity: 1;
+    transform: translate3d(var(--scan-x, 0px), 0, 0) scaleY(1);
+    filter: blur(0.25px);
+  }
+  70% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--scan-x, 0px), 0, 0) scaleY(0.92);
+    filter: blur(0.8px);
+  }
+}
+
+@keyframes nelScanHead {
+  0% {
+    opacity: 0;
+    top: -12%;
+    transform: translateX(-50%) scale(0.85);
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.95;
+    top: 44%;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    top: 96%;
+    transform: translateX(-50%) scale(0.9);
+  }
+}

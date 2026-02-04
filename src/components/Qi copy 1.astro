@@ -1,8 +1,5 @@
 <div id="qi-root">
   <canvas id="qi-vis"></canvas>
-
-  <!-- ✅ click target for toggling Nelumbo (does not block the page) -->
-  <button id="qi-core-hit" type="button" aria-label="Toggle petals"></button>
 </div>
 
 <style>
@@ -34,33 +31,10 @@
     height: 100%;
     pointer-events: none;
   }
-
-  /* ✅ Only the core area is interactive */
-  #qi-core-hit {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 144px;
-    height: 144px;
-    transform: translate(-50%, -50%);
-    border-radius: 999px;
-    border: none;
-    background: transparent;
-    opacity: 0;
-    pointer-events: auto;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* ✅ When petals are open, core click is disabled too */
-  body:has(#petal-shell[data-petals-open]) #qi-core-hit {
-    pointer-events: none;
-  }
 </style>
 
 <script>
   const qiRoot = document.getElementById("qi-root");
-  const qiCoreHit = document.getElementById("qi-core-hit");
   const canvas = document.getElementById("qi-vis");
   const ctx = canvas.getContext("2d", { alpha: true });
 
@@ -93,11 +67,11 @@
     return x * x + y * y <= CORE_RADIUS * CORE_RADIUS;
   }
 
-  // ✅ Switch interaction to the dedicated core hit target (no page-blocking)
-  qiCoreHit.addEventListener(
+  qiRoot.addEventListener(
     "pointerdown",
     (e) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (!isInsideQiCore(e)) return;
 
       e.preventDefault();
       e.stopPropagation();

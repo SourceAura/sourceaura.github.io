@@ -72,8 +72,6 @@ if (match?.[1]) {
 
 const uid = `orb_${Math.random().toString(16).slice(2)}`;
 const canvasId = `${uid}_canvas`;
-
-// Use one “cap” value for max size (square)
 const cap = Math.max(1, Math.min(width, height));
 ---
 
@@ -111,7 +109,9 @@ const cap = Math.max(1, Math.min(width, height));
 
     const canvas = document.getElementById(canvasId);
     const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
+    const wrap = document.querySelector(`[data-ps-root="${uid}"]`);
+
+    if (!canvas || !ctx || !wrap) return;
 
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -122,8 +122,7 @@ const cap = Math.max(1, Math.min(width, height));
 
     function refreshRenderStyle() {
       const rootStyle = getComputedStyle(document.documentElement);
-      const wrap = document.querySelector(`[data-ps-root="${uid}"]`);
-      const wrapStyle = wrap ? getComputedStyle(wrap) : rootStyle;
+      const wrapStyle = getComputedStyle(wrap);
 
       const c = wrapStyle.color;
       const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
@@ -209,22 +208,22 @@ const cap = Math.max(1, Math.min(width, height));
       return { r, g, b, a };
     }
 
-    // ---------- Square sizing ----------
+    // ---------- Square sizing (IMPORTANT: measure layout size, not transformed rect) ----------
     let S = 256;
     let dpr = 1;
     let W = 256,
       H = 256;
 
-    function resizeToDisplaySquare() {
-      const rect = canvas.getBoundingClientRect();
-      const cssW = Math.max(1, rect.width);
-      const cssH = Math.max(1, rect.height);
+    function resizeToLayoutSquare() {
+      // offsetWidth/clientWidth are NOT affected by 3D transforms
+      const cssW = Math.max(1, wrap.clientWidth || wrap.offsetWidth || 1);
+      const cssH = Math.max(1, wrap.clientHeight || wrap.offsetHeight || 1);
 
-      // If wrapper is square, cssW ≈ cssH; still safe:
       S = Math.floor(Math.min(cssW, cssH));
       dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
       const px = Math.floor(S * dpr);
+
       if (canvas.width !== px || canvas.height !== px) {
         canvas.width = px;
         canvas.height = px;
@@ -234,9 +233,9 @@ const cap = Math.max(1, Math.min(width, height));
       H = S;
     }
 
-    const ro = new ResizeObserver(resizeToDisplaySquare);
-    ro.observe(canvas);
-    resizeToDisplaySquare();
+    const ro = new ResizeObserver(resizeToLayoutSquare);
+    ro.observe(wrap);
+    resizeToLayoutSquare();
 
     // ---------- Projection ----------
     const fLen = 320;
@@ -463,17 +462,24 @@ const cap = Math.max(1, Math.min(width, height));
 <style>
   .ps-wrap {
     width: 100%;
-    aspect-ratio: 1 / 1; /* ✅ force square box */
+    aspect-ratio: 1 / 1;
     display: grid;
     place-items: center;
     color: inherit;
+
+    border-radius: 50%;
+    overflow: hidden;
+
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   canvas {
     width: 100%;
-    height: 100%; /* ✅ safe now because wrapper is square */
+    height: 100%;
     display: block;
     background: transparent;
+    border-radius: 50%;
   }
 
   :global(html.dark) {
