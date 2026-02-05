@@ -2,13 +2,16 @@
   --hud-top-offset: 96px;
   --nel-beam-gap: 18px;
 
+  --nel-beam-width: 2px; /* beam stroke width */
+  --nel-scan-width: 2px; /* container width */
+
   /* Shared size vars so scanners line up with carousel */
   --nel-vp: clamp(176px, 32vw, 256px);
   --nel-item: clamp(144px, 26vw, 192px);
 
   /* Scanner geometry */
   --nel-scan-offset: calc((var(--nel-vp) / 2) + 111px);
-  --nel-scan-h: calc(var(--nel-vp) + 140px);
+  --nel-scan-h: calc(var(--nel-vp) + 77px);
 }
 
 .carousel-layer,
@@ -267,7 +270,7 @@
   left: 0;
   top: 0;
   height: 100%;
-  width: 2px;
+  width: var(--nel-scan-width, 2px);
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
@@ -289,7 +292,7 @@
 .petal-beam {
   position: absolute;
   inset: 0;
-  width: 2px;
+  width: 1.6px;
   height: 100%;
 
   opacity: var(--beam-opacity);

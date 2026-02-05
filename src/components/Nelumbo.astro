@@ -294,6 +294,7 @@ function formatDate(d: any): string {
     pullVel = 0;
 
     cancelLongPress();
+    cancelIdleSnap();
     closeHud();
     updatePetalVisibility();
     stop();
@@ -308,6 +309,7 @@ function formatDate(d: any): string {
     }
 
     updatePetalVisibility();
+    scheduleIdleSnap();
     start();
   });
 
@@ -425,23 +427,29 @@ function formatDate(d: any): string {
     const wrap = scanEl.closest(".petal-scan-wrap");
     if (!wrap) return;
 
-    const N = 16;
+    // MUCH more particles
+    const N = 64;
+
     const dir = which === "left" ? -1 : 1;
 
     const h = wrap.clientHeight || 300;
     const baseY = h * (0.5 + (Math.random() - 0.5) * 0.18);
 
+    // longer linger than beam anim (beam is ~520ms)
+    const DURATION = 980;
+
     for (let i = 0; i < N; i++) {
       const p = document.createElement("i");
       p.className = "petal-particle";
 
-      const y0 = baseY + (Math.random() - 0.5) * 90;
+      const y0 = baseY + (Math.random() - 0.5) * 120;
       p.style.top = `${y0}px`;
       p.style.left = `0px`;
 
+      // more "burst": wider, punchier spreads
       const spreadX =
-        (18 + Math.random() * 48) * dir * (0.75 + Math.random() * 0.5);
-      const spreadY = (Math.random() - 0.5) * 80;
+        (34 + Math.random() * 86) * dir * (0.85 + Math.random() * 0.55);
+      const spreadY = (Math.random() - 0.5) * 140;
 
       const fromX = mode === "out" ? 0 : spreadX;
       const toX = mode === "out" ? spreadX : 0;
@@ -449,7 +457,12 @@ function formatDate(d: any): string {
       const fromY = mode === "out" ? 0 : spreadY;
       const toY = mode === "out" ? spreadY : 0;
 
-      const delay = Math.random() * 90;
+      // slightly more granular stagger
+      const delay = Math.random() * 160;
+
+      // per-particle flair
+      const spin = (Math.random() * 80 - 40) * dir;
+      const s0 = 0.9 + Math.random() * 0.35;
 
       wrap.appendChild(p);
 
@@ -457,24 +470,30 @@ function formatDate(d: any): string {
         [
           {
             opacity: 0,
-            transform: `translate3d(${fromX}px, ${fromY}px, 0) scale(0.9)`,
-            filter: "blur(0.2px)",
+            transform: `translate3d(${fromX}px, ${fromY}px, 0) scale(${s0}) rotate(${spin * 0.25}deg)`,
+            filter: "blur(0.25px)",
           },
           {
             opacity: 1,
-            transform: `translate3d(${fromX * 0.35}px, ${fromY * 0.35}px, 0) scale(1)`,
-            offset: 0.2,
+            transform: `translate3d(${fromX * 0.2}px, ${fromY * 0.2}px, 0) scale(${s0 * 1.08}) rotate(${spin * 0.6}deg)`,
+            offset: 0.18,
+          },
+          {
+            opacity: 0.85,
+            transform: `translate3d(${toX * 0.78}px, ${toY * 0.78}px, 0) scale(${s0 * 0.55}) rotate(${spin}deg)`,
+            offset: 0.62,
+            filter: "blur(0.65px)",
           },
           {
             opacity: 0,
-            transform: `translate3d(${toX}px, ${toY}px, 0) scale(0.2)`,
-            filter: "blur(0.9px)",
+            transform: `translate3d(${toX}px, ${toY}px, 0) scale(${s0 * 0.25}) rotate(${spin * 1.15}deg)`,
+            filter: "blur(1.1px)",
           },
         ],
         {
-          duration: 520,
+          duration: DURATION,
           delay,
-          easing: "cubic-bezier(0.2, 0.9, 0.2, 1)",
+          easing: "cubic-bezier(0.14, 0.9, 0.18, 1)",
           fill: "forwards",
         },
       );
@@ -702,6 +721,58 @@ function formatDate(d: any): string {
     start();
   }
 
+  // --- idle snap: after 1.6s, pull nearest to center (fluid) ---
+  let idleSnapTimer = 0;
+
+  // --- idle auto-snap ---
+  let idleTimer = 0;
+  const IDLE_SNAP_MS = 1100;
+
+  function bumpIdle() {
+    clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => {
+      if (!petalsOpen) return;
+      if (hudOpen) return;
+      if (isPointerDown || isDragging) return; // don't fight the user
+      snapToNearest(false); // fluid snap
+    }, IDLE_SNAP_MS);
+  }
+
+  function snapToNearest(immediate = false) {
+    // find the index whose yaw is closest to "front/center"
+    // (your "center" is effectively the active index computed from angle)
+    const normalized = ((angle % 360) + 360) % 360;
+    const nearest = ((Math.round(-normalized / step) % count) + count) % count;
+    snapToIndex(nearest, immediate);
+  }
+
+  function cancelIdleSnap() {
+    clearTimeout(idleSnapTimer);
+    idleSnapTimer = 0;
+  }
+
+  function nearestIndexFromAngle() {
+    if (!count) return 0;
+    const normalized = ((angle % 360) + 360) % 360;
+    return ((Math.round(-normalized / step) % count) + count) % count;
+  }
+
+  function scheduleIdleSnap() {
+    if (!petalsOpen) return;
+    cancelIdleSnap();
+
+    idleSnapTimer = window.setTimeout(() => {
+      if (!petalsOpen) return;
+      if (hudOpen) return;
+      if (isPointerDown || isDragging) return;
+
+      const i = nearestIndexFromAngle();
+      focusedIndex = i;
+      snapToIndex(i, false);
+      start();
+    }, 1600);
+  }
+
   function armSurfaceInteractions(surfaceEl, index) {
     surfaceEl.addEventListener(
       "pointerdown",
@@ -710,12 +781,15 @@ function formatDate(d: any): string {
         if (e.pointerType === "mouse" && e.button !== 0) return;
         if (hudOpen) return;
 
+        cancelIdleSnap();
+
         // arm long press
         isPointerDown = true;
         didMove = false;
         pressStartX = e.clientX;
         pressStartY = e.clientY;
 
+        // immediate focus target (feels "magnetic" even before release)
         focusedIndex = index;
         snapToIndex(index, false);
         start();
@@ -743,7 +817,7 @@ function formatDate(d: any): string {
         if (!didMove && Math.abs(dx) + Math.abs(dy) > 10) {
           didMove = true;
           cancelLongPress();
-
+          bumpIdle();
           // now we are officially dragging the carousel
           isDragging = true;
           isPulling = false;
@@ -754,10 +828,19 @@ function formatDate(d: any): string {
     );
 
     function endPointer() {
+      // short click -> ALWAYS snap (fluid) to clicked orb
+      if (petalsOpen && !hudOpen && !didMove) {
+        focusedIndex = index;
+        snapToIndex(index, false);
+        start();
+      }
+
       isPointerDown = false;
       cancelLongPress();
       isDragging = false;
       isPulling = false;
+
+      scheduleIdleSnap();
     }
 
     surfaceEl.addEventListener("pointerup", endPointer, { passive: true });
@@ -923,6 +1006,7 @@ function formatDate(d: any): string {
       vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
       angle += e.movementX * 0.12;
 
+      cancelIdleSnap();
       start();
     },
     { passive: true },
@@ -934,7 +1018,9 @@ function formatDate(d: any): string {
       isDragging = false;
       isPulling = false;
       isPointerDown = false;
+      bumpIdle();
       cancelLongPress();
+      scheduleIdleSnap();
     },
     { passive: true },
   );
@@ -946,6 +1032,7 @@ function formatDate(d: any): string {
       isPulling = false;
       isPointerDown = false;
       cancelLongPress();
+      scheduleIdleSnap();
     },
     { passive: true },
   );
