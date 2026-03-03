@@ -1,0 +1,138 @@
+---
+/*
+LanguageIndicator: displays current detected language with flag
+*/
+---
+
+<div id="language-indicator" class="language-indicator" aria-label="Current language: {language}" title="Current language: {language}">
+  <span class="language-flag">{flag}</span>
+  <span class="language-code">{code}</span>
+</div>
+
+<style>
+  .language-indicator {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    z-index: 3;
+  }
+
+  html.light .language-indicator {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .language-indicator:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 1);
+  }
+
+  html.light .language-indicator:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .language-flag {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .language-code {
+    font-family: ui-monospace, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 640px) {
+    .language-indicator {
+      right: 28px;
+      padding: 3px 6px;
+      font-size: 10px;
+    }
+    
+    .language-flag {
+      font-size: 12px;
+    }
+  }
+</style>
+
+<script>
+  // Language detection and mapping
+  const languages = {
+    'en': { flag: '🇺🇸', code: 'EN', name: 'English' },
+    'es': { flag: '🇪🇸', code: 'ES', name: 'Español' },
+    'fr': { flag: '🇫🇷', code: 'FR', name: 'Français' },
+    'de': { flag: '🇩🇪', code: 'DE', name: 'Deutsch' },
+    'it': { flag: '🇮🇹', code: 'IT', name: 'Italiano' },
+    'pt': { flag: '🇵🇹', code: 'PT', name: 'Português' },
+    'ru': { flag: '🇷🇺', code: 'RU', name: 'Русский' },
+    'ja': { flag: '🇯🇵', code: 'JA', name: '日本語' },
+    'ko': { flag: '🇰🇷', code: 'KO', name: '한국어' },
+    'zh': { flag: '🇨🇳', code: 'ZH', name: '中文' },
+    'zh-CN': { flag: '🇨🇳', code: 'ZH', name: '中文' },
+    'zh-TW': { flag: '🇹🇼', code: 'TW', name: '繁體中文' },
+    'ar': { flag: '🇸🇦', code: 'AR', name: 'العربية' },
+    'hi': { flag: '🇮🇳', code: 'HI', name: 'हिन्दी' },
+    'th': { flag: '🇹🇭', code: 'TH', name: 'ไทย' },
+    'vi': { flag: '🇻🇳', code: 'VI', name: 'Tiếng Việt' },
+    'nl': { flag: '🇳🇱', code: 'NL', name: 'Nederlands' },
+    'pl': { flag: '🇵🇱', code: 'PL', name: 'Polski' },
+    'tr': { flag: '🇹🇷', code: 'TR', name: 'Türkçe' },
+    'sv': { flag: '🇸🇪', code: 'SV', name: 'Svenska' },
+    'da': { flag: '🇩🇰', code: 'DA', name: 'Dansk' },
+    'no': { flag: '🇳🇴', code: 'NO', name: 'Norsk' },
+    'fi': { flag: '🇫🇮', code: 'FI', name: 'Suomi' },
+    'he': { flag: '🇮🇱', code: 'HE', name: 'עברית' }
+  };
+
+  // Detect browser language
+  function detectLanguage() {
+    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    const langCode = browserLang.split('-')[0].toLowerCase();
+    
+    // Try exact match first, then fallback to primary language
+    if (languages[browserLang]) {
+      return languages[browserLang];
+    } else if (languages[langCode]) {
+      return languages[langCode];
+    } else {
+      return languages['en']; // Default to English
+    }
+  }
+
+  // Update language indicator
+  function updateLanguageIndicator() {
+    const indicator = document.getElementById('language-indicator');
+    if (!indicator) return;
+
+    const lang = detectLanguage();
+    
+    indicator.querySelector('.language-flag').textContent = lang.flag;
+    indicator.querySelector('.language-code').textContent = lang.code;
+    indicator.setAttribute('aria-label', `Current language: ${lang.name}`);
+    indicator.setAttribute('title', `Current language: ${lang.name}`);
+  }
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', updateLanguageIndicator);
+  
+  // Update on language change (if implemented)
+  window.addEventListener('languagechange', updateLanguageIndicator);
+</script>

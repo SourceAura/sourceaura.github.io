@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "petals": "Petals",
+    "search": "Search"
+  },
+  "footer": {
+    "backToTop": "Back to top",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "notFound": "Not found",
+    "readMore": "Read more",
+    "close": "Close",
+    "open": "Open",
+    "menu": "Menu",
+    "searchPlaceholder": "Search..."
+  }
+}

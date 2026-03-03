@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "home": "主页",
+    "about": "关于",
+    "petals": "花瓣",
+    "search": "搜索"
+  },
+  "footer": {
+    "backToTop": "返回顶部",
+    "theme": "主题",
+    "language": "语言"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "notFound": "未找到",
+    "readMore": "阅读更多",
+    "close": "关闭",
+    "open": "打开",
+    "menu": "菜单",
+    "searchPlaceholder": "搜索..."
+  }
+}

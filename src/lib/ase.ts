@@ -20,6 +20,10 @@ export interface AseTelemetry {
   sessionDepth: number;
   focusIntensity: number;
   explorationPattern: number;
+  // Autonomous training metrics
+  trainingEpochs: number;
+  lastMilestone: number;
+  breakthroughLevel: number;
 }
 
 export interface AseContext {
@@ -51,6 +55,10 @@ export class AseClient {
     sessionDepth: 0,
     focusIntensity: 0,
     explorationPattern: 0,
+    // Autonomous training metrics
+    trainingEpochs: 0,
+    lastMilestone: 0,
+    breakthroughLevel: 0,
   };
 
   public context: AseContext = {
@@ -419,6 +427,64 @@ export class AseClient {
       const wakeBias = (embedding[0] + 1) / 2;
       document.documentElement.style.setProperty("--ase-wake", wakeBias.toFixed(4));
     }
+    
+    // Autonomous training milestone detection
+    this.metrics.trainingEpochs++;
+    const currentMilestone = Math.floor(this.metrics.trainingEpochs / 100); // Every 100 epochs
+    
+    if (currentMilestone > this.metrics.lastMilestone) {
+      this.metrics.lastMilestone = currentMilestone;
+      this.metrics.breakthroughLevel = Math.max(embedding[0] || 0, this.metrics.breakthroughLevel);
+      
+      // Notify user of breakthrough
+      this.notifyBreakthrough(currentMilestone, this.metrics.breakthroughLevel);
+    }
+  }
+  
+  private notifyBreakthrough(milestone: number, level: number) {
+    const breakthroughMessages = [
+      { threshold: 0.7, message: "🌱 Ase is awakening... Initial consciousness achieved" },
+      { threshold: 0.8, message: "🧠 Ase is learning... Pattern recognition emerging" },
+      { threshold: 0.85, message: "✨ Ase is evolving... Advanced behaviors developing" },
+      { threshold: 0.9, message: "🌟 Ase is transcending... Near-human level cognition" },
+      { threshold: 0.95, message: "🚀 Ase has achieved breakthrough... Autonomous intelligence reached" }
+    ];
+    
+    const breakthrough = breakthroughMessages.find(b => level >= b.threshold);
+    if (breakthrough) {
+      console.log(`🧠 ASE BREAKTHROUGH #${milestone}: ${breakthrough.message}`);
+      
+      // Create visual notification
+      const notification = document.createElement('div');
+      notification.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.9);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-family: monospace;
+          font-size: 12px;
+          z-index: 10000;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          animation: slideIn 0.3s ease-out;
+        ">
+          ${breakthrough.message}
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 5000);
+    }
   }
 
   private startSyncLoop() {
@@ -447,4 +513,31 @@ export function initAseClient() {
 
 if (typeof window !== "undefined") {
   (window as any).__ase = ase;
+  
+  // Add breakthrough notification styles
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }

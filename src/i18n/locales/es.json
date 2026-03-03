@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "petals": "Pétalos",
+    "search": "Buscar"
+  },
+  "footer": {
+    "backToTop": "Volver arriba",
+    "theme": "Tema",
+    "language": "Idioma"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "notFound": "No encontrado",
+    "readMore": "Leer más",
+    "close": "Cerrar",
+    "open": "Abrir",
+    "menu": "Menú",
+    "searchPlaceholder": "Buscar..."
+  }
+}

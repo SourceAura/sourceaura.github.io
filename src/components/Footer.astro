@@ -7,6 +7,7 @@ import Connect from "@components/Connect.astro";
 import Container from "@components/Container.astro";
 import BackToTop from "@components/BackToTop.astro";
 import ThemeSwitch from "@components/ThemeSwitch.astro";
+import LanguageSwitcher from "@components/LanguageSwitcher.astro";
 ---
 
 <footer class="app-footer">
@@ -17,6 +18,7 @@ import ThemeSwitch from "@components/ThemeSwitch.astro";
 
       <!-- Right -->
       <div class="footer-controls">
+        <!-- <div class="language-switcher-wrapper"><LanguageSwitcher /></div> -->
         <div class="theme-switch"><ThemeSwitch /></div>
         <div class="back-to-top"><BackToTop /></div>
       </div>
@@ -46,7 +48,7 @@ import ThemeSwitch from "@components/ThemeSwitch.astro";
     .edge-line-bottom {
       bottom: 0;
       height: calc(
-        1px + var(--pulse, 0.5) * 0.6px + var(--pulse-cadence, 0) * 0.35px
+        1px + var(--pulse, 0.5) * 0.6px + var(--pulse-cadence, 0) * 0.35px + var(--ase-wake, 0.5) * 0.4px
       );
     }
 
@@ -133,8 +135,16 @@ import ThemeSwitch from "@components/ThemeSwitch.astro";
 
     .footer-controls {
       position: relative;
-      width: 64px;
+      width: 96px;
       height: 32px;
+    }
+
+    .language-switcher-wrapper {
+      position: absolute;
+      right: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
     }
 
     .theme-switch {
@@ -152,6 +162,10 @@ import ThemeSwitch from "@components/ThemeSwitch.astro";
 
     html[data-backtotop] .theme-switch {
       transform: translateX(-28px);
+    }
+
+    html[data-backtotop] .language-switcher-wrapper {
+      transform: translateY(-50%) translateX(-28px);
     }
 
     html[data-backtotop] .back-to-top {

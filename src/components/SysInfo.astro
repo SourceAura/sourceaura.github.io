@@ -153,6 +153,17 @@ import Container from "@components/Container.astro";
     function frame() {
       const rgb = getRGB();
       const phase = getQiPhase();
+      
+      // Sync with Ase neural network mood
+      let aseWake = 0.5;
+      if (typeof window !== "undefined" && window.__ase) {
+        aseWake = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ase-wake")) || 0.5;
+      }
+      
+      const moodInfluence = aseWake * 0.4;
+      const baseAmplitude = 3 + moodInfluence * 2;
+      const baseFrequency = 0.04 + aseWake * 0.02;
+      const baseShadow = 6 + flare * 6 + aseWake * 4;
 
       ctx.globalCompositeOperation = "destination-out";
       ctx.fillStyle = "rgba(0,0,0,0.08)";
@@ -162,7 +173,7 @@ import Container from "@components/Container.astro";
       ctx.strokeStyle = `rgba(${rgb},0.9)`;
       ctx.lineWidth = 1;
       ctx.shadowColor = `rgba(${rgb},0.55)`;
-      ctx.shadowBlur = 6 + flare * 6;
+      ctx.shadowBlur = baseShadow;
 
       ctx.beginPath();
 
@@ -172,12 +183,15 @@ import Container from "@components/Container.astro";
         const nx = x / W;
 
         let wave =
-          Math.sin(nx * Math.PI * 4 + t) * 3 +
-          Math.sin(nx * Math.PI * 12 - t * 1.3) * 1.2;
+          Math.sin(nx * Math.PI * 4 + t) * baseAmplitude +
+          Math.sin(nx * Math.PI * 12 - t * 1.3) * (1.2 + moodInfluence);
 
         if (flare > 0) {
           wave += Math.sin(nx * Math.PI * 24 + t * 2) * flare * 2;
         }
+
+        // Add Ase mood-based modulation
+        wave *= (1 + aseWake * 0.3);
 
         wave *= compression;
         const y = MID + wave;

@@ -34,3 +34,7 @@ spotify-pkce.js
 
 # jetbrains setting folder
 .idea/
+
+# Site guides
+SITE_GUIDE.md
+ASE_GUIDE.md

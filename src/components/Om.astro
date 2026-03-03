@@ -47,6 +47,23 @@
     const MIN_MS = 1000 / FPS;
     let lastTick = 0;
 
+    // ── ENHANCED BREATHING PATTERNS ── */
+    let breathingPattern = 'sine'; // 'sine', 'square', 'sawtooth', 'triangle'
+    let breathingSpeed = 1.0; // 0.5 to 2.0
+    let breathHold = 0.3; // 0.1 to 0.8
+    let customPhase = 0;
+
+    // ── ENHANCED VISUAL EFFECTS ── */
+    let particleIntensity = 1.0;
+    let waveAmplitude = 1.0;
+    let colorShift = 0;
+
+    function enhanceVisuals() {
+      particleIntensity = 0.5 + cadenceEnergy * 0.5;
+      waveAmplitude = 0.8 + weatherEnergy * 0.4;
+      colorShift = lunar * 0.1;
+    }
+
     /* ── LUNAR (28-day aesthetic cycle) ── */
     function getLunar28() {
       const msPerDay = 86400000;
@@ -141,7 +158,20 @@
     const intervals = [];
     let lastKeyTime = 0;
 
-    function onKeydown() {
+    function onKeydown(e) {
+      // Enhanced breathing pattern controls
+      if (e.key === 'b') breathingPattern = 'square';
+      if (e.key === 'w') breathingPattern = 'sawtooth';
+      if (e.key === 't') breathingPattern = 'triangle';
+      if (e.key === 's') breathingPattern = 'sine';
+      if (e.key === 'h') enhanceVisuals();
+      if (e.key === 'l') enhanceVisuals(); // Lower intensity
+      if (e.key === '+') breathingSpeed = Math.min(2.0, breathingSpeed + 0.1);
+      if (e.key === '-') breathingSpeed = Math.max(0.5, breathingSpeed - 0.1);
+      if (e.key === ']') breathHold = Math.min(0.8, breathHold + 0.1);
+      if (e.key === '[') breathHold = Math.max(0.1, breathHold - 0.1);
+      
+      // Original cadence logic
       const now = performance.now();
       if (lastKeyTime) {
         const dt = now - lastKeyTime;
@@ -222,19 +252,38 @@
       const calmHz =
         circadianHz + (lunar - 0.5) * 0.1 + (weatherEnergy - 0.12) * 0.18;
 
+      // Apply breathing pattern modulation
+      let modulatedHz = calmHz;
+      if (breathingPattern === 'square') {
+        modulatedHz = calmHz * (0.5 + breathHold * 0.5);
+      } else if (breathingPattern === 'sawtooth') {
+        modulatedHz = calmHz * (0.5 + breathHold * 0.3);
+      } else if (breathingPattern === 'triangle') {
+        modulatedHz = calmHz * (0.5 + breathHold * 0.2);
+      }
+
       const hz = boosted
         ? BOOST_HZ
         : sighing
           ? SIGH_HZ
-          : calmHz * (1 - cadenceEnergy) + cadenceHz * cadenceEnergy;
+          : modulatedHz * breathingSpeed;
 
       phase += dt * hz * Math.PI * 2;
 
-      let pulse = (Math.sin(phase) + 1) / 2;
-      pulse =
-        0.5 +
-        (pulse - 0.5) *
-          (0.96 + lunar * 0.02 + weatherEnergy * 0.01 + cadenceEnergy * 0.03);
+      // Enhanced pulse with breathing pattern
+      let basePulse = (Math.sin(phase) + 1) / 2;
+      
+      // Apply breathing pattern
+      let modulatedPulse = basePulse;
+      if (breathingPattern === 'square') {
+        modulatedPulse = Math.pow(basePulse, 2 - breathHold);
+      } else if (breathingPattern === 'sawtooth') {
+        modulatedPulse = basePulse * (1 - breathHold * 0.5);
+      } else if (breathingPattern === 'triangle') {
+        modulatedPulse = basePulse * (1 - breathHold * 0.3);
+      }
+      
+      pulse = modulatedPulse * breathingSpeed;
 
       let spike = 0;
       if (location.pathname !== lastRoute) {
@@ -249,6 +298,9 @@
         phase.toFixed(4),
         spike.toFixed(2),
         lunar.toFixed(4),
+        particleIntensity.toFixed(4),
+        waveAmplitude.toFixed(4),
+        colorShift.toFixed(4),
       );
 
       // Feed Ase Telemetry (if core is online)
@@ -258,6 +310,23 @@
           cadenceEnergy: cadenceEnergy,
           wakeIntegral: window.__pulse?.__mounted ? 1 : 0,
         });
+      }
+
+      // Sync with Ase neural network mood
+      if (typeof window !== "undefined" && window.__ase) {
+        const aseWake = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ase-wake")) || 0.5;
+        const moodInfluence = aseWake * 0.3; // Ase mood influences pulse
+        
+        // Apply mood to pulse
+        pulse = pulse * (0.7 + moodInfluence);
+        
+        // Apply mood to breathing speed
+        breathingSpeed = breathingSpeed * (0.8 + aseWake * 0.4);
+        
+        // Apply mood to visual intensity
+        particleIntensity = particleIntensity * (0.6 + aseWake * 0.8);
+        waveAmplitude = waveAmplitude * (0.7 + aseWake * 0.6);
+        colorShift = colorShift + aseWake * 0.2;
       }
 
       raf = requestAnimationFrame(loop);
