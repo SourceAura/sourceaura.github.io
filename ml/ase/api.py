@@ -72,3 +72,18 @@ def log_session(session: SessionVector):
         f.write(json.dumps(record) + "\n")
 
     return {"status": "logged"}
+
+
+@app.get("/stats")
+def get_stats():
+    count = 0
+    if LOG_FILE.exists():
+        with LOG_FILE.open("r") as f:
+            count = sum(1 for _ in f)
+    
+    ready_at = 25
+    return {
+        "log_count": count,
+        "training_ready_at": ready_at,
+        "training_ready": count >= ready_at,
+    }
