@@ -40,7 +40,7 @@ const {
   radiusSp = 1,
   projectionScale = 0.86,
 
-  particlesPerFrame = 56,
+  particlesPerFrame = 72,
   maxParticles = 4800,
   lockRatio = 0.72,
   driftVelocity = 0.065,
@@ -199,7 +199,7 @@ const cap = Math.max(1, Math.min(width, height));
       visScore = Number.isFinite(op) ? op : 1;
 
       // Adaptive quality: when an item is mostly faded, reduce internal resolution.
-      const nextCap = visScore < 0.18 ? 2 : 4;
+      const nextCap = visScore < 0.05 ? 2 : 4;
       if (nextCap !== dprCap) {
         dprCap = nextCap;
         resizeToLayoutSquare();
@@ -469,7 +469,7 @@ const cap = Math.max(1, Math.min(width, height));
       updateVisibilityScore(now);
 
       // If the item is basically invisible, render less often.
-      if (visScore <= 0.02) {
+      if (visScore <= 0.01) {
         raf = requestAnimationFrame(draw);
         return;
       }
