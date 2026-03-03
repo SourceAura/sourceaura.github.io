@@ -1,10 +1,15 @@
 ---
 import Container from "./Container.astro";
+import ColorSwatch from "./ColorSwatch.astro";
 ---
+
+<style>
+  @import "/src/styles/dynamic-colors.css";
+</style>
 
 <Container>
   <!-- ================= Enhanced HUD DOM ================= -->
-  <div id="ase-debug" aria-hidden="true">
+  <div id="ase-debug" aria-hidden="false">
     <div class="ase-head">
       <div class="ase-brand">
         <span class="ase-dot"></span>
@@ -46,6 +51,11 @@ import Container from "./Container.astro";
         id="ase-train-now"
         title="Trigger training">🧠</button
       >
+    </div>
+
+    <!-- Dynamic Color Swatch Section -->
+    <div class="ase-color-swatch">
+      <ColorSwatch />
     </div>
 
     <div class="ase-spark">
@@ -241,7 +251,27 @@ import Container from "./Container.astro";
         <span>samples</span><span id="ase-samples">0</span>
       </div>
     </div>
-  </div>
+
+    <!-- Console Log Section -->
+    <div id="ase-s7" class="ase-section">
+      <div class="ase-title">Console</div>
+      <div class="ase-row">
+        <span>logs</span>
+        <div style="display: flex; gap: 0.25rem;">
+          <div id="ase-console-logs" style="font-family: 'Courier New', monospace; font-size: 10px; color: #ff6b35; max-height: 120px; overflow-y: auto; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 4px; flex: 1;">
+            <!-- ColorSwatch logs will appear here -->
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+            <button id="ase-copy-console" style="padding: 2px 6px; font-size: 9px; background: #ff6b35; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap;">
+              📋 Copy
+            </button>
+            <button id="ase-clear-console" style="padding: 2px 6px; font-size: 9px; background: #666; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap;">
+              🗑️ Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   <!-- ================= Ase Client ================= -->
   <script>
@@ -271,7 +301,7 @@ import Container from "./Container.astro";
 
       // ---------- Enhanced toggles ----------
       const state = {
-        hidden: true, // Start hidden by default
+        hidden: false, // Start visible by default
         s1: false,
         s2: false,
         s3: false,
@@ -670,6 +700,97 @@ import Container from "./Container.astro";
       // Initial stats poll
       pollStats();
     }
+
+    // Console functionality
+    const setupConsole = () => {
+      const copyBtn = document.getElementById('ase-copy-console');
+      const clearBtn = document.getElementById('ase-clear-console');
+      const consoleEl = document.getElementById('ase-console-logs');
+      
+      if (copyBtn && consoleEl) {
+        copyBtn.addEventListener('click', () => {
+          const text = consoleEl.innerText;
+          navigator.clipboard.writeText(text).then(() => {
+            copyBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+              copyBtn.textContent = '📋 Copy';
+            }, 2000);
+          }).catch(err => {
+            console.error('Failed to copy:', err);
+          });
+        });
+        
+        // Right-click context menu
+        consoleEl.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          const menu = document.createElement('div');
+          menu.style.cssText = `
+            position: fixed;
+            top: ${e.clientY}px;
+            left: ${e.clientX}px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 8px 0;
+            font-size: 12px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          `;
+          
+          menu.innerHTML = `
+            <div style="cursor: pointer; padding: 4px 8px;" onclick="copySelectedText()">📋 Copy Selected</div>
+            <div style="cursor: pointer; padding: 4px 8px;" onclick="copyAllText()">📄 Copy All</div>
+            <div style="cursor: pointer; padding: 4px 8px;" onclick="clearConsole()">🗑️ Clear Console</div>
+          `;
+          
+          document.body.appendChild(menu);
+          
+          const copySelectedText = () => {
+            const selection = window.getSelection().toString();
+            if (selection) {
+              navigator.clipboard.writeText(selection);
+            }
+            document.body.removeChild(menu);
+          };
+          
+          const copyAllText = () => {
+            navigator.clipboard.writeText(consoleEl.innerText);
+            document.body.removeChild(menu);
+          };
+          
+          const clearConsole = () => {
+            consoleEl.innerHTML = '';
+            document.body.removeChild(menu);
+          };
+          
+          // Close menu when clicking elsewhere
+          const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+              document.body.removeChild(menu);
+              document.removeEventListener('click', closeMenu);
+            }
+          };
+          
+          setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+          }, 100);
+        });
+      }
+      
+      if (clearBtn && consoleEl) {
+        clearBtn.addEventListener('click', () => {
+          consoleEl.innerHTML = '';
+        });
+      }
+    };
+
+    // Initialize console functionality when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupConsole);
+    } else {
+      setupConsole();
+    }
   </script>
 
   <!-- ================= Enhanced Styles ================= -->
@@ -886,6 +1007,20 @@ import Container from "./Container.astro";
     .ase-spark #ase-vector-radar {
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 50%;
+    }
+
+    .ase-color-swatch {
+      padding: 0.5rem;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .ase-color-swatch :global(.color-swatch) {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .ase-section {

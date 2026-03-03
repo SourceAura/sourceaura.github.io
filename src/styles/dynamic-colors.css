@@ -1,0 +1,184 @@
+/* Dynamic Color Swatch Utilities */
+/* These CSS variables are automatically set by the ColorSwatch component */
+/* based on the currently focused Orb's particle colors */
+
+/* Primary dynamic colors (from Orb particles) */
+:root {
+  --dynamic-color-1: #000000;
+  --dynamic-color-2: #ffffff;
+  --dynamic-color-3: #0064c8;
+  --dynamic-color-4: #6400c8;
+  --dynamic-color-5: #ff6b35;
+  --dynamic-color-6: #4ecdc4;
+
+  --dynamic-rgb-1: 0,0,0;
+  --dynamic-rgb-2: 255,255,255;
+  --dynamic-rgb-3: 0,100,200;
+  --dynamic-rgb-4: 100,0,200;
+  --dynamic-rgb-5: 255,107,53;
+  --dynamic-rgb-6: 78,205,196;
+}
+
+/* Usage examples for site highlights */
+.highlight-dynamic-1 {
+  color: var(--dynamic-color-1);
+  background-color: var(--dynamic-rgb-1);
+}
+
+.highlight-dynamic-2 {
+  color: var(--dynamic-color-2);
+  background-color: var(--dynamic-rgb-2);
+}
+
+.highlight-dynamic-3 {
+  color: var(--dynamic-color-3);
+  background-color: var(--dynamic-rgb-3);
+}
+
+.gradient-dynamic {
+  background: linear-gradient(135deg, 
+    var(--dynamic-color-1) 0%, 
+    var(--dynamic-color-3) 50%, 
+    var(--dynamic-color-5) 100%);
+}
+
+.text-glow-dynamic {
+  text-shadow: 0 0 10px var(--dynamic-color-2);
+  color: var(--dynamic-color-1);
+}
+
+.border-dynamic {
+  border-color: var(--dynamic-color-3);
+  box-shadow: 0 0 20px rgba(var(--dynamic-rgb-3), 0.3);
+}
+
+/* Interactive states */
+.button-dynamic {
+  background: var(--dynamic-color-1);
+  color: var(--dynamic-color-2);
+  border: 2px solid var(--dynamic-color-3);
+  transition: all 0.3s ease;
+}
+
+.button-dynamic:hover {
+  background: var(--dynamic-color-3);
+  color: var(--dynamic-color-1);
+  box-shadow: 0 4px 20px rgba(var(--dynamic-rgb-3), 0.4);
+  transform: translateY(-2px);
+}
+
+/* Link styling */
+.link-dynamic {
+  color: var(--dynamic-color-3);
+  text-decoration: none;
+  position: relative;
+}
+
+.link-dynamic::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--dynamic-color-5);
+  transition: width 0.3s ease;
+}
+
+.link-dynamic:hover::after {
+  width: 100%;
+}
+
+/* Card styling */
+.card-dynamic {
+  background: rgba(var(--dynamic-rgb-1), 0.1);
+  border: 1px solid var(--dynamic-color-3);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.card-dynamic:hover {
+  background: rgba(var(--dynamic-rgb-1), 0.2);
+  box-shadow: 0 8px 32px rgba(var(--dynamic-rgb-3), 0.2);
+}
+
+/* Accent elements */
+.accent-dynamic {
+  color: var(--dynamic-color-5);
+  font-weight: 600;
+}
+
+.accent-bg-dynamic {
+  background: rgba(var(--dynamic-rgb-5), 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Selection styling */
+::selection {
+  background: var(--dynamic-color-3);
+  color: var(--dynamic-color-1);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(var(--dynamic-rgb-1), 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dynamic-color-3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dynamic-color-5);
+}
+
+/* Dark mode overrides */
+:global(html.dark) {
+  --dynamic-color-1: #000000;
+  --dynamic-color-2: #ffffff;
+  --dynamic-color-3: #0064c8;
+  --dynamic-color-4: #6400c8;
+  --dynamic-color-5: #ff6b35;
+  --dynamic-color-6: #4ecdc4;
+}
+
+/* Light mode overrides */
+:global(html.light) {
+  --dynamic-color-1: #ffffff;
+  --dynamic-color-2: #000000;
+  --dynamic-color-3: #0096ff;
+  --dynamic-color-4: #9600ff;
+  --dynamic-color-5: #ff6b35;
+  --dynamic-color-6: #4ecdc4;
+}
+
+/* Animation utilities */
+@keyframes glow-dynamic {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(var(--dynamic-rgb-3), 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(var(--dynamic-rgb-5), 0.5);
+  }
+}
+
+.glow-animation-dynamic {
+  animation: glow-dynamic 2s ease-in-out infinite;
+}
+
+/* Focus states */
+.focus-dynamic {
+  outline: 2px solid var(--dynamic-color-5);
+  outline-offset: 2px;
+}
+
+.focus-dynamic:focus {
+  outline-color: var(--dynamic-color-3);
+  box-shadow: 0 0 0 5px rgba(var(--dynamic-rgb-3), 0.5);
+}

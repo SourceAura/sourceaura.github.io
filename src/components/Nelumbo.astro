@@ -1011,6 +1011,7 @@ function formatDate(d: any): string {
     }
 
     focusedIndex = i;
+    window.__focusedIndex = i; // Expose globally for ColorSwatch
     snapToIndex(i, false);
 
     setHudDataFromItem(el);
@@ -1067,6 +1068,7 @@ function formatDate(d: any): string {
 
       const i = nearestIndexFromAngle();
       focusedIndex = i;
+      window.__focusedIndex = i; // Expose globally for ColorSwatch
       snapToIndex(i, false);
       start();
     }, 1600);
@@ -1093,6 +1095,7 @@ function formatDate(d: any): string {
 
         // immediate focus target (feels "magnetic" even before release)
         focusedIndex = index;
+        window.__focusedIndex = index; // Expose globally for ColorSwatch
         snapToIndex(index, false);
         start();
 
@@ -1145,6 +1148,7 @@ function formatDate(d: any): string {
       // short click -> ALWAYS snap (fluid) to clicked orb
       if (petalsOpen && !hudOpen && !didMove) {
         focusedIndex = index;
+        window.__focusedIndex = index; // Expose globally for ColorSwatch
         snapToIndex(index, false);
         snapBoost = 1;
         start();

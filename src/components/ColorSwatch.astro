@@ -1,0 +1,307 @@
+---
+/**
+ * Dynamic Color Swatch - Fixed Version
+ * Extracts colors from focused Orb particles and applies to site highlights
+ */
+const { width = 300, height = 200 } = Astro.props;
+
+const uid = `swatch_${Math.random().toString(16).slice(2)}`;
+const canvasId = `${uid}_canvas`;
+---
+
+<div class="color-swatch" data-swatch-root={uid}>
+  <canvas id={canvasId} width={width} height={height}></canvas>
+  <div class="color-display" id={`${uid}_colors`}></div>
+</div>
+
+<script is:inline define:vars={{ uid, canvasId, width, height }}>
+  (() => {
+    window.__colorSwatchMounted ??= new Set();
+    if (window.__colorSwatchMounted.has(uid)) return;
+    window.__colorSwatchMounted.add(uid);
+
+    // Default theme palettes
+    const defaultPalettes = {
+      dark: [
+        { name: 'Dark Base', rgb: '0,0,0', hex: '#000000' },
+        { name: 'Dark Accent', rgb: '255,255,255', hex: '#ffffff' },
+        { name: 'Dark Blue', rgb: '0,100,200', hex: '#0064c8' },
+        { name: 'Dark Purple', rgb: '100,0,200', hex: '#6400c8' },
+        { name: 'Dark Orange', rgb: '255,107,53', hex: '#ff6b35' },
+        { name: 'Dark Teal', rgb: '78,205,196', hex: '#4ecdc4' }
+      ],
+      light: [
+        { name: 'Light Base', rgb: '255,255,255', hex: '#ffffff' },
+        { name: 'Light Accent', rgb: '0,0,0', hex: '#000000' },
+        { name: 'Light Blue', rgb: '0,150,255', hex: '#0096ff' },
+        { name: 'Light Purple', rgb: '150,0,255', hex: '#9600ff' },
+        { name: 'Light Orange', rgb: '255,107,53', hex: '#ff6b35' },
+        { name: 'Light Teal', rgb: '78,205,196', hex: '#4ecdc4' }
+      ]
+    };
+
+    let currentPalette = defaultPalettes.dark;
+    let isDark = true;
+
+    // Enhanced logging with Ase HUD integration
+    function log(message, data = {}) {
+      const timestamp = new Date().toLocaleTimeString();
+      const logMessage = `[${timestamp}] 🎨 ${message}`;
+      console.log(logMessage, data);
+      
+      // Send to Ase HUD console
+      const aseConsole = document.getElementById('ase-console-logs');
+      if (aseConsole) {
+        aseConsole.innerHTML += `${logMessage}<br>`;
+        aseConsole.scrollTop = aseConsole.scrollHeight;
+      }
+    }
+
+    // Simple and reliable color extraction
+    function extractOrbColors() {
+      try {
+        // Get all Orb canvases
+        const allOrbs = document.querySelectorAll('.orb-canvas');
+        if (allOrbs.length === 0) {
+          log('No Orbs found');
+          return null;
+        }
+
+        // Get focused index from carousel
+        const focusedIndex = window.__focusedIndex;
+        if (focusedIndex === undefined || focusedIndex === null || focusedIndex === -1) {
+          console.log('🎨 ColorSwatch: No focused Orb');
+          return null;
+        }
+
+        const focusedOrb = allOrbs[focusedIndex];
+        if (!focusedOrb) {
+          log('Foused Orb not found at index', focusedIndex);
+          return null;
+        }
+
+        log('Extracting from Orb', { focusedIndex, orbElement: focusedOrb.tagName, hasContext: !!focusedOrb.getContext });
+
+        // Method 1: Try to get computed style color
+        const orbWrap = focusedOrb.closest('.ps-wrap');
+        if (orbWrap) {
+          const computedStyle = getComputedStyle(orbWrap);
+          const color = computedStyle.color;
+          
+          if (color && color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (rgbMatch) {
+              const r = parseInt(rgbMatch[1]);
+              const g = parseInt(rgbMatch[2]);
+              const b = parseInt(rgbMatch[3]);
+              const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+              
+              log('SUCCESS - Extracted from CSS', { r, g, b, hex });
+              
+              return [{
+                name: `Orb Color`,
+                rgb: `${r},${g},${b}`,
+                hex: hex
+              }];
+            }
+          }
+        }
+
+        // Method 2: Fallback to canvas sampling
+        const orbCtx = focusedOrb.getContext('2d');
+        if (orbCtx) {
+          try {
+            // Small center sample
+            const sampleSize = 20;
+            const imageData = orbCtx.getImageData(
+              focusedOrb.width/2 - sampleSize/2, 
+              focusedOrb.height/2 - sampleSize/2, 
+              sampleSize, 
+              sampleSize
+            );
+            
+            const colors = [];
+            const colorMap = new Map();
+            
+            for (let i = 0; i < imageData.data.length; i += 4) {
+              const r = imageData.data[i];
+              const g = imageData.data[i + 1];
+              const b = imageData.data[i + 2];
+              const a = imageData.data[i + 3];
+              
+              if (a > 64) { // Lower threshold for better detection
+                const rgb = `${r},${g},${b}`;
+                const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                
+                if (!colorMap.has(rgb)) {
+                  colorMap.set(rgb, { r, g, b, hex, count: 0 });
+                }
+                colorMap.get(rgb).count++;
+              }
+            }
+            
+            // Get most frequent color
+            if (colorMap.size > 0) {
+              const sortedColors = Array.from(colorMap.values())
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 1);
+              
+              if (sortedColors.length > 0) {
+                const color = sortedColors[0];
+                log('SUCCESS - Extracted from canvas', color);
+                return [{
+                  name: `Orb Color`,
+                  rgb: `${color.r},${color.g},${color.b}`,
+                  hex: color.hex
+                }];
+              }
+            }
+          } catch (e) {
+            log('Canvas sampling failed', e);
+          }
+        }
+
+        log('All extraction methods failed');
+        return null;
+      } catch (e) {
+        log('Critical error', e);
+        return null;
+      }
+    }
+
+    // Update palette display
+    function updateColorDisplay(palette) {
+      const colorDisplay = document.getElementById(`${uid}_colors`);
+      if (!colorDisplay) return;
+      
+      if (!palette || palette.length === 0) {
+        log('No colors to display');
+        return;
+      }
+      
+      const colorHtml = palette.map(color => `
+        <div class="color-item" style="background-color: ${color.hex}">
+          <div class="color-info">
+            <div class="color-value">${color.hex}</div>
+          </div>
+        </div>
+      `).join('');
+      
+      colorDisplay.innerHTML = colorHtml;
+      
+      // Apply colors to CSS variables
+      const root = document.documentElement;
+      palette.forEach((color, index) => {
+        root.style.setProperty(`--dynamic-color-${index + 1}`, color.hex);
+        root.style.setProperty(`--dynamic-rgb-${index + 1}`, color.rgb);
+      });
+      
+      log('Display updated', palette.length, 'colors');
+    }
+
+    // Detect theme changes
+    function updateTheme() {
+      const rootStyle = getComputedStyle(document.documentElement);
+      isDark = rootStyle.color.includes('0, 0, 0') || 
+                 getComputedStyle(document.body).backgroundColor.includes('0, 0, 0');
+      currentPalette = isDark ? defaultPalettes.dark : defaultPalettes.light;
+      updateColorDisplay(currentPalette);
+    }
+
+    // Monitor focused index changes
+    function startFocusMonitoring() {
+      let lastFocusedIndex = window.__focusedIndex;
+      
+      // Check every 200ms for focused index changes
+      const checkInterval = setInterval(() => {
+        const currentFocusedIndex = window.__focusedIndex;
+        
+        if (currentFocusedIndex !== lastFocusedIndex) {
+          log('Focus changed', { from: lastFocusedIndex, to: currentFocusedIndex });
+          
+          lastFocusedIndex = currentFocusedIndex;
+          
+          // Extract colors when focus changes
+          const orbColors = extractOrbColors();
+          if (orbColors && orbColors.length > 0) {
+            currentPalette = orbColors;
+            updateColorDisplay(currentPalette);
+          }
+        }
+      }, 200);
+      
+      // Cleanup on navigation
+      window.addEventListener('astro:before-swap', () => {
+        clearInterval(checkInterval);
+        window.__colorSwatchMounted.delete(uid);
+      }, { once: true });
+    }
+
+    // Initialize
+    updateTheme();
+    startFocusMonitoring();
+
+    log('Initialized and monitoring');
+  })();
+</script>
+
+<style>
+  .color-swatch {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: system-ui;
+    max-width: 300px;
+  }
+
+  .color-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .color-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+  }
+
+  .color-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .color-info {
+    flex: 1;
+    font-size: 0.75rem;
+  }
+
+  .color-value {
+    font-family: 'Courier New', monospace;
+    color: var(--text-color);
+    font-weight: 600;
+  }
+
+  canvas {
+    display: none;
+  }
+
+  /* Dark mode styles */
+  :global(html.dark) .color-swatch {
+    background: #0a0a0a;
+    border-color: #333;
+  }
+
+  :global(html.light) .color-swatch {
+    background: #f8f8f8;
+    border-color: #ddd;
+  }
+</style>
