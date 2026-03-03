@@ -1,0 +1,120 @@
+/* Nelumbo HUD Giscus Theme
+   Loaded inside the Giscus iframe via data-theme URL.
+*/
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: transparent !important;
+}
+
+/* Make all major surfaces transparent */
+.gsc-main,
+.gsc-comment-box,
+.gsc-comments,
+.gsc-comment,
+.gsc-reactions,
+.gsc-timeline,
+.gsc-header,
+.gsc-footer,
+.gsc-loading {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove dividers/borders */
+.gsc-comment-box-separator,
+.gsc-comment-box-tabs,
+.gsc-comment-box-buttons,
+.gsc-comment-box-bottom,
+.gsc-comment-content,
+.gsc-comment-replies,
+.gsc-reactions-bar,
+.gsc-tl-line,
+.gsc-tl-line::before,
+.gsc-tl-line::after {
+  border: none !important;
+}
+
+/* Keep typography consistent */
+body,
+.gsc-main {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+    Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* Input styling: match HUD control vibe */
+.gsc-comment-box-textarea,
+.gsc-comment-box-textarea textarea,
+.gsc-comment-box-textarea .gsc-comment-box-textarea-extras {
+  background: color-mix(in oklab, transparent 82%, white 10%) !important;
+  border: 1px solid color-mix(in oklab, transparent 78%, white 14%) !important;
+  border-radius: 12px !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(10px);
+}
+
+.gsc-comment-box-textarea textarea {
+  box-shadow: none !important;
+}
+
+.gsc-comment-box-textarea textarea::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+/* Buttons: rounded, subtle glass */
+.gsc-comment-box-buttons button,
+.gsc-comment-box-buttons .btn,
+.gsc-comment-box-buttons .Button,
+.gsc-comment-box-buttons .btn-primary,
+.gsc-comment-box-buttons .btn-danger,
+.gsc-comment-box-buttons .btn-outline,
+.gsc-comment-box-buttons .gsc-comment-box-markdown button,
+.gsc-comment-box-buttons .gsc-comment-box-preview button {
+  background: color-mix(in oklab, transparent 82%, white 10%) !important;
+  border: 1px solid color-mix(in oklab, transparent 78%, white 14%) !important;
+  border-radius: 10px !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: none !important;
+}
+
+.gsc-comment-box-buttons button:hover,
+.gsc-comment-box-buttons .btn:hover,
+.gsc-comment-box-buttons .Button:hover {
+  background: color-mix(in oklab, transparent 74%, white 12%) !important;
+}
+
+/* Comment cards: keep extremely minimal so the HUD frame provides the shape */
+.gsc-comment {
+  background: transparent !important;
+}
+
+.gsc-comment-content {
+  background: color-mix(in oklab, transparent 90%, white 6%) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+
+/* Links and accents */
+.gsc-comment a,
+.gsc-reactions a,
+.gsc-timeline a {
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-decoration: none !important;
+}
+
+.gsc-comment a:hover,
+.gsc-reactions a:hover,
+.gsc-timeline a:hover {
+  text-decoration: underline !important;
+}
+
+/* Hide any outer chrome that feels redundant in HUD */
+.gsc-header,
+.gsc-footer {
+  display: none !important;
+}
