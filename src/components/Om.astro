@@ -251,6 +251,15 @@
         lunar.toFixed(4),
       );
 
+      // Feed Ase Telemetry (if core is online)
+      if (typeof window !== "undefined" && window.__ase) {
+        window.__ase.updateSystemMetrics({
+          idleRatio: 1 - decay,
+          cadenceEnergy: cadenceEnergy,
+          wakeIntegral: window.__pulse?.__mounted ? 1 : 0,
+        });
+      }
+
       raf = requestAnimationFrame(loop);
     }
 

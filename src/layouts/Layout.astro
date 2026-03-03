@@ -36,12 +36,10 @@ const { title, description, prev, next } = Astro.props
       </script>
     ) : null}
 
-    <!-- ✅ Ase bootstrap (browser-only, guaranteed) -->
-    <script is:inline type="module">
-      import { initAseClient } from "/src/lib/ase-client.js";
-
-      console.log("[ASE] bootstrap starting");
-      initAseClient();
+    <!-- ✅ Ase bootstrap (bundled for reliability) -->
+    <script>
+      import "../lib/ase";
+      console.log("[ASE] bootstrap active");
     </script>
 
     <!-- Existing gesture script (unchanged) -->
@@ -189,4 +187,6 @@ html.light #ase-debug {
 </style>
 
 
-<div id="ase-debug"></div>
+{import.meta.env.DEV && (
+  <div id="ase-debug"></div>
+)}

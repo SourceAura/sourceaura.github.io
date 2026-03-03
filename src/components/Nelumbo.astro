@@ -176,11 +176,21 @@ function formatDate(d: any): string {
       </div>
 
       <div class="hud-controls" aria-label="HUD controls">
+        <button
+          class="hud-ctl hud-copy"
+          id="hud-copy"
+          type="button"
+          aria-label="Copy post link"
+          title="Copy Link (Terminal Command)"
+        >
+          <span class="icon">⧉</span>
+        </button>
         <a
           class="hud-ctl hud-open"
           data-hud-link
           href="#"
           aria-label="Open post"
+          title="Access Entry"
         >
           ↗
         </a>
@@ -229,6 +239,20 @@ function formatDate(d: any): string {
   const hudDate = hud?.querySelector("[data-hud-date]");
   const hudRT = hud?.querySelector("[data-hud-rt]");
   const hudLink = hud?.querySelector("[data-hud-link]");
+  const hudCopy = document.getElementById("hud-copy");
+
+  const ARTIFACT_KEYWORDS = [
+    "Materia",
+    "Qi",
+    "Rose",
+    "Lotus",
+    "Nelumbo",
+    "Euthymia",
+    "Ase",
+    "SourceAura",
+    "Tiphereth",
+    "Binah",
+  ];
 
   const count = items.length;
   const step = count ? 360 / count : 360;
@@ -277,6 +301,30 @@ function formatDate(d: any): string {
     e.preventDefault();
     e.stopPropagation();
     closeHud();
+  });
+
+  hudCopy?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const link = hudLink?.getAttribute("href");
+    if (!link) return;
+
+    try {
+      const fullUrl = new URL(link, window.location.origin).href;
+      await navigator.clipboard.writeText(fullUrl);
+
+      const original = hudCopy.innerHTML;
+      hudCopy.innerHTML = '<span class="icon">✓</span>';
+      hudCopy.classList.add("is-success");
+
+      setTimeout(() => {
+        hudCopy.innerHTML = original;
+        hudCopy.classList.remove("is-success");
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   });
 
   window.addEventListener("keydown", (e) => {
@@ -521,6 +569,50 @@ function formatDate(d: any): string {
     start();
   }
 
+  function scrambleText(el, targetText, duration = 800) {
+    if (!el) return;
+    const chars = "!<>-_\\/[]{}—=+*^?#________";
+    let frame = 0;
+    const totalFrames = Math.floor((duration / 1000) * 60);
+
+    const tickScramble = () => {
+      frame++;
+      const progress = frame / totalFrames;
+      const length = targetText.length;
+
+      let result = "";
+      for (let i = 0; i < length; i++) {
+        if (progress > i / length + Math.random() * 0.1) {
+          result += targetText[i];
+        } else {
+          result += chars[Math.floor(Math.random() * chars.length)];
+        }
+      }
+
+      el.textContent = result;
+
+      if (frame < totalFrames) {
+        requestAnimationFrame(tickScramble);
+      } else {
+        el.textContent = targetText;
+      }
+    };
+
+    requestAnimationFrame(tickScramble);
+  }
+
+  function highlightKeywords(text) {
+    let result = text;
+    ARTIFACT_KEYWORDS.forEach((word) => {
+      const regex = new RegExp(`\\b(${word})\\b`, "gi");
+      result = result.replace(
+        regex,
+        `<span class="artifact-keyword">$1</span>`,
+      );
+    });
+    return result;
+  }
+
   function stripToText(html = "") {
     const tmp = document.createElement("div");
     tmp.innerHTML = String(html);
@@ -592,8 +684,8 @@ function formatDate(d: any): string {
 
     const img = el.getAttribute("data-img") || "";
 
-    if (hudTitle) hudTitle.textContent = title;
-    if (hudDesc) hudDesc.textContent = desc;
+    if (hudTitle) scrambleText(hudTitle, title);
+    if (hudDesc) scrambleText(hudDesc, desc, 1200);
     if (hudDate) hudDate.textContent = date;
     if (hudRT) hudRT.textContent = rt;
 
@@ -602,8 +694,12 @@ function formatDate(d: any): string {
       hudLink.setAttribute("aria-label", `Open ${title}`);
     }
 
-    if (hudArticle)
-      hudArticle.textContent = articleText || "No article loaded yet.";
+    if (hudArticle) {
+      const highlighted = highlightKeywords(
+        articleText || "No article loaded yet.",
+      );
+      hudArticle.innerHTML = highlighted;
+    }
     enableDragScroll(hudArticle);
 
     if (hudImg) {

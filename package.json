@@ -3,8 +3,10 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "start": "astro dev",
+    "ml:start": "cd ml/ase && ./.venv/bin/python3 -m uvicorn api:app --port 8000",
+    "dev:all": "bun run dev & bun run ml:start",
     "build": "astro build && pagefind --site dist",
     "dev:search": "astro build && pagefind --site dist && astro dev",
     "postbuild": "pagefind --site dist",

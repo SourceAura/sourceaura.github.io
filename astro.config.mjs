@@ -18,7 +18,14 @@ export default defineConfig({
  site: "https://sourceaura.vercel.app",
  devToolbar: {
      enabled: false,
-   },
+  },
+  vite: {
+    server: {
+      watch: {
+        ignored: ['**/ml/**']
+      }
+    }
+  },
   integrations: [
     tailwind(),
     icon(),
