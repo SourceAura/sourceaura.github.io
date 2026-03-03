@@ -1,0 +1,579 @@
+---
+import Container from "./Container.astro";
+---
+
+<Container>
+  <!-- ================= HUD DOM ================= -->
+  <div id="ase-debug" aria-hidden="true">
+    <div class="ase-head">
+      <div class="ase-brand">
+        <span class="ase-dot"></span>
+        <span class="ase-name">Ase</span>
+        <span id="ase-mood" class="ase-mood">…</span>
+      </div>
+
+      <div class="ase-controls">
+        <button class="ase-btn" data-ase-toggle="all" title="Toggle HUD (H)"
+          >H</button
+        >
+        <button class="ase-btn" data-ase-toggle="s1" title="Toggle Session (1)"
+          >1</button
+        >
+        <button class="ase-btn" data-ase-toggle="s2" title="Toggle Activity (2)"
+          >2</button
+        >
+        <button class="ase-btn" data-ase-toggle="s3" title="Toggle Energy (3)"
+          >3</button
+        >
+        <button class="ase-btn" data-ase-toggle="s4" title="Toggle Vector (4)"
+          >4</button
+        >
+        <button
+          class="ase-btn ase-btn-danger"
+          id="ase-log-now"
+          title="End session & log">⏹</button
+        >
+      </div>
+    </div>
+
+    <div class="ase-spark">
+      <canvas id="ase-spark" width="260" height="34"></canvas>
+    </div>
+
+    <div id="ase-s1" class="ase-section">
+      <div class="ase-title">Session</div>
+      <div class="ase-row">
+        <span title="Session elapsed time">time</span><span
+          id="ase-time"
+          title="Session elapsed time">0.0s</span
+        >
+      </div>
+      <div class="ase-row">
+        <span title="Total interactions">interactions</span><span
+          id="ase-int"
+          title="Total interactions">0</span
+        >
+      </div>
+      <div class="ase-row">
+        <span title="Interaction rate per second">int/sec</span><span
+          id="ase-rate"
+          title="Interaction rate per second">0.00</span
+        >
+      </div>
+      <div class="ase-row">
+        <span title="Idle time in seconds">idle (s)</span><span
+          id="ase-idle-s"
+          title="Idle time in seconds">0.0</span
+        >
+      </div>
+
+      <div class="ase-row">
+        <span title="Age since last inference">last infer age</span><span
+          id="ase-infer-age"
+          title="Age since last inference">—</span
+        >
+      </div>
+      <div class="ase-row">
+        <span title="Inference status">infer status</span><span
+          id="ase-infer-status"
+          title="Inference status">unknown</span
+        >
+      </div>
+
+      <div class="ase-row">
+        <span title="Training readiness status">training ready</span><span
+          id="ase-training"
+          title="Training readiness status">checking…</span
+        >
+      </div>
+    </div>
+
+    <div id="ase-s2" class="ase-section">
+      <div class="ase-title">Activity</div>
+      <div class="ase-row">
+        <span>scroll vel</span><span id="ase-scroll">0.000</span>
+      </div>
+      <div class="ase-bar">
+        <div class="ase-fill" id="ase-bar-scroll"></div>
+      </div>
+
+      <div class="ase-row">
+        <span>idle ratio</span><span id="ase-idle">0.00</span>
+      </div>
+      <div class="ase-bar"><div class="ase-fill" id="ase-bar-idle"></div></div>
+
+      <div class="ase-row">
+        <span>activity</span><span id="ase-activity">0.00</span>
+      </div>
+      <div class="ase-bar">
+        <div class="ase-fill" id="ase-bar-activity"></div>
+      </div>
+
+      <div class="ase-row">
+        <span>activity stability</span><span id="ase-stab-activity">—</span>
+      </div>
+      <div class="ase-meter">
+        <div class="ase-meter-fill" id="ase-meter-activity"></div>
+      </div>
+    </div>
+
+    <div id="ase-s3" class="ase-section">
+      <div class="ase-title">Energy</div>
+      <div class="ase-row">
+        <span>ase-wake</span><span id="ase-wake">0.500</span>
+      </div>
+      <div class="ase-bar"><div class="ase-fill" id="ase-bar-wake"></div></div>
+
+      <div class="ase-row">
+        <span>cadence</span><span id="ase-cadence">0.00</span>
+      </div>
+      <div class="ase-bar">
+        <div class="ase-fill" id="ase-bar-cadence"></div>
+      </div>
+
+      <div class="ase-row">
+        <span>wake stability</span><span id="ase-stab-wake">—</span>
+      </div>
+      <div class="ase-meter">
+        <div class="ase-meter-fill" id="ase-meter-wake"></div>
+      </div>
+    </div>
+
+    <div id="ase-s4" class="ase-section">
+      <div class="ase-title">Vector</div>
+      <div class="ase-grid">
+        {
+          Array.from({ length: 8 }).map((_, i) => (
+            <div class="ase-kv">
+              <span>v{i}</span>
+              <span id={`ase-v${i}`}>0.00</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Ase Client ================= -->
+  <script>
+    import { initAseClient } from "../lib/ase";
+    initAseClient();
+  </script>
+
+  <!-- ================= HUD LIFE LOGIC ================= -->
+  <script>
+    (function waitForAse() {
+      const s = window.__ase;
+      if (!s) return requestAnimationFrame(waitForAse);
+      startHud(s);
+    })();
+
+    function startHud(s) {
+      const $ = (id) => document.getElementById(id);
+      const clamp01 = (v) => Math.max(0, Math.min(1, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+
+      const hud = $("ase-debug");
+      const moodEl = $("ase-mood");
+      const spark = $("ase-spark");
+      const ctx = spark ? spark.getContext("2d") : null;
+
+      // ---------- toggles ----------
+      const state = { hidden: false, s1: true, s2: true, s3: true, s4: true };
+      const apply = () => {
+        hud.style.display = state.hidden ? "none" : "";
+        ["s1", "s2", "s3", "s4"].forEach((k) => {
+          const sec = $(`ase-${k}`);
+          if (sec) sec.style.display = state[k] ? "" : "none";
+        });
+      };
+
+      const bindToggle = (key) => {
+        const btn = hud.querySelector(`[data-ase-toggle="${key}"]`);
+        if (!btn) return;
+        btn.addEventListener("click", () => {
+          if (key === "all") state.hidden = !state.hidden;
+          else state[key] = !state[key];
+          apply();
+        });
+      };
+      bindToggle("all");
+      bindToggle("s1");
+      bindToggle("s2");
+      bindToggle("s3");
+      bindToggle("s4");
+      apply();
+
+      // keyboard shortcuts (H, 1-4)
+      window.addEventListener("keydown", (e) => {
+        const tag = document.activeElement?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+        if (e.key === "h" || e.key === "H") {
+          state.hidden = !state.hidden;
+          apply();
+        }
+        if (["1", "2", "3", "4"].includes(e.key)) {
+          const k = `s${e.key}`;
+          state[k] = !state[k];
+          apply();
+        }
+      });
+
+      // manual log
+      const logBtn = $("ase-log-now");
+      if (logBtn) {
+        logBtn.addEventListener("click", () => {
+          if (window.__ase && window.__ase.logSession) {
+            window.__ase.logSession();
+            logBtn.textContent = "✓";
+            logBtn.disabled = true;
+          }
+        });
+      }
+
+      // ---------- sparkline ----------
+      const HISTORY = 60;
+      const wakeHist = [];
+      let smoothWake = 0.5;
+
+      function drawSpark() {
+        if (!ctx || wakeHist.length < 2) return;
+        const w = spark.width,
+          h = spark.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.beginPath();
+        for (let i = 0; i < wakeHist.length; i++) {
+          const x = (i / (HISTORY - 1)) * w;
+          const y = h - clamp01(wakeHist[i]) * (h - 2) - 1;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = "rgba(170,135,255,0.95)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // ---------- stability meters ----------
+      const actHist = [];
+      const DELTA_WIN = 24;
+
+      function stabilityScore(hist) {
+        if (hist.length < 3) return 0.5;
+        let sum = 0;
+        let n = 0;
+        for (let i = 1; i < hist.length; i++) {
+          sum += Math.abs(hist[i] - hist[i - 1]);
+          n++;
+        }
+        const meanDelta = n ? sum / n : 0;
+        // map: smaller delta => more stable (score closer to 1)
+        return clamp01(1 - meanDelta * 2.2);
+      }
+
+      function setMeter(idFill, idLabel, score) {
+        const fill = $(idFill);
+        const lbl = $(idLabel);
+        if (fill) fill.style.width = `${clamp01(score) * 100}%`;
+        if (lbl) {
+          const pct = Math.round(score * 100);
+          lbl.textContent =
+            pct >= 80
+              ? `stable ${pct}%`
+              : pct >= 55
+                ? `ok ${pct}%`
+                : `volatile ${pct}%`;
+        }
+      }
+
+      // ---------- training ready (poll /stats) ----------
+      let lastStatsAt = 0;
+
+      async function pollStats() {
+        try {
+          const res = await fetch("http://127.0.0.1:8000/stats", {
+            method: "GET",
+          });
+          const data = await res.json();
+
+          const count = data.log_count ?? 0;
+          const readyAt = data.training_ready_at ?? 25;
+          const ready = !!data.training_ready;
+
+          const el = $("ase-training");
+          if (el) {
+            el.textContent = ready
+              ? `YES (${count}/${readyAt})`
+              : `no (${count}/${readyAt})`;
+          }
+        } catch {
+          const el = $("ase-training");
+          if (el) el.textContent = "offline";
+        }
+      }
+
+      // ---------- main loop ----------
+      setInterval(() => {
+        if (!s) return;
+        const now = Date.now();
+        const t = (now - s.startTime) / 1000;
+
+        const scrollVel = s.metrics.scrollVelocity;
+        const idleRatio = s.metrics.idleRatio;
+        const interactRate = s.metrics.interactionCount / Math.max(t, 1);
+
+        const wakeRaw =
+          parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue(
+              "--ase-wake",
+            ),
+          ) || 0.5;
+
+        smoothWake = lerp(smoothWake, wakeRaw, 0.18);
+
+        const scrollN = clamp01(scrollVel * 40);
+        const idleN = clamp01(idleRatio);
+        const interactN = clamp01(s.metrics.interactionCount / 40);
+        const timeN = clamp01(t / 300);
+        const cadenceN = clamp01(s.metrics.cadenceEnergy / 100);
+        const activityN = clamp01(scrollN * 0.55 + interactN * 0.45);
+
+        // basic fields
+        $("ase-time").textContent = `${t.toFixed(1)}s`;
+        $("ase-int").textContent = s.metrics.interactionCount;
+        $("ase-rate").textContent = interactRate.toFixed(2);
+        $("ase-idle-s").textContent = (s.metrics.idleTime / 1000).toFixed(1);
+
+        $("ase-scroll").textContent = scrollVel.toFixed(3);
+        $("ase-idle").textContent = idleN.toFixed(2);
+        $("ase-activity").textContent = activityN.toFixed(2);
+
+        $("ase-wake").textContent = smoothWake.toFixed(3);
+        $("ase-cadence").textContent = cadenceN.toFixed(2);
+
+        $("ase-bar-scroll").style.width = `${scrollN * 100}%`;
+        $("ase-bar-idle").style.width = `${idleN * 100}%`;
+        $("ase-bar-activity").style.width = `${activityN * 100}%`;
+        $("ase-bar-wake").style.width = `${smoothWake * 100}%`;
+        $("ase-bar-cadence").style.width = `${cadenceN * 100}%`;
+
+        // vector
+        const vec = [scrollN, idleN, 0, 0, interactN, timeN, timeN, cadenceN];
+        for (let i = 0; i < 8; i++) {
+          const vEl = $(`ase-v${i}`);
+          if (vEl) vEl.textContent = vec[i].toFixed(2);
+        }
+
+        // mood
+        if (moodEl) {
+          moodEl.textContent =
+            smoothWake > 0.65
+              ? "Focused"
+              : idleN > 0.6
+                ? "Idle"
+                : activityN > 0.5
+                  ? "Exploring"
+                  : "Calm";
+        }
+
+        // sparkline history
+        wakeHist.push(smoothWake);
+        if (wakeHist.length > HISTORY) wakeHist.shift();
+        drawSpark();
+
+        // stability history
+        actHist.push(activityN);
+        if (actHist.length > DELTA_WIN) actHist.shift();
+
+        const wakeWin = wakeHist.slice(
+          Math.max(0, wakeHist.length - DELTA_WIN),
+        );
+        const stabWake = stabilityScore(wakeWin);
+        const stabAct = stabilityScore(actHist);
+
+        setMeter("ase-meter-wake", "ase-stab-wake", stabWake);
+        setMeter("ase-meter-activity", "ase-stab-activity", stabAct);
+
+        // last infer age
+        const ageEl = $("ase-infer-age");
+        const stEl = $("ase-infer-status");
+        if (ageEl && stEl) {
+          const ts = s.lastUpdate;
+          if (!ts) {
+            ageEl.textContent = "—";
+            stEl.textContent = "waiting";
+          } else {
+            const ageS = (Date.now() - ts) / 1000;
+            ageEl.textContent = `${ageS.toFixed(1)}s`;
+            stEl.textContent = s.status === "connected" ? "ok" : s.status;
+          }
+        }
+
+        // poll /stats every ~12s
+        if (Date.now() - lastStatsAt > 12000) {
+          lastStatsAt = Date.now();
+          pollStats();
+        }
+      }, 500);
+
+      // initial stats poll
+      pollStats();
+    }
+  </script>
+
+  <!-- ================= Styles ================= -->
+  <style>
+    #ase-debug {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 10000;
+      width: 280px;
+      padding: 0.75rem;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-family:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+      pointer-events: auto;
+    }
+
+    .ase-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .ase-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ase-dot {
+      width: 6px;
+      height: 6px;
+      background: #aa87ff;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #aa87ff;
+    }
+
+    .ase-name {
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .ase-mood {
+      background: rgba(170, 135, 255, 0.1);
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #aa87ff;
+    }
+
+    .ase-controls {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .ase-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+    }
+
+    .ase-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .ase-btn-danger {
+      color: #ff8787;
+    }
+
+    .ase-spark {
+      margin-bottom: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+
+    .ase-section {
+      margin-bottom: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 0.5rem;
+    }
+
+    .ase-title {
+      color: #aa87ff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+      font-size: 9px;
+    }
+
+    .ase-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .ase-bar {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      margin-bottom: 6px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .ase-fill {
+      height: 100%;
+      background: #aa87ff;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .ase-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.25rem;
+    }
+
+    .ase-kv {
+      display: flex;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+
+    .ase-meter {
+      height: 7px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 4px 0 8px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .ase-meter-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 6px;
+      transition: width 220ms ease;
+      background: #8cffbe;
+      opacity: 0.8;
+    }
+  </style>
+</Container>
