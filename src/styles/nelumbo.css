@@ -2,6 +2,9 @@
   --hud-top-offset: 96px;
   --nel-beam-gap: 18px;
 
+  --nel-hud-h: clamp(240px, 26.4vh, 432px);
+  --nel-hud-gap: 16px;
+
   --nel-beam-width: 2px; /* beam stroke width */
   --nel-scan-width: 2px; /* container width */
 
@@ -295,6 +298,9 @@
   width: 1.6px;
   height: 100%;
 
+  background-size: 100% 220%;
+  background-position: 0% 50%;
+
   opacity: var(--beam-opacity);
   filter: blur(var(--beam-blur));
   transform: translateZ(0) scaleY(0.92);
@@ -349,12 +355,17 @@
     opacity: 0;
     transform: translate3d(0px, 0, 0) scaleY(0.82);
     filter: blur(0.7px);
+    background-position: 0% 10%;
   }
   14% {
     opacity: 1;
     transform: translate3d(calc(var(--beam-in-dir) * var(--beam-nudge)), 0, 0)
       scaleY(1.02);
     filter: blur(0.25px);
+    background-position: 0% 35%;
+    box-shadow:
+      0 0 14px color-mix(in oklch, currentColor 45%, transparent),
+      0 0 36px color-mix(in oklch, currentColor 26%, transparent);
   }
   58% {
     opacity: 0.95;
@@ -364,11 +375,13 @@
         0
       )
       scaleY(1.03);
+    background-position: 0% 70%;
   }
   100% {
     opacity: 0;
     transform: translate3d(0px, 0, 0) scaleY(0.9);
     filter: blur(0.9px);
+    background-position: 0% 92%;
   }
 }
 
@@ -378,6 +391,7 @@
     transform: translate3d(calc(var(--beam-in-dir) * var(--beam-nudge)), 0, 0)
       scaleY(0.86);
     filter: blur(0.55px);
+    background-position: 0% 88%;
   }
   16% {
     opacity: 1;
@@ -388,15 +402,21 @@
       )
       scaleY(1.02);
     filter: blur(0.25px);
+    background-position: 0% 60%;
+    box-shadow:
+      0 0 14px color-mix(in oklch, currentColor 45%, transparent),
+      0 0 36px color-mix(in oklch, currentColor 26%, transparent);
   }
   62% {
     opacity: 0.95;
     transform: translate3d(0px, 0, 0) scaleY(1.03);
+    background-position: 0% 32%;
   }
   100% {
     opacity: 0;
     transform: translate3d(0px, 0, 0) scaleY(0.92);
     filter: blur(0.9px);
+    background-position: 0% 10%;
   }
 }
 
@@ -429,13 +449,15 @@
 .hud {
   position: fixed;
   left: var(--hud-x, 50%);
-  top: calc(var(--hud-y, 50%) + var(--hud-top-offset));
+  top: calc(
+    var(--hud-y, 50%) - (var(--nel-hud-h) + var(--nel-hud-gap)) * 0.5
+  );
   transform: translate3d(-50%, -50%, 0);
 
   z-index: 60;
 
-  width: clamp(312px, 33.6vw, 624px);
-  height: clamp(240px, 26.4vh, 432px);
+  width: calc(min(640px, calc(100vw - 24px)) * 0.95);
+  height: var(--nel-hud-h);
 
   pointer-events: none;
   opacity: 0;
@@ -872,6 +894,7 @@
   border-radius: 10px;
   display: grid;
   place-items: center;
+  position: relative;
   border: none;
   background: color-mix(in oklch, transparent 82%, currentColor 10%);
   color: inherit;
@@ -879,6 +902,31 @@
   text-decoration: none;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+}
+
+.hud-ctl .count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in oklch, white 92%, currentColor 8%);
+  background: color-mix(in oklch, currentColor 68%, black 32%);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, currentColor 28%, transparent),
+    0 0 14px color-mix(in oklch, currentColor 44%, transparent);
+  text-shadow: 0 0 10px color-mix(in oklch, currentColor 18%, transparent);
+}
+
+.hud-ctl .count:empty {
+  display: none;
 }
 
 .hud-ctl:hover {
@@ -911,6 +959,101 @@
 
 .hud-close:hover {
   background: color-mix(in oklch, transparent 74%, currentColor 12%);
+}
+
+/* Comments Section (mirror reflection of HUD) */
+.hud-comments-section {
+  position: fixed;
+  left: var(--hud-x, 50%);
+  top: calc(
+    var(--hud-y, 50%) + (var(--nel-hud-h) + var(--nel-hud-gap)) * 0.5
+  );
+  transform: translate3d(-50%, -50%, 0);
+  width: calc(min(640px, calc(100vw - 24px)) * 0.95);
+  height: var(--nel-hud-h);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 220ms ease,
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  z-index: 55;
+  overflow: hidden;
+}
+
+.hud-comments-section:not(.is-collapsed) {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translate3d(-50%, -8px, 0);
+}
+
+.hud-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: color-mix(in oklch, black 88%, transparent);
+  border: 1px solid color-mix(in oklch, currentColor 20%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 40px color-mix(in oklch, currentColor 10%, transparent),
+    0 0 80px color-mix(in oklch, currentColor 5%, transparent);
+}
+
+.hud-comments-section .hud-frame {
+  height: 100%;
+  overflow: hidden;
+  background: color-mix(in oklch, black 88%, transparent);
+  border: 1px solid color-mix(in oklch, currentColor 20%, transparent);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 40px color-mix(in oklch, currentColor 10%, transparent),
+    0 0 80px color-mix(in oklch, currentColor 5%, transparent);
+}
+
+.hud-comments-section .hud-seg {
+  text-align: center;
+}
+
+.hud-comments-section .hud-article {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hud-comments-section .hud-titleText {
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: inherit;
+  display: block;
+}
+
+.hud-comments-section #hud-giscus-wrapper {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  margin: 0 auto;
+}
+
+.hud-comments-section #hud-giscus-wrapper .giscus {
+  width: 100%;
+  min-height: 0;
+}
+
+.hud-comments-section #hud-giscus-wrapper .giscus-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: none;
+  background: transparent;
 }
 
 .hud.is-booting .hud-seg {

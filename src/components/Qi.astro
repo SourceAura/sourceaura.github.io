@@ -62,7 +62,7 @@
   const qiRoot = document.getElementById("qi-root");
   const qiCoreHit = document.getElementById("qi-core-hit");
   const canvas = document.getElementById("qi-vis");
-  const ctx = canvas.getContext("2d", { alpha: true });
+  const ctx = canvas?.getContext("2d", { alpha: true });
 
   // ───────────────── CORE STATE (REQUIRED) ─────────────────
 

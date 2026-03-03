@@ -13,6 +13,24 @@ export interface AseTelemetry {
   searchCount: number;
   searchDepth: number;
   timeOnSite: number;
+  // Enhanced metrics
+  scrollAcceleration: number;
+  clickHeatmap: number;
+  keyboardRhythm: number;
+  sessionDepth: number;
+  focusIntensity: number;
+  explorationPattern: number;
+}
+
+export interface AseContext {
+  page: string;
+  section: string;
+  deviceType: string;
+  viewportSize: string;
+  timeOfDay: number;
+  dayOfWeek: number;
+  sessionNumber: number;
+  referrer: string;
 }
 
 export class AseClient {
@@ -26,6 +44,24 @@ export class AseClient {
     searchCount: 0,
     searchDepth: 0,
     timeOnSite: 0,
+    // Enhanced metrics
+    scrollAcceleration: 0,
+    clickHeatmap: 0,
+    keyboardRhythm: 0,
+    sessionDepth: 0,
+    focusIntensity: 0,
+    explorationPattern: 0,
+  };
+
+  public context: AseContext = {
+    page: "unknown",
+    section: "main",
+    deviceType: "desktop",
+    viewportSize: "medium",
+    timeOfDay: new Date().getHours(),
+    dayOfWeek: new Date().getDay(),
+    sessionNumber: 1,
+    referrer: document.referrer || "direct",
   };
 
   public startTime = Date.now();
@@ -40,6 +76,87 @@ export class AseClient {
     }
   }
 
+  private updateContext() {
+    this.context.page = this.detectPageType();
+    this.context.section = this.getCurrentSection();
+    this.context.deviceType = this.detectDeviceType();
+    this.context.viewportSize = this.getViewportSize();
+    this.context.timeOfDay = new Date().getHours();
+    this.context.dayOfWeek = new Date().getDay();
+  }
+
+  private detectPageType(): string {
+    const path = window.location.pathname;
+    if (path === "/" || path === "/index") return "home";
+    if (path.includes("/petals")) return "petals";
+    if (path.includes("/euthymia")) return "euthymia";
+    return "other";
+  }
+
+  private getCurrentSection(): string {
+    // Detect current section based on scroll position and elements
+    const sections = document.querySelectorAll("section, [id]");
+    const scrollY = window.scrollY;
+    
+    for (const section of sections) {
+      const rect = section.getBoundingClientRect();
+      const element = section as HTMLElement;
+      const elementTop = rect.top + scrollY;
+      
+      if (scrollY >= elementTop - 100) {
+        return element.id || element.tagName.toLowerCase();
+      }
+    }
+    return "main";
+  }
+
+  private detectDeviceType(): string {
+    const width = window.innerWidth;
+    if (width < 768) return "mobile";
+    if (width < 1024) return "tablet";
+    return "desktop";
+  }
+
+  private getViewportSize(): string {
+    const width = window.innerWidth;
+    if (width < 640) return "small";
+    if (width < 1024) return "medium";
+    return "large";
+  }
+
+  private calculateClickConcentration(clicks: Array<{x: number, y: number, time: number}>): number {
+    if (clicks.length < 2) return 0;
+    
+    // Calculate average distance between clicks
+    let totalDistance = 0;
+    let count = 0;
+    
+    for (let i = 1; i < clicks.length; i++) {
+      const dx = clicks[i].x - clicks[i-1].x;
+      const dy = clicks[i].y - clicks[i-1].y;
+      totalDistance += Math.sqrt(dx * dx + dy * dy);
+      count++;
+    }
+    
+    const avgDistance = count > 0 ? totalDistance / count : 0;
+    // Lower average distance = higher concentration
+    return Math.max(0, 1 - avgDistance);
+  }
+
+  private updateCadenceEnergy() {
+    // Calculate energy based on recent activity patterns
+    const recentActivity = this.metrics.interactionCount / Math.max((Date.now() - this.startTime) / 1000, 1);
+    const scrollEnergy = this.metrics.scrollVelocity;
+    const focusEnergy = this.metrics.focusIntensity;
+    
+    // Combine different energy sources
+    this.metrics.cadenceEnergy = (
+      recentActivity * 0.4 +
+      scrollEnergy * 0.3 +
+      focusEnergy * 0.3
+    );
+  }
+
   public static getInstance(): AseClient {
     if (!AseClient.instance) {
       AseClient.instance = new AseClient();
@@ -48,31 +165,159 @@ export class AseClient {
   }
 
   private initTrackers() {
-    // Scroll Velocity
+    this.updateContext();
+    
+    // Enhanced Scroll Velocity & Acceleration
     let lastScrollY = window.scrollY;
     let lastScrollTime = Date.now();
+    let lastVelocity = 0;
+    let currentVelocity = 0;
+    let scrollEvents = [];
+    
     window.addEventListener("scroll", () => {
       const now = Date.now();
       const dy = Math.abs(window.scrollY - lastScrollY);
       const dt = now - lastScrollTime;
-      if (dt > 10) {
-        const vel = dy / dt; // px/ms
-        this.metrics.scrollVelocity = vel * 20; // scaled for HUD visibility
+      
+      if (dt > 16) { // ~60fps throttling
+        currentVelocity = dy / dt; // px/ms
+        this.metrics.scrollVelocity = currentVelocity * 10; // reduced scaling
+        
+        // Calculate acceleration
+        const acceleration = Math.abs(currentVelocity - lastVelocity) / dt * 1000;
+        this.metrics.scrollAcceleration = Math.min(acceleration, 1.0);
+        lastVelocity = currentVelocity;
+        
+        // Track scroll patterns
+        scrollEvents.push({ time: now, velocity: currentVelocity });
+        if (scrollEvents.length > 100) scrollEvents.shift();
+        
+        if (import.meta.env.DEV) {
+          console.log(`ASE: scroll velocity=${this.metrics.scrollVelocity.toFixed(3)}, acc=${this.metrics.scrollAcceleration.toFixed(3)}`);
+        }
       }
       lastScrollY = window.scrollY;
       lastScrollTime = now;
     }, { passive: true });
 
-    // Interactions
-    window.addEventListener("click", () => this.metrics.interactionCount++, { passive: true });
-    window.addEventListener("keydown", () => this.metrics.interactionCount++, { passive: true });
+    // Velocity decay
+    setInterval(() => {
+      if (Date.now() - lastScrollTime > 100) { // decay after 100ms of no scroll
+        currentVelocity *= 0.85; // exponential decay
+        this.metrics.scrollVelocity = currentVelocity * 10;
+        if (this.metrics.scrollVelocity < 0.001) {
+          this.metrics.scrollVelocity = 0;
+        }
+      }
+    }, 50);
 
-    // Idle Tracking
+    // Enhanced Click Heatmap Tracking
+    const clickPositions: Array<{x: number, y: number, time: number}> = [];
+    window.addEventListener("click", (e) => {
+      this.metrics.interactionCount++;
+      
+      // Track click positions for heatmap analysis
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      clickPositions.push({ x, y, time: Date.now() });
+      
+      // Keep only recent clicks
+      clickPositions.splice(0, clickPositions.length, ...clickPositions.filter(pos => Date.now() - pos.time < 30000));
+      
+      // Calculate click concentration (heatmap intensity)
+      this.metrics.clickHeatmap = this.calculateClickConcentration(clickPositions);
+    }, { passive: true });
+
+    // Enhanced Keyboard Rhythm Tracking
+    const keyTimes: number[] = [];
+    window.addEventListener("keydown", () => {
+      this.metrics.interactionCount++;
+      
+      const now = Date.now();
+      keyTimes.push(now);
+      
+      // Keep only recent keystrokes
+      keyTimes.splice(0, keyTimes.length, ...keyTimes.filter(time => now - time < 10000));
+      
+      // Calculate typing rhythm variance
+      if (keyTimes.length > 2) {
+        const intervals: number[] = [];
+        for (let i = 1; i < keyTimes.length; i++) {
+          intervals.push(keyTimes[i] - keyTimes[i - 1]);
+        }
+        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+        const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - avgInterval, 2), 0) / intervals.length;
+        this.metrics.keyboardRhythm = Math.min(variance / 10000, 1.0); // Normalize
+      }
+    }, { passive: true });
+
+    // Session Depth & Exploration Pattern
+    let visitedSections = new Set();
+    let pageTransitions = 0;
+    
+    const trackSection = () => {
+      const section = this.getCurrentSection();
+      if (!visitedSections.has(section)) {
+        visitedSections.add(section);
+        this.metrics.sessionDepth = visitedSections.size / 10; // Normalize
+      }
+    };
+    
+    // Track page transitions for exploration pattern
+    let lastPage = window.location.pathname;
+    const checkPageTransition = () => {
+      const currentPage = window.location.pathname;
+      if (currentPage !== lastPage) {
+        pageTransitions++;
+        lastPage = currentPage;
+        this.metrics.explorationPattern = Math.min(pageTransitions / 20, 1.0);
+        this.updateContext();
+      }
+    };
+    
+    // Focus Intensity Tracking
+    const focusEvents: number[] = [];
+    let lastFocusTime = Date.now();
+    
+    const trackFocus = () => {
+      const now = Date.now();
+      const focusDuration = now - lastFocusTime;
+      focusEvents.push(focusDuration);
+      
+      // Keep only recent focus events
+      focusEvents.splice(0, focusEvents.length, ...focusEvents.filter(duration => duration < 300000)); // 5 minutes
+      
+      if (focusEvents.length > 0) {
+        const avgFocus = focusEvents.reduce((a, b) => a + b, 0) / focusEvents.length;
+        this.metrics.focusIntensity = Math.min(avgFocus / 60000, 1.0); // Normalize to minutes
+      }
+      
+      lastFocusTime = now;
+    };
+    
+    // Track various user activities
+    window.addEventListener("mousemove", () => {
+      lastActivity = Date.now();
+      trackSection();
+    }, { passive: true });
+    
+    window.addEventListener("scroll", () => {
+      lastActivity = Date.now();
+      trackSection();
+      trackFocus();
+    }, { passive: true });
+    
+    window.addEventListener("keydown", () => {
+      lastActivity = Date.now();
+      trackFocus();
+    }, { passive: true });
+    
+    // Check for page transitions
+    setInterval(checkPageTransition, 1000);
+
+    // Idle Tracking (existing)
     let lastActivity = Date.now();
     const updateIdle = () => { lastActivity = Date.now(); };
-    window.addEventListener("mousemove", updateIdle, { passive: true });
-    window.addEventListener("scroll", updateIdle, { passive: true });
-    window.addEventListener("keydown", updateIdle, { passive: true });
 
     setInterval(() => {
       const now = Date.now();
@@ -82,26 +327,33 @@ export class AseClient {
       }
       this.metrics.idleRatio = this.metrics.idleTime / (now - this.startTime);
       this.metrics.timeOnSite = (now - this.startTime) / 60000;
+      
+      // Update cadence energy based on recent activity
+      this.updateCadenceEnergy();
     }, 1000);
   }
 
   public async sync() {
+    // Enhanced vector with sophisticated metrics
     const vector = [
       this.clamp(this.metrics.scrollVelocity * 20),
-      this.metrics.idleRatio,
-      this.clamp(this.metrics.searchCount / 10),
-      this.clamp(this.metrics.searchDepth / 5),
+      this.clamp(this.metrics.scrollAcceleration),
+      this.clamp(this.metrics.idleRatio),
+      this.clamp(this.metrics.clickHeatmap),
+      this.clamp(this.metrics.keyboardRhythm),
       this.clamp(this.metrics.interactionCount / 100),
-      this.clamp(this.metrics.timeOnSite / 60),
-      this.clamp(this.metrics.timeOnSite / 10), // Placeholder for temporal depth
-      this.clamp(this.metrics.cadenceEnergy / 100)
+      this.clamp(this.metrics.sessionDepth),
+      this.clamp(this.metrics.focusIntensity),
     ];
 
     try {
       const res = await fetch("http://localhost:8000/infer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ values: vector })
+        body: JSON.stringify({ 
+          values: vector,
+          context: this.context 
+        })
       });
 
       if (res.ok) {
@@ -123,24 +375,40 @@ export class AseClient {
   }
 
   public async logSession() {
+    // Enhanced vector for training data
     const vector = [
       this.clamp(this.metrics.scrollVelocity * 20),
-      this.metrics.idleRatio,
-      0, 0,
+      this.clamp(this.metrics.scrollAcceleration),
+      this.clamp(this.metrics.idleRatio),
+      this.clamp(this.metrics.clickHeatmap),
+      this.clamp(this.metrics.keyboardRhythm),
       this.clamp(this.metrics.interactionCount / 100),
-      this.clamp(this.metrics.timeOnSite / 60),
-      this.clamp(this.metrics.timeOnSite / 10),
-      this.clamp(this.metrics.cadenceEnergy / 100)
+      this.clamp(this.metrics.sessionDepth),
+      this.clamp(this.metrics.focusIntensity),
     ];
 
     try {
-      await fetch("http://localhost:8000/log", {
+      const res = await fetch("http://localhost:8000/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ values: vector })
+        body: JSON.stringify({ 
+          values: vector,
+          context: this.context 
+        })
       });
-      return true;
+      
+      if (res.ok) {
+        const result = await res.json();
+        if (import.meta.env.DEV) {
+          console.log("[ASE] Session logged:", result);
+        }
+        return true;
+      }
+      return false;
     } catch (e) {
+      if (import.meta.env.DEV) {
+        console.error("[ASE] Failed to log session:", e);
+      }
       return false;
     }
   }
@@ -170,7 +438,11 @@ export class AseClient {
 export const ase = typeof window !== "undefined" ? AseClient.getInstance() : null;
 
 export function initAseClient() {
-  return AseClient.getInstance();
+  const instance = AseClient.getInstance();
+  if (import.meta.env.DEV) {
+    console.log("[ASE] Client initialized", instance);
+  }
+  return instance;
 }
 
 if (typeof window !== "undefined") {

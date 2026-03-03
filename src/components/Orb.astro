@@ -115,12 +115,20 @@ const cap = Math.max(1, Math.min(width, height));
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // ---------- Pulse (from CSS var --pulse) ----------
-    function getPulse() {
+    // Sampling the CSS var ~10Hz avoids expensive getComputedStyle per frame.
+    let pulse = 0.5;
+    const samplePulse = () => {
       const v = getComputedStyle(document.documentElement).getPropertyValue(
         "--pulse",
       );
       const p = Number(v);
-      return Number.isFinite(p) ? Math.max(0, Math.min(1, p)) : 0.5;
+      pulse = Number.isFinite(p) ? Math.max(0, Math.min(1, p)) : 0.5;
+    };
+    samplePulse();
+    const pulseTimer = setInterval(samplePulse, 120);
+
+    function getPulse() {
+      return pulse;
     }
 
     let lastPulse = getPulse();
@@ -132,6 +140,7 @@ const cap = Math.max(1, Math.min(width, height));
     // ---------- Disintegration state ----------
     let dis = {
       active: false,
+      level: 0,
       t0: 0,
       dur: 520, // match your scanner pulse timing
       which: "left",
@@ -139,14 +148,17 @@ const cap = Math.max(1, Math.min(width, height));
     };
 
     function disLevel(now) {
-      if (!dis.active) return 0;
+      if (!dis.active) return dis.level;
       const t = (now - dis.t0) / dis.dur;
       if (t >= 1) {
         dis.active = false;
-        return 0;
+        dis.level = dis.mode === "out" ? 1 : 0;
+        return dis.level;
       }
       // smooth fade curve
-      return t * t * (3 - 2 * t);
+      const s = t * t * (3 - 2 * t);
+      dis.level = dis.mode === "out" ? s : 1 - s;
+      return dis.level;
     }
 
     // Listen for scanner pulses coming from Nelumbo
@@ -155,20 +167,44 @@ const cap = Math.max(1, Math.min(width, height));
       if (!d) return;
       if (orbIndex < 0 || d.index !== orbIndex) return;
 
-      // Only disintegrate on OUT (when crossing into the kill zone)
-      if (d.mode === "out") {
-        dis.active = true;
-        dis.t0 = performance.now();
-        dis.which = d.which;
-        dis.mode = d.mode;
+      dis.active = true;
+      dis.t0 = performance.now();
+      dis.which = d.which;
+      dis.mode = d.mode === "in" ? "in" : "out";
 
-        // Kick more particles loose for a crispy "break apart"
-        // (do NOT change your core look; this just temporarily unlocks movement)
-        for (let k = 0; k < Math.min(N, 900); k++) locked[k] = 0;
-      }
+      for (let k = 0; k < Math.min(N, 900); k++) locked[k] = 0;
     }
 
     window.addEventListener("nelumbo:scan", onScan);
+
+    // ---------- Visibility (perf) ----------
+    // When the carousel item is hidden/faded, we can throttle drawing.
+    let lastVisCheck = 0;
+    let visScore = 1;
+    function updateVisibilityScore(now) {
+      if (now - lastVisCheck < 180) return;
+      lastVisCheck = now;
+
+      if (!hostItem) {
+        visScore = 1;
+        return;
+      }
+
+      const st = getComputedStyle(hostItem);
+      if (st.visibility === "hidden" || st.display === "none") {
+        visScore = 0;
+        return;
+      }
+      const op = Number(st.opacity);
+      visScore = Number.isFinite(op) ? op : 1;
+
+      // Adaptive quality: when an item is mostly faded, reduce internal resolution.
+      const nextCap = visScore < 0.18 ? 2 : 4;
+      if (nextCap !== dprCap) {
+        dprCap = nextCap;
+        resizeToLayoutSquare();
+      }
+    }
 
     // ---------- Theme cache ----------
     let cachedMode = "source-over";
@@ -266,6 +302,7 @@ const cap = Math.max(1, Math.min(width, height));
     // ---------- Square sizing (IMPORTANT: measure layout size, not transformed rect) ----------
     let S = 256;
     let dpr = 1;
+    let dprCap = 4;
     let W = 256,
       H = 256;
 
@@ -275,7 +312,7 @@ const cap = Math.max(1, Math.min(width, height));
       const cssH = Math.max(1, wrap.clientHeight || wrap.offsetHeight || 1);
 
       S = Math.floor(Math.min(cssW, cssH));
-      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      dpr = Math.max(1, Math.min(dprCap, window.devicePixelRatio || 1));
 
       const px = Math.floor(S * dpr);
 
@@ -315,6 +352,8 @@ const cap = Math.max(1, Math.min(width, height));
     const stuck = new Uint16Array(N);
     const locked = new Uint8Array(N);
     const alive = new Uint8Array(N);
+
+    const dissolve = new Float32Array(N);
 
     let writeIndex = 0;
 
@@ -363,6 +402,9 @@ const cap = Math.max(1, Math.min(width, height));
       stuck[i] = (50 + Math.random() * 30) | 0;
 
       alive[i] = 1;
+
+      // Stable per-particle dissolve seed (Evervault-like threshold dissolve)
+      dissolve[i] = Math.random();
     }
 
     function spawnSome(extra = 0) {
@@ -383,13 +425,20 @@ const cap = Math.max(1, Math.min(width, height));
 
     for (let i = 0; i < Math.min(N, 1100); i++) resetParticle(i);
 
+    // ---------- Test-like lifetime envelope ----------
+    const attack = 50;
+    const hold = 50;
+    const decay = 100;
+    const life = attack + hold + decay;
+
     // ---------- Render loop ----------
     let turnAngle = 0;
     let raf = 0;
 
     function beginFrame() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
 
       ctx.globalCompositeOperation = "source-over";
       ctx.clearRect(0, 0, W, H);
@@ -406,14 +455,27 @@ const cap = Math.max(1, Math.min(width, height));
     }
 
     function draw() {
+      if (document.hidden) {
+        raf = 0;
+        return;
+      }
+
       // "Thump" burst when pulse crosses upward (optional but fun)
       const p = getPulse();
       const burst = lastPulse < 0.78 && p >= 0.78 ? 18 : 0; // tweak threshold + size
       lastPulse = p;
 
+      const now = performance.now();
+      updateVisibilityScore(now);
+
+      // If the item is basically invisible, render less often.
+      if (visScore <= 0.02) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
+
       spawnSome(burst);
 
-      const now = performance.now();
       const dl = disLevel(now); // 0..1 when disintegrating
 
       turnAngle = (turnAngle + turnSpeed) % (Math.PI * 2);
@@ -433,8 +495,23 @@ const cap = Math.max(1, Math.min(width, height));
 
         age[i]++;
 
+        // Test.astro: recycle particles after envelope completes
+        if (age[i] > life) {
+          resetParticle(i);
+          continue;
+        }
+
+        // Test.astro: alpha envelope (attack/hold/decay)
+        let pAlpha = 1;
+        if (age[i] < attack) pAlpha = age[i] / attack;
+        else if (age[i] < attack + hold) pAlpha = 1;
+        else pAlpha = 1 - (age[i] - attack - hold) / decay;
+        if (pAlpha <= 0) {
+          resetParticle(i);
+          continue;
+        }
+
         if (dl > 0 && !locked[i]) {
-          // Push outward from sphere surface while fading
           const dx = x[i];
           const dy = y[i];
           const dz = z[i] - scz;
@@ -444,16 +521,26 @@ const cap = Math.max(1, Math.min(width, height));
           const ny = dy / r;
           const nz = dz / r;
 
-          // Outward impulse grows with dl
-          const kick = (0.1 + dl * 0.55) * driftVelocity;
-          vx[i] += nx * kick;
-          vy[i] += ny * kick;
-          vz[i] += nz * kick;
+          if (dis.mode === "in") {
+            const kick = (0.08 + dl * 0.42) * driftVelocity;
+            const dr = r - sphereRad;
+            vx[i] += -nx * kick - nx * dr * 0.00085;
+            vy[i] += -ny * kick - ny * dr * 0.00085;
+            vz[i] += -nz * kick - nz * dr * 0.00085;
+          } else {
+            const kick = (0.1 + dl * 0.55) * driftVelocity;
+            vx[i] += nx * kick;
+            vy[i] += ny * kick;
+            vz[i] += nz * kick;
 
-          // Make it “dusty”
-          vx[i] += driftJitter * 2.2 * randn();
-          vy[i] += driftJitter * 2.2 * randn();
-          vz[i] += driftJitter * 2.2 * randn();
+            vx[i] += driftJitter * 2.2 * randn();
+            vy[i] += driftJitter * 2.2 * randn();
+            vz[i] += driftJitter * 2.2 * randn();
+          }
+
+          if (dis.mode === "in" && Math.abs(r - sphereRad) < 2.25) {
+            locked[i] = 1;
+          }
         }
 
         if (!locked[i] && age[i] > stuck[i]) {
@@ -509,11 +596,17 @@ const cap = Math.max(1, Math.min(width, height));
           texA = Math.max(0.5, tex.a);
         }
 
-        // Fade away during disintegration (never changes normal look when dl=0)
-        const fade = dl > 0 ? 1 - dl : 1;
+        // Evervault-like dissolve: speckled disappearance with a soft threshold band.
+        // dl: 0..1, higher = more disintegrated.
+        const band = 0.12;
+        const k = (1 - dl - dissolve[i]) / band;
+        const vis = k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k);
+        if (vis <= 0) continue;
+
+        const fade = 1 - dl;
         const a = Math.min(
           1,
-          Math.max(0.1, depth * texA * materialStrength * fade),
+          Math.max(0.1, depth * texA * materialStrength * fade * pAlpha * vis),
         );
 
         ctx.fillStyle = `rgba(${rgb}, ${a})`;
@@ -532,6 +625,7 @@ const cap = Math.max(1, Math.min(width, height));
       "astro:before-swap",
       () => {
         cancelAnimationFrame(raf);
+        clearInterval(pulseTimer);
         moTheme.disconnect();
         ro.disconnect();
         window.removeEventListener("nelumbo:scan", onScan);

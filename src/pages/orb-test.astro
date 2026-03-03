@@ -1,0 +1,67 @@
+---
+import Orb from '../components/Orb.astro';
+
+// Get the first available post for testing
+import { getCollection } from 'astro:content';
+const posts = await getCollection('petals');
+const testPost = posts[0]; // Use first available post
+---
+
+<html>
+<head>
+  <title>Orb Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 2rem;
+      background: #000;
+      color: #fff;
+      font-family: system-ui;
+    }
+    .orb-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 500px;
+      border: 1px solid #333;
+      margin: 2rem 0;
+      position: relative;
+    }
+    .debug-info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Orb Visibility Test</h1>
+  <p>Testing with post: {testPost?.data.title || 'No posts found'}</p>
+  
+  <div class="orb-container">
+    <div class="debug-info">
+      <div>Looking for Orb...</div>
+      <div id="orb-status">Checking...</div>
+    </div>
+    {testPost && <Orb post={testPost} />}
+  </div>
+  
+  <script>
+    setTimeout(() => {
+      const canvas = document.querySelector('canvas');
+      const status = document.getElementById('orb-status');
+      if (canvas) {
+        status.textContent = `Canvas found: ${canvas.width}x${canvas.height}`;
+        status.style.color = '#0f0';
+      } else {
+        status.textContent = 'No canvas found';
+        status.style.color = '#f00';
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

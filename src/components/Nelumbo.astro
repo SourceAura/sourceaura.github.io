@@ -11,7 +11,9 @@ Updates:
 - HUD docked under PageFind input (#hud-dock)
 - NEW: Side “card scanner” lines pulse when an orb crosses the fade boundary (scan out/in)
 */
+import Qi from "@components/Qi.astro";
 import Orb from "@components/Orb.astro";
+import Giscus from "@components/Giscus.astro";
 const { posts } = Astro.props;
 import "@styles/nelumbo.css";
 
@@ -176,15 +178,42 @@ function formatDate(d: any): string {
       </div>
 
       <div class="hud-controls" aria-label="HUD controls">
-        <button
-          class="hud-ctl hud-copy"
-          id="hud-copy"
-          type="button"
-          aria-label="Copy post link"
-          title="Copy Link (Terminal Command)"
-        >
-          <span class="icon">⧉</span>
-        </button>
+        <a class="hud-ctl hud-reactions" data-hud-reactions href="#" aria-label="Reactions" title="Reactions">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="1.1em"
+            height="1.1em"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"
+            ></path>
+          </svg>
+          <span class="count" data-hud-reactions-count></span>
+        </a>
+
+        <a class="hud-ctl hud-comments" data-hud-comments href="#" aria-label="Comments" title="Comments">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="1.1em"
+            height="1.1em"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+          </svg>
+          <span class="count" data-hud-comments-count></span>
+        </a>
+
         <a
           class="hud-ctl hud-open"
           data-hud-link
@@ -209,6 +238,35 @@ function formatDate(d: any): string {
       <div class="hud-specks" aria-hidden="true"></div>
       <div class="hud-signalNoise" aria-hidden="true"></div>
     </div>
+  </div>
+</div>
+
+<!-- Collapsible Giscus Comments Section (completely separate from HUD) -->
+<div class="hud-comments-section is-collapsed" id="hud-comments-section">
+  <div class="hud-frame">
+    <div class="hud-seg hud-mediaStats">
+      <div class="hud-media-wrap">
+      </div>
+    </div>
+
+    <div class="hud-seg hud-article">
+      <div id="hud-giscus-wrapper" class="giscus">
+        <!-- Dynamic Giscus instance will be mounted here -->
+      </div>
+    </div>
+
+    <button
+      class="hud-close"
+      type="button"
+      id="hud-comments-close"
+      aria-label="Close Comments"
+    >
+      ×
+    </button>
+
+    <div class="hud-glow" aria-hidden="true"></div>
+    <div class="hud-specks" aria-hidden="true"></div>
+    <div class="hud-signalNoise" aria-hidden="true"></div>
   </div>
 </div>
 
@@ -239,7 +297,111 @@ function formatDate(d: any): string {
   const hudDate = hud?.querySelector("[data-hud-date]");
   const hudRT = hud?.querySelector("[data-hud-rt]");
   const hudLink = hud?.querySelector("[data-hud-link]");
-  const hudCopy = document.getElementById("hud-copy");
+  const hudReactions = hud?.querySelector("[data-hud-reactions]");
+  const hudComments = hud?.querySelector("[data-hud-comments]");
+  const hudReactionsCount = hud?.querySelector("[data-hud-reactions-count]");
+  const hudCommentsCount = hud?.querySelector("[data-hud-comments-count]");
+  const hudCommentsSection = document.getElementById("hud-comments-section");
+  const hudCommentsClose = document.getElementById("hud-comments-close");
+  const hudGiscusWrapper = document.getElementById("hud-giscus-wrapper");
+
+  let activeGiscusTerm = "/";
+  let hudGiscusBooted = false;
+
+  function ensureHudGiscus(term) {
+    if (!hudGiscusWrapper) return;
+    if (hudGiscusBooted) return;
+
+    hudGiscusWrapper.innerHTML = "<div class=\"giscus\"></div>";
+
+    const s = document.createElement("script");
+    s.src = "https://giscus.app/client.js";
+    s.async = true;
+    s.crossOrigin = "anonymous";
+
+    s.setAttribute("data-repo", "sourceaura/sourceaura.github.io");
+    s.setAttribute("data-repo-id", "MDEwOlJlcG9zaXRvcnkyMDg2Nzg2NjY=");
+    s.setAttribute("data-category", "Show and tell");
+    s.setAttribute("data-category-id", "DIC_kwDODHAvCs4Cgi0j");
+    s.setAttribute("data-mapping", "specific");
+    s.setAttribute("data-term", term);
+    s.setAttribute("data-reactions-enabled", "1");
+    s.setAttribute("data-emit-metadata", "1");
+    s.setAttribute("data-input-position", "bottom");
+    s.setAttribute("data-theme", "/giscus/nelumbo-hud.css");
+    s.setAttribute("data-lang", "en");
+
+    hudGiscusWrapper.appendChild(s);
+    hudGiscusBooted = true;
+  }
+
+  function setHudGiscusTerm(term) {
+    activeGiscusTerm = term;
+    ensureHudGiscus(term);
+    if (!hudGiscusWrapper) return;
+
+    const frame = hudGiscusWrapper.querySelector("iframe.giscus-frame");
+    if (!frame || !frame.contentWindow) return;
+
+    frame.contentWindow.postMessage(
+      { giscus: { setConfig: { term } } },
+      "https://giscus.app",
+    );
+  }
+
+  function formatCount(n) {
+    return n > 99 ? "99+" : String(n);
+  }
+
+  function animateCount(el) {
+    el.animate(
+      [
+        { transform: "scale(0.85)", opacity: 0 },
+        { transform: "scale(1.15)", opacity: 1, offset: 0.55 },
+        { transform: "scale(1)", opacity: 1 },
+      ],
+      { duration: 420, easing: "cubic-bezier(0.2, 0.9, 0.2, 1)" },
+    );
+  }
+
+  function setHudCountsLoading() {
+    if (hudReactionsCount) hudReactionsCount.textContent = "";
+    if (hudCommentsCount) hudCommentsCount.textContent = "";
+    hudReactions?.removeAttribute("data-has-reactions");
+  }
+
+  function setGiscusTerm(term) {
+    if (term === activeGiscusTerm) return;
+    activeGiscusTerm = term;
+
+    mountGiscusProbe(term);
+  }
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== "https://giscus.app") return;
+
+    const g = event.data?.giscus;
+    if (!g || !g.discussion) return;
+
+    if (hudCommentsCount) {
+      hudCommentsCount.textContent = formatCount(
+        g.discussion.totalCommentCount ?? 0,
+      );
+      animateCount(hudCommentsCount);
+    }
+
+    if (hudReactionsCount && g.discussion?.id) {
+      fetch(`/api/reactions?id=${g.discussion.id}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (typeof d.total !== "number") return;
+          hudReactionsCount.textContent = formatCount(d.total);
+          hudReactions?.setAttribute("data-has-reactions", "true");
+          animateCount(hudReactionsCount);
+        })
+        .catch(() => {});
+    }
+  });
 
   const ARTIFACT_KEYWORDS = [
     "Materia",
@@ -293,8 +455,26 @@ function formatDate(d: any): string {
     }
   }
 
+  // Smooth trackpad / mousewheel rotation
+  shell?.addEventListener(
+    "wheel",
+    (e) => {
+      if (!petalsOpen) return;
+      if (hudOpen) return;
+      e.preventDefault();
+
+      const dy = clamp(e.deltaY, -80, 80);
+      wheelVel += dy * 0.004;
+      bumpIdle();
+      start();
+    },
+    { passive: false },
+  );
+
   function closeHud() {
     setHudOpen(false);
+    // Also close comments section when HUD closes
+    hudCommentsSection?.classList.add("is-collapsed");
   }
 
   hudClose?.addEventListener("click", (e) => {
@@ -303,29 +483,33 @@ function formatDate(d: any): string {
     closeHud();
   });
 
-  hudCopy?.addEventListener("click", async (e) => {
+  hudComments?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    const link = hudLink?.getAttribute("href");
-    if (!link) return;
-
-    try {
-      const fullUrl = new URL(link, window.location.origin).href;
-      await navigator.clipboard.writeText(fullUrl);
-
-      const original = hudCopy.innerHTML;
-      hudCopy.innerHTML = '<span class="icon">✓</span>';
-      hudCopy.classList.add("is-success");
-
-      setTimeout(() => {
-        hudCopy.innerHTML = original;
-        hudCopy.classList.remove("is-success");
-      }, 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
+    const isOpening = !hudCommentsSection?.classList.contains("is-collapsed");
+    hudCommentsSection?.classList.toggle("is-collapsed");
+    
+    // Mount Giscus when opening comments
+    if (!isOpening && activeGiscusTerm) {
+      ensureHudGiscus(activeGiscusTerm);
+      setHudGiscusTerm(activeGiscusTerm);
     }
   });
+
+  // Use capture phase to ensure this runs before any other handlers
+  document.addEventListener("click", (e) => {
+    if (e.target === hudCommentsClose || hudCommentsClose?.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      hudCommentsSection?.classList.add("is-collapsed");
+      
+      // Clean up Giscus instance when closing comments
+      // Keep the embed mounted; collapsing only hides it and preserves thread state.
+      
+      return false;
+    }
+  }, true); // Use capture phase
 
   window.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
@@ -412,12 +596,23 @@ function formatDate(d: any): string {
   let pullVel = 0;
   let isPulling = false;
 
-  function getOmPulse() {
+  let wheelVel = 0;
+
+  let snapBoost = 0;
+
+  let omPulse = 0.5;
+  const sampleOmPulse = () => {
     const v = getComputedStyle(document.documentElement).getPropertyValue(
       "--pulse",
     );
     const p = Number(v);
-    return Number.isFinite(p) ? p : 0.5;
+    omPulse = Number.isFinite(p) ? p : 0.5;
+  };
+  sampleOmPulse();
+  const omPulseTimer = setInterval(sampleOmPulse, 120);
+
+  function getOmPulse() {
+    return omPulse;
   }
 
   let radius = 300;
@@ -694,6 +889,24 @@ function formatDate(d: any): string {
       hudLink.setAttribute("aria-label", `Open ${title}`);
     }
 
+    if (hudReactions) {
+      hudReactions.setAttribute("href", href);
+      hudReactions.setAttribute("aria-label", `Reactions for ${title}`);
+    }
+
+    if (hudComments) {
+      hudComments.setAttribute("href", `${href}#giscus-wrapper`);
+      hudComments.setAttribute("aria-label", `Comments for ${title}`);
+    }
+
+    setHudCountsLoading();
+    try {
+      const term = new URL(href, window.location.origin).pathname;
+      setHudGiscusTerm(term);
+    } catch {
+      setHudGiscusTerm("/");
+    }
+
     if (hudArticle) {
       const highlighted = highlightKeywords(
         articleText || "No article loaded yet.",
@@ -736,20 +949,10 @@ function formatDate(d: any): string {
   function snapHudToDock(immediate = false) {
     if (!hudOpen || !hud) return;
 
-    const dock = getHudDock();
-    if (!dock) {
-      hud.style.setProperty("--hud-x", `50%`);
-      hud.style.setProperty("--hud-y", `140px`);
-      return;
-    }
-
-    const r = dock.getBoundingClientRect();
-    const x = r.left + r.width * 0.5;
-    const y = r.bottom + 12 + 220 * 0.5;
-
-    const { cx, cy } = clampToViewport(x, y);
-    hud.style.setProperty("--hud-x", `${cx}px`);
-    hud.style.setProperty("--hud-y", `${cy}px`);
+    hud.style.setProperty("--hud-x", `50%`);
+    hud.style.setProperty("--hud-y", `50%`);
+    hudCommentsSection?.style.setProperty("--hud-x", `50%`);
+    hudCommentsSection?.style.setProperty("--hud-y", `50%`);
 
     if (immediate) hud.classList.add("no-snap");
     else hud.classList.remove("no-snap");
@@ -870,6 +1073,8 @@ function formatDate(d: any): string {
   }
 
   function armSurfaceInteractions(surfaceEl, index) {
+    let dragLastX = 0;
+
     surfaceEl.addEventListener(
       "pointerdown",
       (e) => {
@@ -884,6 +1089,7 @@ function formatDate(d: any): string {
         didMove = false;
         pressStartX = e.clientX;
         pressStartY = e.clientY;
+        dragLastX = e.clientX;
 
         // immediate focus target (feels "magnetic" even before release)
         focusedIndex = index;
@@ -919,6 +1125,18 @@ function formatDate(d: any): string {
           isPulling = false;
           pullVel = 0;
         }
+
+        if (!isDragging) return;
+
+        const ddx = e.clientX - dragLastX;
+        dragLastX = e.clientX;
+
+        const d = ddx * 0.12;
+        vel = clamp(d, -velClamp, velClamp);
+        angle += d;
+
+        cancelIdleSnap();
+        start();
       },
       { passive: true },
     );
@@ -928,6 +1146,7 @@ function formatDate(d: any): string {
       if (petalsOpen && !hudOpen && !didMove) {
         focusedIndex = index;
         snapToIndex(index, false);
+        snapBoost = 1;
         start();
       }
 
@@ -1045,7 +1264,18 @@ function formatDate(d: any): string {
     const breath = (om - 0.5) * 2;
 
     const friction = BASE_FRICTION * (1 - breath * 0.015);
-    const snapStrength = BASE_SNAP * (1 + breath * 0.06);
+    const snapStrength = BASE_SNAP * (1 + breath * 0.06) * (1 + snapBoost * 2.2);
+
+    if (snapBoost) {
+      snapBoost *= 0.86;
+      if (snapBoost < 0.01) snapBoost = 0;
+    }
+
+    if (wheelVel) {
+      vel += wheelVel;
+      wheelVel *= 0.86;
+      if (Math.abs(wheelVel) < 0.001) wheelVel = 0;
+    }
 
     angle += vel;
     vel *= friction;
@@ -1091,23 +1321,6 @@ function formatDate(d: any): string {
     cancelAnimationFrame(rafId);
   }
 
-  // Drag rotate (works once isDragging is set after move threshold)
-  shell?.addEventListener(
-    "pointermove",
-    (e) => {
-      if (!petalsOpen) return;
-      if (!isDragging) return;
-      if (hudOpen) return;
-
-      vel = clamp(e.movementX * 0.12, -velClamp, velClamp);
-      angle += e.movementX * 0.12;
-
-      cancelIdleSnap();
-      start();
-    },
-    { passive: true },
-  );
-
   shell?.addEventListener(
     "pointerup",
     () => {
@@ -1144,4 +1357,12 @@ function formatDate(d: any): string {
   applyTransforms();
   updatePetalVisibility();
   stop();
+
+  window.addEventListener(
+    "astro:before-swap",
+    () => {
+      clearInterval(omPulseTimer);
+    },
+    { once: true },
+  );
 </script>
