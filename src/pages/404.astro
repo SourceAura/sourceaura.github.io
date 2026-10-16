@@ -1,24 +1,605 @@
 ---
-/*
-404: "Found - A Page that was, Not.."
-*/
-import Test from "@components/Test.astro";
 import { SITE } from "@consts";
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
 ---
 
-<Layout title="404" description={SITE.DESCRIPTION}>
-  <head>
-    <meta name="pagefind:filter" content="nav" />
-  </head>
-  <Container>
-    <div class="mt-16 grid place-items-center gap-3">
-      <h4 class="animate text-2xl font-semibold text-black dark:text-white">
-        <!-- 404: Page not found -->
-      </h4>
-      <Test />
-      <span class="animate"> </span>
+<Layout title="404" description={SITE.SEO_DESCRIPTION}>
+  <div class="void-scene">
+    <canvas class="starfield" aria-hidden="true"></canvas>
+    <div class="ghost-404" aria-hidden="true">404</div>
+    <div class="void-vignette" aria-hidden="true"></div>
+    <div class="void-dotgrid" aria-hidden="true"></div>
+    <div class="corner-brackets" aria-hidden="true">
+      <span class="bracket tl"></span>
+      <span class="bracket tr"></span>
+      <span class="bracket bl"></span>
+      <span class="bracket br"></span>
     </div>
-  </Container>
+    <div class="flash" aria-hidden="true"></div>
+    <div class="nova" aria-hidden="true"></div>
+
+    <div class="void-content">
+      <p class="void-telemetry">404 // UNCHARTED</p>
+      <h1 class="void-headline" id="headline">LOST SIGNAL</h1>
+
+      <button class="seed" id="seed" aria-label="Cultivate starlight">
+        <div class="charge-ring"></div>
+        <span class="seed-glow"></span>
+        <span class="seed-core"></span>
+      </button>
+
+      <div class="starlight-counter" id="counter">
+        <span class="counter-label">Starlight</span>
+        <span class="counter-value"><span id="starlight">0</span> / 108</span>
+        <span class="phase-label" id="phase">AWAKEN</span>
+      </div>
+
+      <div class="portal" id="portal" hidden>
+        <a href="/" class="portal-pill">Return to Orbit</a>
+      </div>
+
+      <p class="euthymia-teaser">
+        or drift into the full cultivation → <a href="/euthymia">/euthymia</a>
+      </p>
+    </div>
+
+    <a href="/petals" class="back-to-petals">← back to the petals</a>
+  </div>
 </Layout>
+
+<script is:inline>
+  (() => {
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pointerFine = matchMedia("(pointer: fine)").matches;
+
+    const canvas = document.querySelector(".starfield");
+    const ctx = canvas.getContext("2d");
+    const headline = document.getElementById("headline");
+    const seed = document.getElementById("seed");
+    const starlightEl = document.getElementById("starlight");
+    const phaseEl = document.getElementById("phase");
+    const counterEl = document.getElementById("counter");
+    const portal = document.getElementById("portal");
+    const flash = document.querySelector(".flash");
+    const nova = document.querySelector(".nova");
+    const chargeRing = document.querySelector(".charge-ring");
+
+    const THRESHOLD = 108;
+    let count = 0;
+    let chargeLevel = 0;
+    let lastStreak = 0;
+    let hasAscended = false;
+
+    /* ── Starfield ──────────────────────────── */
+    let stars = [];
+    let raf = 0;
+
+    function initStars() {
+      const n = 120;
+      stars = [];
+      for (let i = 0; i < n; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.5 + 0.5,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          alpha: Math.random() * 0.5 + 0.3,
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of stars) {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+        ctx.fill();
+        s.x += s.vx;
+        s.y += s.vy;
+        if (s.x < 0) s.x = canvas.width;
+        if (s.x > canvas.width) s.x = 0;
+        if (s.y < 0) s.y = canvas.height;
+        if (s.y > canvas.height) s.y = 0;
+      }
+      if (!reduceMotion) raf = requestAnimationFrame(drawStars);
+    }
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initStars();
+      drawStars();
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    /* ── Decrypt headline ───────────────────── */
+    function decryptHeadline() {
+      if (reduceMotion) return;
+      const text = headline.textContent;
+      headline.textContent = "";
+      const chars = text.split("");
+      const pool = "!<>-_\\/[]{}=+*^?#________";
+      chars.forEach((ch) => {
+        const span = document.createElement("span");
+        span.className = "dc-char";
+        span.textContent = pool[Math.floor(Math.random() * pool.length)];
+        headline.appendChild(span);
+      });
+      const els = headline.querySelectorAll(".dc-char");
+      els.forEach((span, i) => {
+        setTimeout(() => {
+          span.textContent = text[i];
+          span.classList.add("is-settled");
+        }, 200 + i * 45);
+      });
+    }
+    decryptHeadline();
+
+    /* ── Helpers ────────────────────────────── */
+    function getPhase() {
+      if (count < 36) return "AWAKEN";
+      if (count < 72) return "GROW";
+      return "IGNITE";
+    }
+
+    function getStreakInterval() {
+      const p = getPhase();
+      return p === "AWAKEN" ? 10 : p === "GROW" ? 8 : 5;
+    }
+
+    /* ── Update ─────────────────────────────── */
+    function updateSeed() {
+      const pct = Math.min(count / THRESHOLD, 1);
+      const phase = getPhase();
+
+      phaseEl.textContent = phase;
+      counterEl.dataset.phase = phase;
+
+      seed.style.setProperty("--seed-brightness", 0.3 + pct * 0.7);
+      seed.style.setProperty("--seed-glow", pct);
+      const size = 80 + pct * 60;
+      seed.style.width = size + "px";
+      seed.style.height = size + "px";
+
+      starlightEl.textContent = count;
+
+      const interval = getStreakInterval();
+      if (count - lastStreak >= interval) {
+        lastStreak = count;
+        spawnStreak();
+      }
+
+      if (count >= THRESHOLD && !hasAscended) {
+        hasAscended = true;
+        ascend();
+      }
+    }
+
+    /* ── Sparks ─────────────────────────────── */
+    function spawnSparks() {
+      if (reduceMotion) return;
+      const rect = seed.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const pct = count / THRESHOLD;
+      const sparkCount = 8 + Math.floor(pct * 16);
+      const dist = 30 + pct * 40;
+
+      for (let i = 0; i < sparkCount; i++) {
+        const spark = document.createElement("span");
+        spark.className = "spark";
+        const angle = (Math.PI * 2 * i) / sparkCount + Math.random() * 0.5;
+        const d = dist + Math.random() * 25;
+        spark.style.setProperty("--tx", Math.cos(angle) * d + "px");
+        spark.style.setProperty("--ty", Math.sin(angle) * d + "px");
+        spark.style.left = cx + "px";
+        spark.style.top = cy + "px";
+        document.body.appendChild(spark);
+        setTimeout(() => spark.remove(), 600);
+      }
+
+      // Shake
+      seed.style.transform = "translateX(-2px)";
+      setTimeout(() => seed.style.transform = "", 50);
+      setTimeout(() => seed.style.transform = "translateX(2px)", 100);
+      setTimeout(() => seed.style.transform = "", 150);
+    }
+
+    /* ── Streak shower ──────────────────────── */
+    function spawnStreak() {
+      if (reduceMotion) return;
+      const streak = document.createElement("div");
+      streak.className = "streak";
+      streak.style.left = Math.random() * 100 + "vw";
+      document.body.appendChild(streak);
+      setTimeout(() => streak.remove(), 1500);
+    }
+
+    /* ── Ascension ──────────────────────────── */
+    function ascend() {
+      portal.hidden = false;
+      if (!reduceMotion) {
+        flash.classList.add("is-active");
+        setTimeout(() => flash.classList.remove("is-active"), 800);
+        nova.classList.add("is-active");
+        setTimeout(() => nova.classList.remove("is-active"), 1200);
+        requestAnimationFrame(() => portal.classList.add("is-open"));
+      } else {
+        portal.classList.add("is-open");
+      }
+    }
+
+    /* ── Interaction ────────────────────────── */
+    function cultivate(n = 1) {
+      if (count >= THRESHOLD) return;
+      count = Math.min(count + n, THRESHOLD);
+      updateSeed();
+      spawnSparks();
+    }
+
+    seed.addEventListener("click", () => cultivate(1));
+    seed.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        cultivate(1);
+      }
+    });
+
+    // Hold to meditate (pointer: fine only)
+    if (pointerFine) {
+      let holdStart = 0;
+      let holdRaf = 0;
+
+      seed.addEventListener("pointerdown", (e) => {
+        if (e.pointerType !== "mouse" || e.button !== 0) return;
+        holdStart = Date.now();
+        chargeRing.style.opacity = "1";
+
+        const tick = () => {
+          const elapsed = Date.now() - holdStart;
+          chargeLevel = Math.min(elapsed / 600, 1);
+          chargeRing.style.setProperty("--charge", chargeLevel);
+          if (chargeLevel >= 1) {
+            cultivate(3);
+            chargeLevel = 0;
+            chargeRing.style.setProperty("--charge", 0);
+            holdStart = Date.now();
+          }
+          holdRaf = requestAnimationFrame(tick);
+        };
+        holdRaf = requestAnimationFrame(tick);
+      });
+
+      const stopHold = () => {
+        cancelAnimationFrame(holdRaf);
+        chargeLevel = 0;
+        chargeRing.style.setProperty("--charge", 0);
+        chargeRing.style.opacity = "0";
+      };
+
+      seed.addEventListener("pointerup", stopHold);
+      seed.addEventListener("pointerleave", stopHold);
+    }
+  })();
+</script>
+
+<style>
+  .void-scene {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #05070f;
+    z-index: 10;
+  }
+
+  .starfield {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ghost-404 {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(8rem, 30vw, 24rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: #7df9ff;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .void-vignette {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .void-dotgrid {
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .corner-brackets {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .bracket {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: #7df9ff;
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .bracket.tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+  .bracket.tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+  .bracket.bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+  .bracket.br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+
+  .flash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, rgba(125,249,255,0.3), transparent 70%);
+    pointer-events: none;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .flash.is-active { opacity: 1; }
+
+  .nova {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    border: 2px solid #7df9ff;
+    pointer-events: none;
+    z-index: 20;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+  .nova.is-active { animation: novaExpand 1.2s ease-out forwards; }
+  @keyframes novaExpand {
+    from { width: 0; height: 0; opacity: 1; }
+    to { width: 100vmax; height: 100vmax; opacity: 0; }
+  }
+
+  .void-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+
+  .void-telemetry {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin: 0;
+  }
+
+  .void-headline {
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: white;
+    text-shadow: 0 0 40px rgba(125,249,255,0.3);
+    margin: 0;
+  }
+
+  .dc-char { display: inline-block; }
+
+  .seed {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: width 0.3s ease, height 0.3s ease;
+  }
+  .seed:focus-visible { outline: 2px solid #7df9ff; outline-offset: 4px; }
+
+  .seed-core {
+    position: absolute;
+    inset: 20%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #7df9ff, #b48cff);
+    opacity: var(--seed-brightness, 0.3);
+    transition: opacity 0.3s ease;
+  }
+
+  .seed-glow {
+    position: absolute;
+    inset: -20%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(125,249,255, calc(var(--seed-glow, 0) * 0.4)), transparent 70%);
+    opacity: var(--seed-glow, 0);
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .charge-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    background: conic-gradient(#7df9ff calc(var(--charge, 0) * 360deg), transparent 0);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    mask: radial-gradient(circle, transparent 55%, black 56%);
+    -webkit-mask: radial-gradient(circle, transparent 55%, black 56%);
+  }
+
+  .starlight-counter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .counter-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .counter-value {
+    font-family: "Geist Mono", monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #7df9ff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+    transition: color 0.3s ease;
+  }
+  .starlight-counter[data-phase="AWAKEN"] .phase-label { color: rgba(125,249,255,0.4); }
+  .starlight-counter[data-phase="GROW"] .phase-label { color: rgba(125,249,255,0.6); }
+  .starlight-counter[data-phase="IGNITE"] .phase-label { color: rgba(125,249,255,0.9); }
+
+  .portal {
+    display: flex;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1.4, 0.36, 1);
+  }
+  .portal[hidden] { display: none; }
+  .portal.is-open { opacity: 1; transform: scale(1) translateY(0); }
+
+  .portal-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #7df9ff, #b48cff);
+    color: #05070f;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 0 30px rgba(125,249,255,0.3);
+  }
+  .portal-pill:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 50px rgba(125,249,255,0.5);
+  }
+
+  .euthymia-teaser {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    margin: 0;
+  }
+  .euthymia-teaser a {
+    color: #7df9ff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(125,249,255,0.3);
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .euthymia-teaser a:hover { color: #b48cff; border-color: #b48cff; }
+
+  .back-to-petals {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    text-decoration: none;
+    z-index: 4;
+    transition: color 0.2s ease;
+  }
+  .back-to-petals:hover { color: #7df9ff; }
+
+  .spark {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #7df9ff;
+    pointer-events: none;
+    z-index: 10;
+    animation: sparkFly 0.6s ease-out forwards;
+  }
+  @keyframes sparkFly {
+    from { opacity: 1; transform: translate(0,0) scale(1); }
+    to { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+  }
+
+  .streak {
+    position: fixed;
+    top: -100px;
+    width: 2px;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, #7df9ff, transparent);
+    pointer-events: none;
+    z-index: 10;
+    animation: streakFall 1.5s ease-in forwards;
+  }
+  @keyframes streakFall {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(calc(100vh + 100px)); opacity: 0; }
+  }
+
+  @media (max-width: 360px) {
+    .void-content { padding: 1rem; gap: 1rem; }
+    .seed { width: 60px; height: 60px; }
+    .bracket { width: 16px; height: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spark, .streak { display: none; }
+    .seed, .portal, .portal-pill { transition: none; }
+    .portal { opacity: 1; transform: none; }
+    .flash { display: none; }
+    .nova { display: none; }
+  }
+</style>

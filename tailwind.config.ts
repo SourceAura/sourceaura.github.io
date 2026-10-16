@@ -19,8 +19,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Geist", ...defaultTheme.fontFamily.sans],
-        mono: ["Geist Mono", ...defaultTheme.fontFamily.mono],
+        sans: ["Geist Variable", ...defaultTheme.fontFamily.sans],
+        mono: ["Geist Mono Variable", ...defaultTheme.fontFamily.mono],
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,4 +1,8 @@
+@import "@fontsource-variable/geist/wght.css";
+@import "@fontsource-variable/geist-mono/wght.css";
+
 @import "./Calyx.css";
+@import "./motion.css";
 
 @tailwind base;
 @tailwind components;

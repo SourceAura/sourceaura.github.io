@@ -1,1210 +1,843 @@
 ---
-import Container from "./Container.astro";
+/*
+  AseHud — DEV-ONLY inspector for the Ase neural core.
+
+  Rendered only when `import.meta.env.DEV` (see Layout.astro), so none of this
+  reaches production. Collapsed to a pill by default; open state and active tab
+  persist in localStorage.
+
+  Design notes
+  ------------
+  - Monochrome, using the site's own tokens plus the single oklch accent shared
+    with the pagefind glow. No emoji, no rainbow chrome.
+  - The "in" pane reads `__ase.lastVector` — the exact array that was POSTed —
+    instead of recomputing its own normalisation. The old HUD displayed a
+    different vector than it sent, which makes a debug tool worse than useless.
+  - The "out" pane shows the model's latent embedding. It is the only thing Ase
+    actually produces, and it was previously invisible.
+  - Styles are `is:global` because the rows are built with `createElement` and
+    would never receive Astro's scope attribute. Every selector is namespaced
+    under `#ase-hud`, so nothing leaks.
+*/
 import ColorSwatch from "./ColorSwatch.astro";
 ---
 
-<style>
-  @import "/src/styles/dynamic-colors.css";
-</style>
+<div id="ase-hud" data-open="false" data-tab="in" data-link="waiting">
+  <button
+    id="ase-toggle"
+    type="button"
+    aria-expanded="false"
+    aria-controls="ase-body"
+    title="Ase inspector (E)"
+  >
+    <span class="ase-dot" aria-hidden="true"></span>
+    <span class="ase-word">ase</span>
+    <span class="ase-model" id="ase-model-ver">v0</span>
+    <span class="ase-chev" aria-hidden="true"></span>
+  </button>
 
-<Container>
-  <!-- ================= Enhanced HUD DOM ================= -->
-  <div id="ase-debug" aria-hidden="false">
-    <div class="ase-head">
-      <div class="ase-brand">
-        <span class="ase-dot"></span>
-        <span class="ase-name">Ase</span>
-        <span id="ase-mood" class="ase-mood">…</span>
-        <span id="ase-model-ver" class="ase-version">v0</span>
-      </div>
+  <div id="ase-body">
+    <div class="ase-link">
+      <span id="ase-state">waiting</span>
+      <span class="ase-sep">·</span>
+      <span id="ase-lat">—</span>
+      <span class="ase-sep">·</span>
+      <span id="ase-age">no inference yet</span>
     </div>
 
-    <div class="ase-controls-row">
-      <button class="ase-btn" data-ase-toggle="all" title="Toggle HUD (E)"
-        >E</button
-      >
-      <button class="ase-btn" data-ase-toggle="s1" title="Toggle Session (1)"
-        >1</button
-      >
-      <button class="ase-btn" data-ase-toggle="s2" title="Toggle Activity (2)"
-        >2</button
-      >
-      <button class="ase-btn" data-ase-toggle="s3" title="Toggle Energy (3)"
-        >3</button
-      >
-      <button class="ase-btn" data-ase-toggle="s4" title="Toggle Vector (4)"
-        >4</button
-      >
-      <button class="ase-btn" data-ase-toggle="s5" title="Toggle Analytics (5)"
-        >5</button
-      >
-      <button class="ase-btn" data-ase-toggle="s6" title="Toggle Context (6)"
-        >6</button
-      >
-      <button
-        class="ase-btn ase-btn-danger"
-        id="ase-log-now"
-        title="End session & log">⏹</button
-      >
-      <button
-        class="ase-btn ase-btn-special"
-        id="ase-train-now"
-        title="Trigger training">🧠</button
-      >
+    <!-- The only thing Ase changes about the page: one CSS variable. -->
+    <div class="ase-block">
+      <div class="ase-block-head">
+        <span class="ase-key">ase-wake</span>
+        <span class="ase-num" id="ase-wake-val">0.500</span>
+      </div>
+      <canvas id="ase-wake-spark"></canvas>
     </div>
 
-    <!-- Dynamic Color Swatch Section -->
-    <div class="ase-color-swatch">
-      <ColorSwatch />
+    <div class="ase-tabs" role="tablist">
+      <button type="button" role="tab" data-tab="in" aria-selected="true">in</button>
+      <button type="button" role="tab" data-tab="out" aria-selected="false">out</button>
+      <button type="button" role="tab" data-tab="model" aria-selected="false">model</button>
+      <button type="button" role="tab" data-tab="colors" aria-selected="false">colors</button>
     </div>
 
-    <div class="ase-spark">
-      <canvas id="ase-spark" width="180" height="34"></canvas>
-      <canvas id="ase-vector-radar" width="80" height="80"></canvas>
+    <div class="ase-pane" data-pane="in">
+      <p class="ase-note">8 values → <code>/infer</code></p>
+      <div id="ase-vec"></div>
     </div>
 
-    <!-- Session Section -->
-    <div id="ase-s1" class="ase-section">
-      <div class="ase-title">Session</div>
-      <div class="ase-row">
-        <span title="Session elapsed time">time</span><span
-          id="ase-time"
-          title="Session elapsed time">0.0s</span
-        >
-      </div>
-      <div class="ase-row">
-        <span title="Total interactions">interactions</span><span
-          id="ase-int"
-          title="Total interactions">0</span
-        >
-      </div>
-      <div class="ase-row">
-        <span title="Interaction rate per second">int/sec</span><span
-          id="ase-rate"
-          title="Interaction rate per second">0.00</span
-        >
-      </div>
-      <div class="ase-row">
-        <span title="Idle time in seconds">idle (s)</span><span
-          id="ase-idle-s"
-          title="Idle time in seconds">0.0</span
-        >
-      </div>
-      <div class="ase-row">
-        <span title="Age since last inference">last infer age</span><span
-          id="ase-infer-age"
-          title="Age since last inference">—</span
-        >
-      </div>
-      <div class="ase-row">
-        <span title="Inference status">infer status</span><span
-          id="ase-infer-status"
-          title="Inference status">unknown</span
-        >
-      </div>
-      <div class="ase-row">
-        <span title="Training readiness status">training ready</span><span
-          id="ase-training"
-          title="Training readiness status">checking…</span
-        >
-      </div>
+    <div class="ase-pane" data-pane="out" hidden>
+      <p class="ase-note">latent embedding · <span id="ase-embed-dims">0</span> dims · signed</p>
+      <div id="ase-embed-grid" class="ase-embed-grid"></div>
     </div>
 
-    <!-- Enhanced Activity Section -->
-    <div id="ase-s2" class="ase-section">
-      <div class="ase-title">Activity</div>
-      <div class="ase-row">
-        <span>scroll vel</span><span id="ase-scroll">0.000</span>
-      </div>
-      <div class="ase-bar">
-        <div class="ase-fill" id="ase-bar-scroll"></div>
-      </div>
-
-      <div class="ase-row">
-        <span>scroll acc</span><span id="ase-acc">0.000</span>
-      </div>
-      <div class="ase-bar">
-        <div class="ase-fill" id="ase-bar-acc"></div>
-      </div>
-
-      <div class="ase-row">
-        <span>click heat</span><span id="ase-heatmap">0.00</span>
-      </div>
-      <div class="ase-bar"><div class="ase-fill" id="ase-bar-heatmap"></div></div>
-
-      <div class="ase-row">
-        <span>kbd rhythm</span><span id="ase-kbd">0.00</span>
-      </div>
-      <div class="ase-bar"><div class="ase-fill" id="ase-bar-kbd"></div></div>
-
-      <div class="ase-row">
-        <span>idle ratio</span><span id="ase-idle">0.00</span>
-      </div>
-      <div class="ase-bar"><div class="ase-fill" id="ase-bar-idle"></div></div>
-
-      <div class="ase-row">
-        <span>activity</span><span id="ase-activity">0.00</span>
-      </div>
-      <div class="ase-bar">
-        <div class="ase-fill" id="ase-bar-activity"></div>
-      </div>
-
-      <div class="ase-row">
-        <span>activity stability</span><span id="ase-stab-activity">—</span>
-      </div>
-      <div class="ase-meter">
-        <div class="ase-meter-fill" id="ase-meter-activity"></div>
-      </div>
+    <div class="ase-pane" data-pane="model" hidden>
+      <div id="ase-model-rows"></div>
     </div>
 
-    <!-- Enhanced Energy Section -->
-    <div id="ase-s3" class="ase-section">
-      <div class="ase-title">Energy</div>
-      <div class="ase-row">
-        <span>ase-wake</span><span id="ase-wake">0.500</span>
-      </div>
-      <div class="ase-bar"><div class="ase-fill" id="ase-bar-wake"></div></div>
-
-      <div class="ase-row">
-        <span>cadence</span><span id="ase-cadence">0.00</span>
-      </div>
-      <div class="ase-bar">
-        <div class="ase-fill" id="ase-bar-cadence"></div>
-      </div>
-
-      <div class="ase-row">
-        <span>focus intensity</span><span id="ase-focus">0.00</span>
-      </div>
-      <div class="ase-bar"><div class="ase-fill" id="ase-bar-focus"></div></div>
-
-      <div class="ase-row">
-        <span>session depth</span><span id="ase-depth">0.00</span>
-      </div>
-      <div class="ase-bar"><div class="ase-fill" id="ase-bar-depth"></div></div>
-
-      <div class="ase-row">
-        <span>wake stability</span><span id="ase-stab-wake">—</span>
-      </div>
-      <div class="ase-meter">
-        <div class="ase-meter-fill" id="ase-meter-wake"></div>
-      </div>
+    <div class="ase-pane" data-pane="colors" hidden>
+      <ColorSwatch width={264} height={150} />
+      <div id="ase-console-logs" class="ase-console"></div>
     </div>
 
-    <!-- Enhanced Vector Section -->
-    <div id="ase-s4" class="ase-section">
-      <div class="ase-title">Vector</div>
-      <div class="ase-grid">
-        {
-          Array.from({ length: 8 }).map((_, i) => (
-            <div class="ase-kv">
-              <span>v{i}</span>
-              <span id={`ase-v${i}`}>0.00</span>
-            </div>
-          ))
-        }
-      </div>
+    <div class="ase-actions">
+      <button id="ase-log" type="button">log session</button>
+      <button id="ase-train" type="button">train</button>
+      <button id="ase-copy" type="button">copy json</button>
     </div>
+  </div>
+</div>
 
-    <!-- New Analytics Section -->
-    <div id="ase-s5" class="ase-section">
-      <div class="ase-title">Analytics</div>
-      <div class="ase-row">
-        <span>page type</span><span id="ase-page">unknown</span>
-      </div>
-      <div class="ase-row">
-        <span>device</span><span id="ase-device">desktop</span>
-      </div>
-      <div class="ase-row">
-        <span>viewport</span><span id="ase-viewport">medium</span>
-      </div>
-      <div class="ase-row">
-        <span>exploration</span><span id="ase-exploration">0.00</span>
-      </div>
-      <div class="ase-bar"><div class="ase-fill" id="ase-bar-exploration"></div></div>
-      <div class="ase-row">
-        <span>session #</span><span id="ase-session-num">1</span>
-      </div>
-      <div class="ase-row">
-        <span>model ver</span><span id="ase-model">ase_v0</span>
-      </div>
-    </div>
+<script>
+  const IN_LABELS = [
+    "scroll vel",
+    "scroll acc",
+    "idle ratio",
+    "click heat",
+    "kbd rhythm",
+    "interactions",
+    "depth",
+    "focus",
+  ];
 
-    <!-- New Context Section -->
-    <div id="ase-s6" class="ase-section">
-      <div class="ase-title">Context</div>
-      <div class="ase-row">
-        <span>time</span><span id="ase-time-context">--:--</span>
-      </div>
-      <div class="ase-row">
-        <span>day</span><span id="ase-day-context">---</span>
-      </div>
-      <div class="ase-row">
-        <span>section</span><span id="ase-section-context">main</span>
-      </div>
-      <div class="ase-row">
-        <span>referrer</span><span id="ase-referrer">direct</span>
-      </div>
-      <div class="ase-row">
-        <span>training</span><span id="ase-auto-training">ON</span>
-      </div>
-      <div class="ase-row">
-        <span>samples</span><span id="ase-samples">0</span>
-      </div>
-    </div>
+  const MODEL_FIELDS = [
+    ["model", "ase-f-model"],
+    ["samples", "ase-f-samples"],
+    ["training", "ase-f-training"],
+    ["auto-train", "ase-f-auto"],
+    ["page", "ase-f-page"],
+    ["section", "ase-f-section"],
+    ["device", "ase-f-device"],
+    ["viewport", "ase-f-viewport"],
+    ["session #", "ase-f-session"],
+    ["referrer", "ase-f-referrer"],
+  ];
 
-    <!-- Console Log Section -->
-    <div id="ase-s7" class="ase-section">
-      <div class="ase-title">Console</div>
-      <div class="ase-row">
-        <div style="display: flex; gap: 0.25rem;">
-          <div id="ase-console-logs" style="font-family: 'Courier New', monospace; font-size: 10px; color: #ff6b35; max-height: 120px; overflow-y: auto; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 4px; flex: 1;">
-            <!-- ColorSwatch logs will appear here -->
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <button id="ase-copy-console" style="padding: 2px 6px; font-size: 9px; background: #ff6b35; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap;">
-              📋
-            </button>
-            <button id="ase-clear-console" style="padding: 2px 6px; font-size: 9px; background: #666; color: white; border: none; border-radius: 3px; cursor: pointer; white-space: nowrap;">
-              🗑️
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+  const HISTORY = 96;
 
-  <!-- ================= Ase Client ================= -->
-  <script>
-    import { initAseClient } from "../lib/ase";
-    initAseClient();
-  </script>
+  function initAseHud() {
+    const hud = document.getElementById("ase-hud");
+    if (!hud || hud.dataset.ready === "1") return;
+    hud.dataset.ready = "1";
 
-  <!-- ================= Enhanced HUD LIFE LOGIC ================= -->
-  <script>
-    (function waitForAse() {
-      const s = window.__ase;
-      if (!s) return requestAnimationFrame(waitForAse);
-      startHud(s);
-    })();
+    const $ = (id: string) => document.getElementById(id);
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+    const accent = () =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--ase-accent")
+        .trim() || "oklch(0.72 0.06 255)";
 
-    function startHud(s) {
-      const $ = (id) => document.getElementById(id);
-      const clamp01 = (v) => Math.max(0, Math.min(1, v));
-      const lerp = (a, b, t) => a + (b - a) * t;
-
-      const hud = $("ase-debug");
-      const moodEl = $("ase-mood");
-      const spark = $("ase-spark");
-      const vectorRadar = $("ase-vector-radar");
-      const ctx = spark ? spark.getContext("2d") : null;
-      const vectorCtx = vectorRadar ? vectorRadar.getContext("2d") : null;
-
-      // ---------- Enhanced toggles ----------
-      const state = {
-        hidden: false, // Start visible by default
-        s1: false,
-        s2: false,
-        s3: false,
-        s4: false,
-        s5: false,
-        s6: false,
-      };
-      const apply = () => {
-        hud.style.display = state.hidden ? "none" : "";
-        ["s1", "s2", "s3", "s4", "s5", "s6"].forEach((k) => {
-          const sec = $(`ase-${k}`);
-          if (sec) sec.style.display = state[k] ? "" : "none";
-          
-          // Update button active state
-          const btn = hud.querySelector(`[data-ase-toggle="${k}"]`);
-          if (btn) {
-            btn.setAttribute('data-active', state[k].toString());
-          }
-        });
-        
-        // Update main toggle button state
-        const mainBtn = hud.querySelector(`[data-ase-toggle="all"]`);
-        if (mainBtn) {
-          mainBtn.setAttribute('data-active', (!state.hidden).toString());
-        }
-      };
-
-      const bindToggle = (key) => {
-        const btn = hud.querySelector(`[data-ase-toggle="${key}"]`);
-        if (!btn) return;
-        btn.addEventListener("click", () => {
-          if (key === "all") state.hidden = !state.hidden;
-          else state[key] = !state[key];
-          apply();
-        });
-      };
-      ["all", "s1", "s2", "s3", "s4", "s5", "s6"].forEach(bindToggle);
-      apply();
-
-      // keyboard shortcuts (E, 1-6)
-      window.addEventListener("keydown", (e) => {
-        const tag = document.activeElement?.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA") return;
-
-        if (e.key === "e" || e.key === "E") {
-          state.hidden = !state.hidden;
-          apply();
-        }
-        if (["1", "2", "3", "4", "5", "6"].includes(e.key)) {
-          const k = `s${e.key}`;
-          state[k] = !state[k];
-          apply();
-        }
-      });
-
-      // manual log
-      const logBtn = $("ase-log-now");
-      if (logBtn) {
-        logBtn.addEventListener("click", () => {
-          if (window.__ase && window.__ase.logSession) {
-            window.__ase.logSession();
-            logBtn.textContent = "✓";
-            logBtn.disabled = true;
-            setTimeout(() => {
-              logBtn.textContent = "⏹";
-              logBtn.disabled = false;
-            }, 2000);
-          }
-        });
-      }
-
-      // manual training trigger
-      const trainBtn = $("ase-train-now");
-      if (trainBtn) {
-        trainBtn.addEventListener("click", async () => {
-          trainBtn.textContent = "🔄";
-          trainBtn.disabled = true;
-          
-          try {
-            const res = await fetch("http://localhost:8000/train", { method: "POST" });
-            const result = await res.json();
-            trainBtn.textContent = result.status === "success" ? "✅" : "❌";
-          } catch (e) {
-            trainBtn.textContent = "❌";
-          }
-          
-          setTimeout(() => {
-            trainBtn.textContent = "🧠";
-            trainBtn.disabled = false;
-          }, 3000);
-        });
-      }
-
-      // ---------- Enhanced sparkline ----------
-      const HISTORY = 60;
-      const wakeHist = [];
-      let smoothWake = 0.5;
-
-      function drawSpark() {
-        if (!ctx || wakeHist.length < 2) return;
-        const w = spark.width, h = spark.height;
-        ctx.clearRect(0, 0, w, h);
-        ctx.beginPath();
-        for (let i = 0; i < wakeHist.length; i++) {
-          const x = (i / (HISTORY - 1)) * w;
-          const y = h - clamp01(wakeHist[i]) * (h - 2) - 1;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = "rgba(170,135,255,0.95)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      // ---------- Radar visualization ----------
-      function drawRadar(ctx, values, size = 40) {
-        if (!ctx) return;
-        const centerX = size;
-        const centerY = size;
-        const radius = size - 10;
-        const angleStep = (Math.PI * 2) / values.length;
-
-        ctx.clearRect(0, 0, size * 2, size * 2);
-        
-        // Draw grid
-        ctx.strokeStyle = "rgba(255,255,255,0.1)";
-        ctx.lineWidth = 1;
-        for (let i = 1; i <= 5; i++) {
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, (radius * i) / 5, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        // Draw axes
-        for (let i = 0; i < values.length; i++) {
-          const angle = i * angleStep - Math.PI / 2;
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY);
-          ctx.lineTo(
-            centerX + Math.cos(angle) * radius,
-            centerY + Math.sin(angle) * radius
-          );
-          ctx.stroke();
-        }
-
-        // Draw data
-        ctx.fillStyle = "rgba(170,135,255,0.3)";
-        ctx.strokeStyle = "rgba(170,135,255,0.8)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (let i = 0; i < values.length; i++) {
-          const angle = i * angleStep - Math.PI / 2;
-          const value = clamp01(values[i]);
-          const x = centerX + Math.cos(angle) * radius * value;
-          const y = centerY + Math.sin(angle) * radius * value;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
-
-      // ---------- stability meters ----------
-      const actHist = [];
-      const DELTA_WIN = 24;
-
-      function stabilityScore(hist) {
-        if (hist.length < 3) return 0.5;
-        let sum = 0;
-        let n = 0;
-        for (let i = 1; i < hist.length; i++) {
-          sum += Math.abs(hist[i] - hist[i - 1]);
-          n++;
-        }
-        const meanDelta = n ? sum / n : 0;
-        return clamp01(1 - meanDelta * 2.2);
-      }
-
-      function setMeter(idFill, idLabel, score) {
-        const fill = $(idFill);
-        const lbl = $(idLabel);
-        if (fill) fill.style.width = `${clamp01(score) * 100}%`;
-        if (lbl) {
-          const pct = Math.round(score * 100);
-          lbl.textContent =
-            pct >= 80
-              ? `stable ${pct}%`
-              : pct >= 55
-                ? `ok ${pct}%`
-                : `volatile ${pct}%`;
-        }
-      }
-
-      // ---------- Enhanced training status polling ----------
-      let lastStatsAt = 0;
-
-      async function pollStats() {
+    const store = {
+      get: (k: string, d: string) => {
         try {
-          const res = await fetch("http://127.0.0.1:8000/stats", {
-            method: "GET",
-          });
-          const data = await res.json();
-
-          const count = data.log_count ?? 0;
-          const readyAt = data.training_ready_at ?? 25;
-          const ready = !!data.training_ready;
-          const modelVer = data.current_model || "ase_v0";
-          const autoTraining = data.auto_training ?? true;
-
-          // Update multiple HUD elements
-          const el = $("ase-training");
-          if (el) {
-            el.textContent = ready
-              ? `YES (${count}/${readyAt})`
-              : `no (${count}/${readyAt})`;
-          }
-
-          // Update new analytics section
-          const samplesEl = $("ase-samples");
-          if (samplesEl) samplesEl.textContent = count;
-          
-          const modelEl = $("ase-model");
-          if (modelEl) modelEl.textContent = modelVer;
-          
-          const autoEl = $("ase-auto-training");
-          if (autoEl) autoEl.textContent = autoTraining ? "ON" : "OFF";
-          
-          const verEl = $("ase-model-ver");
-          if (verEl) verEl.textContent = modelVer.replace("ase_", "v");
-
+          return localStorage.getItem("ase." + k) ?? d;
         } catch {
-          const el = $("ase-training");
-          if (el) el.textContent = "offline";
+          return d;
         }
-      }
-
-      // ---------- Enhanced main loop ----------
-      setInterval(() => {
-        if (!s) return;
-        const now = Date.now();
-        const t = (now - s.startTime) / 1000;
-
-        // Enhanced metrics from new ASE client
-        const scrollVel = s.metrics.scrollVelocity || 0;
-        const scrollAcc = s.metrics.scrollAcceleration || 0;
-        const clickHeat = s.metrics.clickHeatmap || 0;
-        const kbdRhythm = s.metrics.keyboardRhythm || 0;
-        const idleRatio = s.metrics.idleRatio || 0;
-        const interactRate = s.metrics.interactionCount / Math.max(t, 1);
-        const focusIntensity = s.metrics.focusIntensity || 0;
-        const sessionDepth = s.metrics.sessionDepth || 0;
-        const explorationPattern = s.metrics.explorationPattern || 0;
-
-        const wakeRaw =
-          parseFloat(
-            getComputedStyle(document.documentElement).getPropertyValue(
-              "--ase-wake",
-            ),
-          ) || 0.5;
-
-        smoothWake = lerp(smoothWake, wakeRaw, 0.18);
-
-        // Enhanced normalizations
-        const scrollN = clamp01(scrollVel * 80);
-        const accN = clamp01(scrollAcc);
-        const heatN = clamp01(clickHeat);
-        const kbdN = clamp01(kbdRhythm);
-        const idleN = clamp01(idleRatio);
-        const interactN = clamp01(s.metrics.interactionCount / 40);
-        const focusN = clamp01(focusIntensity);
-        const depthN = clamp01(sessionDepth);
-        const explorationN = clamp01(explorationPattern);
-        const timeN = clamp01(t / 300);
-        const cadenceN = clamp01(s.metrics.cadenceEnergy / 100);
-        const activityN = clamp01(scrollN * 0.3 + interactN * 0.4 + heatN * 0.3);
-
-        // Update existing basic fields
-        $("ase-time").textContent = `${t.toFixed(1)}s`;
-        $("ase-int").textContent = s.metrics.interactionCount;
-        $("ase-rate").textContent = interactRate.toFixed(2);
-        $("ase-idle-s").textContent = (s.metrics.idleTime / 1000).toFixed(1);
-
-        // Update enhanced activity section
-        $("ase-scroll").textContent = scrollVel.toFixed(3);
-        $("ase-acc").textContent = scrollAcc.toFixed(3);
-        $("ase-heatmap").textContent = heatN.toFixed(2);
-        $("ase-kbd").textContent = kbdN.toFixed(2);
-        $("ase-idle").textContent = idleN.toFixed(2);
-        $("ase-activity").textContent = activityN.toFixed(2);
-
-        // Update enhanced energy section
-        $("ase-wake").textContent = smoothWake.toFixed(3);
-        $("ase-cadence").textContent = cadenceN.toFixed(2);
-        $("ase-focus").textContent = focusN.toFixed(2);
-        $("ase-depth").textContent = depthN.toFixed(2);
-
-        // Update all bars
-        $("ase-bar-scroll").style.width = `${scrollN * 100}%`;
-        $("ase-bar-acc").style.width = `${accN * 100}%`;
-        $("ase-bar-heatmap").style.width = `${heatN * 100}%`;
-        $("ase-bar-kbd").style.width = `${kbdN * 100}%`;
-        $("ase-bar-idle").style.width = `${idleN * 100}%`;
-        $("ase-bar-activity").style.width = `${activityN * 100}%`;
-        $("ase-bar-wake").style.width = `${smoothWake * 100}%`;
-        $("ase-bar-cadence").style.width = `${cadenceN * 100}%`;
-        $("ase-bar-focus").style.width = `${focusN * 100}%`;
-        $("ase-bar-depth").style.width = `${depthN * 100}%`;
-        $("ase-bar-exploration").style.width = `${explorationN * 100}%`;
-
-        // Update analytics section
-        if (s.context) {
-          $("ase-page").textContent = s.context.page || "unknown";
-          $("ase-device").textContent = s.context.deviceType || "desktop";
-          $("ase-viewport").textContent = s.context.viewportSize || "medium";
-          $("ase-session-num").textContent = s.context.sessionNumber || "1";
-          $("ase-exploration").textContent = explorationN.toFixed(2);
-          
-          // Update context section
-          const now = new Date();
-          $("ase-time-context").textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-          $("ase-day-context").textContent = now.toLocaleDateString('en-US', { weekday: 'short' });
-          $("ase-section-context").textContent = s.context.section || "main";
-          $("ase-referrer").textContent = (s.context.referrer || "direct").substring(0, 12);
+      },
+      set: (k: string, v: string) => {
+        try {
+          localStorage.setItem("ase." + k, v);
+        } catch {
+          /* private mode */
         }
-
-        // Enhanced vector with 8 dimensions
-        const vec = [scrollN, accN, idleN, heatN, kbdN, interactN, timeN, cadenceN];
-        for (let i = 0; i < 8; i++) {
-          const vEl = $(`ase-v${i}`);
-          if (vEl) vEl.textContent = vec[i].toFixed(2);
-        }
-
-        // Draw radar visualization
-        if (vectorCtx) {
-          drawRadar(vectorCtx, vec, 40);
-        }
-
-        // Enhanced mood calculation
-        if (moodEl) {
-          if (smoothWake > 0.65) {
-            moodEl.textContent = "Focused";
-            moodEl.style.color = "#8cffbe";
-          } else if (idleN > 0.6) {
-            moodEl.textContent = "Idle";
-            moodEl.style.color = "#ff8787";
-          } else if (activityN > 0.5) {
-            moodEl.textContent = "Exploring";
-            moodEl.style.color = "#ffaa00";
-          } else {
-            moodEl.textContent = "Calm";
-            moodEl.style.color = "#aa87ff";
-          }
-        }
-
-        // sparkline history
-        wakeHist.push(smoothWake);
-        if (wakeHist.length > HISTORY) wakeHist.shift();
-        drawSpark();
-
-        // stability history
-        actHist.push(activityN);
-        if (actHist.length > DELTA_WIN) actHist.shift();
-
-        const wakeWin = wakeHist.slice(
-          Math.max(0, wakeHist.length - DELTA_WIN),
-        );
-        const stabWake = stabilityScore(wakeWin);
-        const stabAct = stabilityScore(actHist);
-
-        setMeter("ase-meter-wake", "ase-stab-wake", stabWake);
-        setMeter("ase-meter-activity", "ase-stab-activity", stabAct);
-
-        // last infer age
-        const ageEl = $("ase-infer-age");
-        const stEl = $("ase-infer-status");
-        if (ageEl && stEl) {
-          const ts = s.lastUpdate;
-          if (!ts) {
-            ageEl.textContent = "—";
-            stEl.textContent = "waiting";
-          } else {
-            const ageS = (Date.now() - ts) / 1000;
-            ageEl.textContent = `${ageS.toFixed(1)}s`;
-            stEl.textContent = s.status === "connected" ? "ok" : s.status;
-          }
-        }
-
-        // Enhanced stats polling
-        if (Date.now() - lastStatsAt > 8000) { // Poll more frequently
-          lastStatsAt = Date.now();
-          pollStats();
-        }
-      }, 300); // Slightly faster update rate
-
-      // Initial stats poll
-      pollStats();
-    }
-
-    // Console functionality
-    const setupConsole = () => {
-      const copyBtn = document.getElementById('ase-copy-console');
-      const clearBtn = document.getElementById('ase-clear-console');
-      const consoleEl = document.getElementById('ase-console-logs');
-      
-      if (copyBtn && consoleEl) {
-        copyBtn.addEventListener('click', () => {
-          const text = consoleEl.innerText;
-          navigator.clipboard.writeText(text).then(() => {
-            copyBtn.textContent = '✅ Copied!';
-            setTimeout(() => {
-              copyBtn.textContent = '📋 Copy';
-            }, 2000);
-          }).catch(err => {
-            console.error('Failed to copy:', err);
-          });
-        });
-        
-        // Right-click context menu
-        consoleEl.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          const menu = document.createElement('div');
-          menu.style.cssText = `
-            position: fixed;
-            top: ${e.clientY}px;
-            left: ${e.clientX}px;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 4px;
-            padding: 8px 0;
-            font-size: 12px;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          `;
-          
-          menu.innerHTML = `
-            <div style="cursor: pointer; padding: 4px 8px;" onclick="copySelectedText()">📋 Copy Selected</div>
-            <div style="cursor: pointer; padding: 4px 8px;" onclick="copyAllText()">📄 Copy All</div>
-            <div style="cursor: pointer; padding: 4px 8px;" onclick="clearConsole()">🗑️ Clear Console</div>
-          `;
-          
-          document.body.appendChild(menu);
-          
-          const copySelectedText = () => {
-            const selection = window.getSelection().toString();
-            if (selection) {
-              navigator.clipboard.writeText(selection);
-            }
-            document.body.removeChild(menu);
-          };
-          
-          const copyAllText = () => {
-            navigator.clipboard.writeText(consoleEl.innerText);
-            document.body.removeChild(menu);
-          };
-          
-          const clearConsole = () => {
-            consoleEl.innerHTML = '';
-            document.body.removeChild(menu);
-          };
-          
-          // Close menu when clicking elsewhere
-          const closeMenu = (e) => {
-            if (!menu.contains(e.target)) {
-              document.body.removeChild(menu);
-              document.removeEventListener('click', closeMenu);
-            }
-          };
-          
-          setTimeout(() => {
-            document.addEventListener('click', closeMenu);
-          }, 100);
-        });
-      }
-      
-      if (clearBtn && consoleEl) {
-        clearBtn.addEventListener('click', () => {
-          consoleEl.innerHTML = '';
-        });
-      }
+      },
     };
 
-    // Initialize console functionality when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', setupConsole);
-    } else {
-      setupConsole();
-    }
-  </script>
+    /* ---------------- open / close ---------------- */
+    let open = store.get("open", "false") === "true";
+    let tab = store.get("tab", "in");
 
-  <!-- ================= Enhanced Styles ================= -->
-  <style>
-    #ase-debug {
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 10000;
-      width: 340px; /* Expanded for larger fonts */
-      padding: 0.75rem;
-      background: rgba(10, 10, 15, 0.92);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 10px;
-      font-family:
-        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
-      font-size: 11px; /* Increased from 10px */
-      color: rgba(255, 255, 255, 0.9);
-      pointer-events: auto;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
+    const toggle = $("ase-toggle")!;
 
-    .ase-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
+    const applyOpen = () => {
+      hud.dataset.open = String(open);
+      toggle.setAttribute("aria-expanded", String(open));
+      store.set("open", String(open));
+      if (open) void pollStats();
+    };
 
-    .ase-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    const applyTab = () => {
+      hud.dataset.tab = tab;
+      hud.querySelectorAll<HTMLElement>("[data-tab]").forEach((b) => {
+        b.setAttribute("aria-selected", String(b.dataset.tab === tab));
+      });
+      hud.querySelectorAll<HTMLElement>("[data-pane]").forEach((p) => {
+        p.hidden = p.dataset.pane !== tab;
+      });
+      store.set("tab", tab);
+    };
 
-    .ase-controls-row {
-      display: flex;
-      gap: 0.2rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 0.75rem;
-      padding: 0.5rem;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
+    toggle.addEventListener("click", () => {
+      open = !open;
+      applyOpen();
+    });
 
-    .ase-dot {
-      width: 6px;
-      height: 6px;
-      background: #aa87ff;
-      border-radius: 50%;
-      box-shadow: 0 0 12px #aa87ff;
-      animation: ase-pulse 2s ease-in-out infinite;
-    }
+    hud.querySelectorAll<HTMLElement>("[data-tab]").forEach((b) => {
+      b.addEventListener("click", () => {
+        tab = b.dataset.tab ?? "in";
+        applyTab();
+      });
+    });
 
-    @keyframes ase-pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-
-    .ase-name {
-      font-weight: bold;
-      color: #fff;
-      font-size: 12px; /* Increased from 11px */
-    }
-
-    .ase-mood {
-      background: rgba(170, 135, 255, 0.15);
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #aa87ff;
-      font-size: 10px; /* Increased from 9px */
-      transition: all 0.3s ease;
-    }
-
-    .ase-version {
-      background: rgba(140, 255, 190, 0.15);
-      padding: 2px 4px;
-      border-radius: 3px;
-      color: #8cffbe;
-      font-size: 9px; /* Increased from 8px */
-      font-weight: bold;
-    }
-
-    .ase-controls {
-      display: flex;
-      gap: 0.2rem;
-      flex-wrap: wrap;
-    }
-
-    .ase-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #fff;
-      width: 18px;
-      height: 18px;
-      padding: 0;
-      border-radius: 4px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px; /* Increased from 8px */
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .ase-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: translateY(-1px);
-    }
-
-    .ase-btn:active {
-      transform: translateY(0);
-    }
-
-    /* Active state with soft glow */
-    .ase-btn[data-active="true"] {
-      background: rgba(170, 135, 255, 0.25);
-      border-color: rgba(170, 135, 255, 0.6);
-      color: #aa87ff;
-      box-shadow: 
-        0 0 8px rgba(170, 135, 255, 0.4),
-        0 0 16px rgba(170, 135, 255, 0.2),
-        inset 0 0 8px rgba(170, 135, 255, 0.1);
-    }
-
-    .ase-btn[data-active="true"]:hover {
-      background: rgba(170, 135, 255, 0.35);
-      border-color: rgba(170, 135, 255, 0.8);
-      box-shadow: 
-        0 0 12px rgba(170, 135, 255, 0.6),
-        0 0 24px rgba(170, 135, 255, 0.3),
-        inset 0 0 12px rgba(170, 135, 255, 0.15);
-    }
-
-    /* Special active states for different button types */
-    .ase-btn-danger[data-active="true"] {
-      background: rgba(255, 135, 135, 0.25);
-      border-color: rgba(255, 135, 135, 0.6);
-      color: #ff8787;
-      box-shadow: 
-        0 0 8px rgba(255, 135, 135, 0.4),
-        0 0 16px rgba(255, 135, 135, 0.2),
-        inset 0 0 8px rgba(255, 135, 135, 0.1);
-    }
-
-    .ase-btn-danger[data-active="true"]:hover {
-      background: rgba(255, 135, 135, 0.35);
-      border-color: rgba(255, 135, 135, 0.8);
-      box-shadow: 
-        0 0 12px rgba(255, 135, 135, 0.6),
-        0 0 24px rgba(255, 135, 135, 0.3),
-        inset 0 0 12px rgba(255, 135, 135, 0.15);
-    }
-
-    .ase-btn-special[data-active="true"] {
-      background: rgba(255, 170, 0, 0.25);
-      border-color: rgba(255, 170, 0, 0.6);
-      color: #ffaa00;
-      box-shadow: 
-        0 0 8px rgba(255, 170, 0, 0.4),
-        0 0 16px rgba(255, 170, 0, 0.2),
-        inset 0 0 8px rgba(255, 170, 0, 0.1);
-    }
-
-    .ase-btn-special[data-active="true"]:hover {
-      background: rgba(255, 170, 0, 0.35);
-      border-color: rgba(255, 170, 0, 0.8);
-      box-shadow: 
-        0 0 12px rgba(255, 170, 0, 0.6),
-        0 0 24px rgba(255, 170, 0, 0.3),
-        inset 0 0 12px rgba(255, 170, 0, 0.15);
-    }
-
-    .ase-btn-danger {
-      color: #ff8787;
-      border-color: rgba(255, 135, 135, 0.3);
-    }
-
-    .ase-btn-danger:hover {
-      background: rgba(255, 135, 135, 0.15);
-    }
-
-    .ase-btn-special {
-      color: #ffaa00;
-      border-color: rgba(255, 170, 0, 0.3);
-    }
-
-    .ase-btn-special:hover {
-      background: rgba(255, 170, 0, 0.15);
-    }
-
-    .ase-spark {
-      margin-bottom: 0.75rem;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 6px;
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.25rem;
-      align-items: center;
-    }
-
-    .ase-spark canvas {
-      border-radius: 4px;
-    }
-
-    .ase-spark #ase-vector-radar {
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-    }
-
-    .ase-color-swatch {
-      padding: 0.5rem;
-      border-radius: 4px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      max-width: 100%;
-      overflow: hidden;
-    }
-
-    .ase-color-swatch :global(.color-swatch) {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .ase-section {
-      margin-bottom: 0.75rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 0.5rem;
-      transition: all 0.3s ease;
-    }
-
-    .ase-section:hover {
-      background: rgba(255, 255, 255, 0.02);
-      border-top-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .ase-title {
-      color: #aa87ff;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.3rem;
-      font-size: 10px; /* Increased from 9px */
-      font-weight: 600;
-    }
-
-    .ase-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 3px;
-      align-items: center;
-      font-size: 10px; /* Increased from 9px */
-    }
-
-    .ase-row span:first-child {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 9px; /* Increased from 8px */
-    }
-
-    .ase-row span:last-child {
-      color: #fff;
-      font-weight: 500;
-    }
-
-    .ase-bar {
-      height: 3px;
-      background: rgba(255, 255, 255, 0.08);
-      margin-bottom: 6px;
-      border-radius: 2px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .ase-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #aa87ff, #8cffbe);
-      width: 0%;
-      transition: width 0.4s ease;
-      border-radius: 2px;
-      position: relative;
-    }
-
-    .ase-fill::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 8px;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 0 2px 2px 0;
-    }
-
-    .ase-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.25rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .ase-kv {
-      display: flex;
-      justify-content: space-between;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 3px 6px;
-      border-radius: 3px;
-      font-size: 9px; /* Increased from 8px */
-      transition: all 0.2s ease;
-    }
-
-    .ase-kv:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .ase-kv span:first-child {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .ase-kv span:last-child {
-      color: #8cffbe;
-      font-weight: 600;
-    }
-
-    .ase-meter {
-      height: 8px;
-      border-radius: 6px;
-      overflow: hidden;
-      margin: 4px 0 8px 0;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .ase-meter-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 6px;
-      transition: width 0.3s ease;
-      background: linear-gradient(90deg, #ff8787, #ffaa00, #8cffbe);
-      opacity: 0.85;
-    }
-
-    .ase-mini-radar {
-      display: flex;
-      justify-content: center;
-      margin-top: 0.5rem;
-    }
-
-    .ase-mini-radar canvas {
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-    }
-
-    /* Enhanced visual feedback */
-    #ase-debug[data-training="active"] {
-      border-color: rgba(140, 255, 190, 0.5);
-      box-shadow: 0 8px 32px rgba(140, 255, 190, 0.2);
-    }
-
-    #ase-debug[data-connected="true"] .ase-dot {
-      background: #8cffbe;
-      box-shadow: 0 0 12px #8cffbe;
-    }
-
-    #ase-debug[data-connected="false"] .ase-dot {
-      background: #ff8787;
-      box-shadow: 0 0 12px #ff8787;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      #ase-debug {
-        width: 280px;
-        font-size: 9px;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "e" || e.key === "E") {
+        open = !open;
+        applyOpen();
       }
-      
-      .ase-controls {
-        gap: 0.15rem;
+    };
+    window.addEventListener("keydown", onKey);
+
+    applyOpen();
+    applyTab();
+
+    /* ---------------- device-pixel-aware canvas ---------------- */
+    function fitCanvas(
+      canvas: HTMLCanvasElement | null,
+      cssH: number,
+    ): { ctx: CanvasRenderingContext2D; w: number; h: number } | null {
+      if (!canvas) return null;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssW = canvas.parentElement?.clientWidth || 264;
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      canvas.style.width = "100%";
+      canvas.style.height = `${cssH}px`;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, w: cssW, h: cssH };
+    }
+
+    /* ---------------- "in" pane, built from the wire vector ---------------- */
+    const vecRoot = $("ase-vec")!;
+    const vecRows = IN_LABELS.map((label) => {
+      const row = document.createElement("div");
+      row.className = "ase-row";
+      const l = document.createElement("span");
+      l.className = "ase-key";
+      l.textContent = label;
+      const track = document.createElement("span");
+      track.className = "ase-track";
+      const fill = document.createElement("span");
+      fill.className = "ase-fill";
+      track.appendChild(fill);
+      const num = document.createElement("span");
+      num.className = "ase-num";
+      num.textContent = "0.00";
+      row.append(l, track, num);
+      vecRoot.appendChild(row);
+      return { fill, num };
+    });
+
+    /* ---------------- "out" pane: the latent embedding ----------------
+       The embedding is signed, so each dimension is drawn diverging from a
+       zero baseline rather than as a magnitude. One cell per dimension keeps
+       every bar adjacent to its own number, so the two can never be misread
+       against each other. */
+    const embedGrid = $("ase-embed-grid")!;
+    let embedding: number[] = [];
+    let embedCells: { bar: HTMLElement; num: HTMLElement }[] = [];
+
+    const buildEmbedCells = (n: number) => {
+      embedGrid.textContent = "";
+      embedCells = Array.from({ length: n }, () => {
+        const cell = document.createElement("div");
+        cell.className = "ase-cell";
+        const track = document.createElement("span");
+        track.className = "ase-cell-track";
+        const bar = document.createElement("i");
+        track.appendChild(bar);
+        const num = document.createElement("span");
+        num.className = "ase-cell-num";
+        num.textContent = "0.00";
+        cell.append(track, num);
+        embedGrid.appendChild(cell);
+        return { bar, num };
+      });
+    };
+
+    const renderEmbed = () => {
+      if (!embedding.length) return;
+      if (embedCells.length !== embedding.length) {
+        buildEmbedCells(embedding.length);
       }
-      
-      .ase-btn {
-        width: 16px;
-        height: 16px;
-        font-size: 7px;
+
+      const maxAbs = Math.max(...embedding.map(Math.abs), 1e-6);
+      const half = 8; // half of the 16px track
+      embedCells.forEach((cell, i) => {
+        const v = embedding[i] ?? 0;
+        const t = Math.max(-1, Math.min(1, v / maxAbs));
+        // Floor at 1px so a small-but-nonzero dimension is still visible
+        // instead of silently rendering as nothing.
+        const h = Math.max(Math.abs(t) * half, 1);
+        cell.bar.style.height = `${h}px`;
+        cell.bar.style.top = t >= 0 ? `${half - h}px` : `${half}px`;
+        cell.num.textContent = v.toFixed(2);
+        cell.num.dataset.sign = v >= 0 ? "pos" : "neg";
+      });
+    };
+
+    /* ---------------- wake sparkline ---------------- */
+    const sparkCv = fitCanvas(
+      document.getElementById("ase-wake-spark") as HTMLCanvasElement | null,
+      30,
+    );
+    const wakeHist: number[] = [];
+    let smoothWake = 0.5;
+
+    const renderSpark = () => {
+      if (!sparkCv || wakeHist.length < 2) return;
+      const { ctx, w, h } = sparkCv;
+      const color = accent();
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = color;
+      ctx.fillRect(0, h - 1, w, 1);
+      ctx.globalAlpha = 1;
+
+      ctx.beginPath();
+      wakeHist.forEach((v, i) => {
+        const x = (i / (HISTORY - 1)) * w;
+        const y = h - clamp01(v) * (h - 4) - 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.lineJoin = "round";
+      ctx.stroke();
+    };
+
+    /* ---------------- "model" pane ---------------- */
+    const modelRows = $("ase-model-rows")!;
+    const modelEls: Record<string, HTMLElement> = {};
+    MODEL_FIELDS.forEach(([label, id]) => {
+      const row = document.createElement("div");
+      row.className = "ase-row ase-row--flat";
+      const l = document.createElement("span");
+      l.className = "ase-key";
+      l.textContent = label;
+      const v = document.createElement("span");
+      v.className = "ase-num";
+      v.textContent = "—";
+      row.append(l, v);
+      modelRows.appendChild(row);
+      modelEls[id] = v;
+    });
+
+    let lastStatsAt = 0;
+    async function pollStats() {
+      const url = (window as any).__aseUrl;
+      if (!url) return;
+      try {
+        const res = await fetch(`${url}/stats`);
+        const data = await res.json();
+        const count = data.log_count ?? 0;
+        const readyAt = data.training_ready_at ?? 25;
+        modelEls["ase-f-model"].textContent = data.current_model ?? "—";
+        modelEls["ase-f-samples"].textContent = `${count}/${readyAt}`;
+        modelEls["ase-f-training"].textContent = data.training_ready
+          ? "ready"
+          : "collecting";
+        modelEls["ase-f-auto"].textContent = data.auto_training ? "on" : "off";
+        const ver = $("ase-model-ver");
+        if (ver) {
+          ver.textContent = String(data.current_model ?? "v0").replace(
+            "ase_",
+            "",
+          );
+        }
+        hud.dataset.link = "online";
+      } catch {
+        hud.dataset.link = "offline";
+        modelEls["ase-f-training"].textContent = "offline";
       }
     }
 
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-      #ase-debug {
-        background: rgba(0, 0, 0, 0.95);
-        border-color: rgba(255, 255, 255, 0.4);
+    /* ---------------- events from the client ---------------- */
+    const onUpdate = (e: Event) => {
+      const d = (e as CustomEvent).detail || {};
+      embedding = d.embedding || [];
+      hud.dataset.link = "online";
+      const lat = $("ase-lat");
+      if (lat) {
+        lat.textContent =
+          d.latency != null ? `${Math.round(d.latency)}ms` : "—";
       }
-      
-      .ase-fill {
-        background: #aa87ff;
-      }
-    }
+      const dims = $("ase-embed-dims");
+      if (dims) dims.textContent = String(embedding.length);
+      renderEmbed();
+    };
+    window.addEventListener("ase:update", onUpdate);
 
-    /* Reduced motion support */
-    @media (prefers-reduced-motion: reduce) {
-      .ase-fill,
-      .ase-meter-fill {
-        transition: none;
+    const onMilestone = (e: Event) => {
+      const state = $("ase-state");
+      if (state) {
+        state.textContent = `milestone ${(e as CustomEvent).detail?.count ?? 0}`;
       }
-      
-      .ase-dot {
-        animation: none;
+    };
+    window.addEventListener("ase:milestone", onMilestone);
+
+    /* ---------------- main loop ---------------- */
+    const tick = () => {
+      const s = (window as any).__ase;
+      if (!s) return;
+
+      const vec: number[] = s.lastVector || [];
+      for (let i = 0; i < vecRows.length; i++) {
+        const v = clamp01(vec[i] ?? 0);
+        vecRows[i].fill.style.width = `${v * 100}%`;
+        vecRows[i].num.textContent = v.toFixed(2);
       }
+
+      const wakeRaw =
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--ase-wake",
+          ),
+        ) || 0.5;
+      smoothWake = smoothWake + (wakeRaw - smoothWake) * 0.2;
+      const wakeVal = $("ase-wake-val");
+      if (wakeVal) wakeVal.textContent = smoothWake.toFixed(3);
+      wakeHist.push(smoothWake);
+      if (wakeHist.length > HISTORY) wakeHist.shift();
+      renderSpark();
+
+      const state = $("ase-state");
+      const age = $("ase-age");
+      if (state) state.textContent = s.status || "waiting";
+      if (age) {
+        age.textContent = s.lastUpdate
+          ? `${((Date.now() - s.lastUpdate) / 1000).toFixed(1)}s ago`
+          : "no inference yet";
+      }
+
+      const c = s.context;
+      if (c) {
+        modelEls["ase-f-page"].textContent = c.page || "—";
+        modelEls["ase-f-section"].textContent = c.section || "—";
+        modelEls["ase-f-device"].textContent = c.deviceType || "—";
+        modelEls["ase-f-viewport"].textContent = c.viewportSize || "—";
+        modelEls["ase-f-session"].textContent = String(c.sessionNumber ?? "—");
+        modelEls["ase-f-referrer"].textContent = (c.referrer || "direct").slice(
+          0,
+          18,
+        );
+      }
+
+      if (open && Date.now() - lastStatsAt > 8000) {
+        lastStatsAt = Date.now();
+        void pollStats();
+      }
+    };
+    const loop = window.setInterval(tick, 250);
+    tick();
+
+    /* ---------------- actions ---------------- */
+    const flash = (btn: HTMLButtonElement, text: string, ms = 1200) => {
+      const old = btn.textContent;
+      btn.textContent = text;
+      btn.disabled = true;
+      window.setTimeout(() => {
+        btn.textContent = old;
+        btn.disabled = false;
+      }, ms);
+    };
+
+    $("ase-log")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      const ok = await (window as any).__ase?.logSession?.();
+      flash(btn, ok ? "logged" : "failed");
+    });
+
+    $("ase-train")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      btn.textContent = "training…";
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${(window as any).__aseUrl}/train`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        btn.textContent = data.status === "success" ? "done" : "failed";
+        void pollStats();
+      } catch {
+        btn.textContent = "offline";
+      }
+      window.setTimeout(() => {
+        btn.textContent = "train";
+        btn.disabled = false;
+      }, 1600);
+    });
+
+    $("ase-copy")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      const s = (window as any).__ase;
+      const payload = {
+        vector: s?.lastVector ?? [],
+        embedding,
+        latency: s?.lastLatency ?? null,
+        context: s?.context ?? null,
+      };
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+        flash(btn, "copied");
+      } catch {
+        flash(btn, "failed");
+      }
+    });
+
+    /* ---------------- teardown on view-transition swap ---------------- */
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        window.clearInterval(loop);
+        window.removeEventListener("keydown", onKey);
+        window.removeEventListener("ase:update", onUpdate);
+        window.removeEventListener("ase:milestone", onMilestone);
+      },
+      { once: true },
+    );
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAseHud);
+  } else {
+    initAseHud();
+  }
+  document.addEventListener("astro:page-load", initAseHud);
+</script>
+
+<style is:global>
+  /* Global on purpose: the rows are created with createElement and would never
+     pick up Astro's scope attribute. Everything is namespaced under #ase-hud. */
+  #ase-hud {
+    --ase-accent: oklch(0.72 0.06 255);
+    --ase-surface: rgba(9, 9, 11, 0.86);
+    --ase-line: rgba(255, 255, 255, 0.12);
+    --ase-fg: rgba(255, 255, 255, 0.94);
+    --ase-muted: rgba(255, 255, 255, 0.44);
+    --ase-soft: rgba(255, 255, 255, 0.06);
+    --ase-track: rgba(255, 255, 255, 0.1);
+    --ase-raised: rgba(255, 255, 255, 0.13);
+    --ase-zero: rgba(255, 255, 255, 0.24);
+
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 9000;
+    width: min(288px, calc(100vw - 2rem));
+    font-family:
+      "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--ase-fg);
+    background: var(--ase-surface);
+    backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--ase-line);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+    transition: width 180ms ease;
+  }
+
+  html.light #ase-hud {
+    --ase-accent: oklch(0.52 0.09 255);
+    --ase-surface: rgba(253, 253, 254, 0.9);
+    --ase-line: rgba(0, 0, 0, 0.12);
+    --ase-fg: rgba(0, 0, 0, 0.92);
+    --ase-muted: rgba(0, 0, 0, 0.46);
+    --ase-soft: rgba(0, 0, 0, 0.05);
+    --ase-track: rgba(0, 0, 0, 0.09);
+    --ase-raised: rgba(0, 0, 0, 0.07);
+    --ase-zero: rgba(0, 0, 0, 0.26);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+  }
+
+  /* ---------- collapsed ---------- */
+  #ase-hud[data-open="false"] {
+    width: auto;
+  }
+  #ase-hud[data-open="false"] #ase-body {
+    display: none;
+  }
+
+  #ase-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.45rem 0.7rem;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  #ase-hud[data-open="false"] #ase-toggle {
+    width: auto;
+  }
+  #ase-toggle:hover {
+    background: var(--ase-soft);
+  }
+  #ase-toggle:focus-visible {
+    outline: 1px solid var(--ase-accent);
+    outline-offset: -1px;
+  }
+
+  #ase-hud .ase-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ase-muted);
+  }
+  #ase-hud[data-link="online"] .ase-dot {
+    background: var(--ase-accent);
+    box-shadow: 0 0 8px var(--ase-accent);
+  }
+  #ase-hud[data-link="offline"] .ase-dot {
+    background: oklch(0.66 0.19 25);
+    box-shadow: 0 0 8px oklch(0.66 0.19 25 / 0.6);
+  }
+
+  #ase-hud .ase-word {
+    letter-spacing: 0.09em;
+    opacity: 0.9;
+  }
+
+  #ase-hud .ase-model {
+    margin-left: auto;
+    color: var(--ase-muted);
+    font-size: 10px;
+  }
+
+  #ase-hud .ase-chev {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    margin-left: 0.4rem;
+    border-right: 1px solid var(--ase-muted);
+    border-bottom: 1px solid var(--ase-muted);
+    transform: rotate(-135deg) translate(-1px, -1px);
+    transition: transform 180ms ease;
+  }
+  #ase-hud[data-open="true"] .ase-chev {
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+
+  /* ---------- body ---------- */
+  #ase-body {
+    padding: 0 0.7rem 0.7rem;
+    border-top: 1px solid var(--ase-line);
+  }
+
+  #ase-hud .ase-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0;
+    font-size: 10px;
+    color: var(--ase-muted);
+  }
+  #ase-hud .ase-sep {
+    opacity: 0.4;
+  }
+
+  #ase-hud .ase-block {
+    padding-bottom: 0.6rem;
+  }
+  #ase-hud .ase-block-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.3rem;
+  }
+
+  #ase-wake-spark {
+    display: block;
+  }
+
+  /* ---------- tabs ---------- */
+  #ase-hud .ase-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    margin-bottom: 0.6rem;
+    background: var(--ase-soft);
+    border-radius: 7px;
+  }
+  #ase-hud .ase-tabs button {
+    flex: 1;
+    padding: 0.28rem 0;
+    background: transparent;
+    border: 0;
+    border-radius: 5px;
+    color: var(--ase-muted);
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+    transition:
+      background 140ms ease,
+      color 140ms ease;
+  }
+  #ase-hud .ase-tabs button:hover {
+    color: var(--ase-fg);
+  }
+  #ase-hud .ase-tabs button[aria-selected="true"] {
+    background: var(--ase-raised);
+    color: var(--ase-fg);
+    box-shadow: inset 0 0 0 1px var(--ase-line);
+  }
+
+  /* ---------- panes ---------- */
+  #ase-hud .ase-pane[hidden] {
+    display: none;
+  }
+
+  #ase-hud .ase-note {
+    margin: 0 0 0.5rem;
+    font-size: 10px;
+    color: var(--ase-muted);
+  }
+  #ase-hud .ase-note code {
+    color: var(--ase-fg);
+    opacity: 0.75;
+  }
+
+  #ase-hud .ase-row {
+    display: grid;
+    grid-template-columns: 74px 1fr 34px;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  #ase-hud .ase-row--flat {
+    grid-template-columns: 74px 1fr;
+  }
+
+  #ase-hud .ase-key {
+    font-size: 10px;
+    color: var(--ase-muted);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  #ase-hud .ase-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #ase-hud .ase-track {
+    display: block;
+    height: 3px;
+    background: var(--ase-track);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  #ase-hud .ase-fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--ase-accent);
+    border-radius: 2px;
+    transition: width 220ms ease;
+  }
+
+  #ase-hud .ase-embed-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+  }
+  #ase-hud .ase-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  #ase-hud .ase-cell-track {
+    position: relative;
+    display: block;
+    height: 16px;
+  }
+  #ase-hud .ase-cell-track::before {
+    content: "";
+    position: absolute;
+    inset: 50% 0 auto 0;
+    height: 1px;
+    background: var(--ase-zero);
+  }
+  #ase-hud .ase-cell-track i {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: var(--ase-accent);
+    border-radius: 1px;
+  }
+  #ase-hud .ase-cell-num {
+    font-size: 9px;
+    text-align: center;
+    color: var(--ase-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  #ase-hud .ase-cell-num[data-sign="pos"] {
+    color: var(--ase-fg);
+  }
+
+  /* ---------- actions ---------- */
+  #ase-hud .ase-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 0.7rem;
+  }
+  #ase-hud .ase-actions button {
+    flex: 1;
+    padding: 0.34rem 0;
+    background: var(--ase-soft);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--ase-fg);
+    font: inherit;
+    font-size: 10px;
+    opacity: 0.7;
+    cursor: pointer;
+    transition:
+      opacity 140ms ease,
+      border-color 140ms ease;
+  }
+  #ase-hud .ase-actions button:hover {
+    opacity: 1;
+    border-color: var(--ase-line);
+  }
+  #ase-hud .ase-actions button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  #ase-hud .ase-console {
+    margin-top: 0.5rem;
+    max-height: 96px;
+    overflow-y: auto;
+    padding: 0.4rem;
+    background: var(--ase-soft);
+    border-radius: 6px;
+    font-size: 9px;
+    line-height: 1.45;
+    color: var(--ase-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #ase-hud,
+    #ase-hud .ase-fill,
+    #ase-hud .ase-chev,
+    #ase-hud .ase-tabs button,
+    #ase-hud .ase-actions button {
+      transition: none;
     }
-  </style>
-</Container>
+  }
+</style>

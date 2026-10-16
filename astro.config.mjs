@@ -66,7 +66,10 @@ export default defineConfig({
   integrations: [
     tailwind(),
     icon(),
-    sitemap(),
+    sitemap({
+      // /orb-test is a dev-only tuning harness — keep it out of the sitemap.
+      filter: (page) => !page.includes("/orb-test"),
+    }),
     mdx(),
      preact(),
     pagefind({

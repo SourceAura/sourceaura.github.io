@@ -29,6 +29,20 @@ interface Props {
   damping?: number;
 
   nearPlaneEpsilon?: number;
+
+  /* ---- Crystal layer (opt-in) ----
+     Adds the Crystalized-Ball vocabulary — electric rim strands, travelling
+     flares, sparks, haze — around the existing texture-mapped particle sphere.
+     The sphere itself is untouched: the rim takes its colour from the post
+     image's dominant tone, and every particle still samples the image at its
+     own (u,v). Default off, so the orb renders exactly as before unless asked. */
+  crystal?: boolean;
+  glow?: number;
+  haze?: number;
+  strands?: number;
+  crackle?: number;
+  flares?: number;
+  sparks?: number;
 }
 
 const {
@@ -56,6 +70,15 @@ const {
   damping = 0.985,
 
   nearPlaneEpsilon = 24,
+
+  crystal = false,
+  /* These defaults are the approved "crystal · intense" look. */
+  glow = 1,
+  haze = 0.9,
+  strands = 8,
+  crackle = 0.9,
+  flares = 1,
+  sparks = 0.9,
 } = Astro.props;
 
 /* Extract first markdown image */
@@ -99,6 +122,13 @@ const cap = Math.max(1, Math.min(width, height));
     gravity,
     damping,
     nearPlaneEpsilon,
+    crystal,
+    glow,
+    haze,
+    strands,
+    crackle,
+    flares,
+    sparks,
   }}
 >
   (() => {
@@ -177,29 +207,69 @@ const cap = Math.max(1, Math.min(width, height));
 
     window.addEventListener("nelumbo:scan", onScan);
 
+    // ---------- Pointer interaction ----------
+    // Mouse: gentle attraction toward the cursor. Click: radial burst.
+    const pointerFine = matchMedia("(pointer: fine)").matches;
+    const pointer = { x: 0, y: 0, active: false, inside: false };
+    const clickBurst = { x: 0, y: 0, t: 0, active: false };
+
+    const onPointerMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = e.clientX - rect.left;
+      pointer.y = e.clientY - rect.top;
+      pointer.active = true;
+      pointer.inside = true;
+    };
+    const onPointerLeave = () => {
+      pointer.active = false;
+      pointer.inside = false;
+    };
+    const onPointerDown = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      clickBurst.x = e.clientX - rect.left;
+      clickBurst.y = e.clientY - rect.top;
+      clickBurst.t = 1;
+      clickBurst.active = true;
+    };
+
+    if (pointerFine) {
+      wrap.addEventListener("pointermove", onPointerMove);
+      wrap.addEventListener("pointerleave", onPointerLeave);
+    }
+    wrap.addEventListener("pointerdown", onPointerDown);
+
     // ---------- Visibility (perf) ----------
-    // When the carousel item is hidden/faded, we can throttle drawing.
+    // How much work an orb is worth is a function of how visible it actually
+    // is. During a carousel transition most petals sit between 5% and 30%
+    // opacity; rendering those at full cost is where the frame budget goes.
     let lastVisCheck = 0;
-    let visScore = 1;
+    let visScore = 1; // 0..1 — the host item's opacity
+    let effort = 1; // 0..1 — work budget derived from it
+
     function updateVisibilityScore(now) {
       if (now - lastVisCheck < 180) return;
       lastVisCheck = now;
 
       if (!hostItem) {
         visScore = 1;
-        return;
+      } else {
+        const st = getComputedStyle(hostItem);
+        if (st.visibility === "hidden" || st.display === "none") {
+          visScore = 0;
+        } else {
+          const op = Number(st.opacity);
+          visScore = Number.isFinite(op) ? Math.max(0, Math.min(1, op)) : 1;
+        }
       }
 
-      const st = getComputedStyle(hostItem);
-      if (st.visibility === "hidden" || st.display === "none") {
-        visScore = 0;
-        return;
-      }
-      const op = Number(st.opacity);
-      visScore = Number.isFinite(op) ? op : 1;
+      // Thinning curve: hard near zero, effectively untouched from ~40% up.
+      // Physics still runs for every particle, so a faded orb keeps its motion
+      // and population and simply gains its specks back as it fades in.
+      effort = visScore >= 0.4 ? 1 : Math.max(0.12, visScore * 2.5);
 
-      // Adaptive quality: when an item is mostly faded, reduce internal resolution.
-      const nextCap = visScore < 0.05 ? 2 : 4;
+      // Internal resolution is not perceptible below ~30% opacity, so drop it
+      // there rather than paying full-res fill for an orb nobody can see.
+      const nextCap = visScore < 0.05 ? 2 : visScore < 0.3 ? 3 : 4;
       if (nextCap !== dprCap) {
         dprCap = nextCap;
         resizeToLayoutSquare();
@@ -238,6 +308,79 @@ const cap = Math.max(1, Math.min(width, height));
       texH = 0;
     let texData = null;
 
+    // ---------- Dominant tone (drives the crystal layer) ----------
+    let toneRGB = { r: 255, g: 255, b: 255 };
+    let hotRGB = { r: 255, g: 255, b: 255 };
+
+    function mixW(c, k) {
+      return {
+        r: Math.round(c.r + (255 - c.r) * k),
+        g: Math.round(c.g + (255 - c.g) * k),
+        b: Math.round(c.b + (255 - c.b) * k),
+      };
+    }
+
+    // Weighted average that favours colourful, mid-bright pixels, then pushed
+    // in saturation and lifted in luminance so the rim reads as coloured light
+    // rather than mud on a black background.
+    function computeTone(data, w, h) {
+      let r = 0,
+        g = 0,
+        b = 0,
+        wsum = 0;
+      const step = 3;
+
+      for (let yy = 0; yy < h; yy += step) {
+        for (let xx = 0; xx < w; xx += step) {
+          const i = (yy * w + xx) * 4;
+          const a = data[i + 3] / 255;
+          if (a < 0.5) continue;
+
+          const R = data[i],
+            G = data[i + 1],
+            B = data[i + 2];
+          const mx = Math.max(R, G, B);
+          const mn = Math.min(R, G, B);
+          const sat = mx === 0 ? 0 : (mx - mn) / mx;
+          const lum = mx / 255;
+          // Skip greys: averaging across every pixel pulls a colourful image
+          // toward mud. Colourful pixels carry the media's actual hue.
+          if (sat < 0.12) continue;
+          const weight = a * (sat * 3.2) * (0.3 + lum * 0.8);
+
+          r += R * weight;
+          g += G * weight;
+          b += B * weight;
+          wsum += weight;
+        }
+      }
+
+      if (wsum <= 0) return { r: 255, g: 255, b: 255 };
+
+      let R = r / wsum,
+        G = g / wsum,
+        B = b / wsum;
+
+      const mx = Math.max(R, G, B),
+        mn = Math.min(R, G, B);
+      const mid = (mx + mn) / 2;
+      const boost = 1.4;
+      R = mid + (R - mid) * boost;
+      G = mid + (G - mid) * boost;
+      B = mid + (B - mid) * boost;
+
+      const lum = (R + G + B) / 3;
+      if (lum > 0 && lum < 96) {
+        const k = 96 / lum;
+        R *= k;
+        G *= k;
+        B *= k;
+      }
+
+      const cl = (v) => Math.max(0, Math.min(255, Math.round(v)));
+      return { r: cl(R), g: cl(G), b: cl(B) };
+    }
+
     function loadTexture(src) {
       if (!src) return;
       const img = new Image();
@@ -264,6 +407,14 @@ const cap = Math.max(1, Math.min(width, height));
         tctx.drawImage(img, 0, 0, texW, texH);
         texData = tctx.getImageData(0, 0, texW, texH).data;
         texReady = true;
+
+        if (crystal) {
+          toneRGB = computeTone(texData, texW, texH);
+          // 0.4 keeps the rim clearly the image's colour while still reading as
+          // light. Higher values push it toward white and bury the media tone.
+          hotRGB = mixW(toneRGB, 0.4);
+          window.__orbTone = { tone: toneRGB, hot: hotRGB };
+        }
       };
 
       img.onerror = () => {
@@ -431,6 +582,167 @@ const cap = Math.max(1, Math.min(width, height));
     const decay = 100;
     const life = attack + hold + decay;
 
+    // ---------- Crystal layer ----------
+    // Everything below is additive and only runs when `crystal` is true.
+    const CRY = {
+      strands: Math.max(0, Math.min(8, strands | 0)),
+      crackle: Math.max(0, Math.min(1, crackle)),
+      flares: Math.max(0, Math.min(1, flares)),
+      sparks: Math.max(0, Math.min(1, sparks)),
+      glow: Math.max(0, Math.min(1, glow)),
+      haze: Math.max(0, Math.min(1, haze)),
+    };
+
+    const sparkList = [];
+    let sparkAcc = 0;
+
+    function rgbaOf(c, a) {
+      return `rgba(${c.r},${c.g},${c.b},${a})`;
+    }
+
+    // Drawn BEHIND the particles, so the material occludes the glow and the rim
+    // reads as a halo framing the image rather than paint over it.
+    function drawCrystalBack(now, dl, cx, cy, R) {
+      if (!crystal || !texReady || R <= 0 || effort <= 0.02) return;
+
+      const t = now / 1000;
+      const fade = 1 - dl;
+      const tone = toneRGB;
+      const hot = hotRGB;
+
+      ctx.globalCompositeOperation = isDark ? "lighter" : "source-over";
+
+      // --- haze: light pooling around and under the sphere ---
+      if (CRY.haze > 0) {
+        const outer = Math.min(R * 2.2, S * 0.5);
+        const g = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, outer);
+        g.addColorStop(0, rgbaOf(tone, 0.17 * CRY.haze * fade));
+        g.addColorStop(0.5, rgbaOf(tone, 0.075 * CRY.haze * fade));
+        g.addColorStop(1, rgbaOf(tone, 0));
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, outer, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // --- strands: electric arcs braided around the rim ---
+      if (CRY.strands > 0) {
+        // A barely-visible orb doesn't need all eight braids. These are the
+        // most expensive part of the layer: n paths x 72 segments per frame.
+        const n =
+          effort >= 1
+            ? CRY.strands
+            : Math.max(1, Math.round(CRY.strands * effort));
+        const wob = 0.012 + CRY.crackle * 0.05;
+        const steps = 72;
+
+        for (let s = 0; s < n; s++) {
+          const a1 = (0.2 - s * 0.018) * CRY.glow * fade;
+          if (a1 <= 0) continue;
+
+          const ph = t * (0.35 + s * 0.07) + (s * Math.PI * 2) / n;
+
+          ctx.beginPath();
+          for (let i = 0; i <= steps; i++) {
+            const a = (i / steps) * Math.PI * 2;
+            const j =
+              Math.sin(a * 3 + ph * 2.1) * wob +
+              Math.sin(a * 7 - ph * 3.3) * wob * 0.45 +
+              Math.sin(a * 13 + ph * 5.7) * wob * 0.2;
+            const r = R * (1 + j);
+            const px = cx + Math.cos(a) * r;
+            const py = cy + Math.sin(a) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.strokeStyle = rgbaOf(s === 0 ? hot : tone, a1);
+          ctx.lineWidth = 0.9 + (n - s) * 0.22;
+          ctx.stroke();
+        }
+      }
+
+      // --- flares: slow travelling licks of light on the rim ---
+      if (CRY.flares > 0 && effort > 0.25) {
+        const n = 3;
+        for (let i = 0; i < n; i++) {
+          const a = t * 0.28 + (i * Math.PI * 2) / n;
+          const px = cx + Math.cos(a) * R;
+          const py = cy + Math.sin(a) * R;
+          const rad = R * (0.22 + 0.1 * Math.sin(t * 1.1 + i * 2.3));
+          const g = ctx.createRadialGradient(px, py, 0, px, py, rad);
+          g.addColorStop(0, rgbaOf(hot, 0.42 * CRY.flares * fade));
+          g.addColorStop(0.45, rgbaOf(tone, 0.16 * CRY.flares * fade));
+          g.addColorStop(1, rgbaOf(tone, 0));
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(px, py, rad, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // --- rim: soft wide pass, then a tighter hot pass ---
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.strokeStyle = rgbaOf(tone, 0.3 * CRY.glow * fade);
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.strokeStyle = rgbaOf(hot, 0.42 * CRY.glow * fade);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Drawn ON TOP of the particles: discharges and a tight highlight that tie
+    // the rim together without washing out the image.
+    function drawCrystalFront(now, dl, cx, cy, R) {
+      if (!crystal || !texReady || R <= 0 || effort <= 0.02) return;
+
+      const t = now / 1000;
+      const fade = 1 - dl;
+      const hot = hotRGB;
+
+      ctx.globalCompositeOperation = isDark ? "lighter" : "source-over";
+
+      // --- sparks: short arcs discharging along the inside of the rim ---
+      if (CRY.sparks > 0 && effort > 0.25) {
+        sparkAcc += CRY.sparks * 0.16;
+        while (sparkAcc >= 1) {
+          sparkAcc -= 1;
+          sparkList.push({
+            a: Math.random() * Math.PI * 2,
+            life: 1,
+            len: 0.1 + Math.random() * 0.24,
+            dir: Math.random() < 0.5 ? -1 : 1,
+          });
+          if (sparkList.length > 14) sparkList.shift();
+        }
+
+        for (let i = sparkList.length - 1; i >= 0; i--) {
+          const sp = sparkList[i];
+          sp.life -= 0.045;
+          if (sp.life <= 0) {
+            sparkList.splice(i, 1);
+            continue;
+          }
+          const a0 = sp.a + t * 0.6 * sp.dir;
+          ctx.beginPath();
+          ctx.arc(cx, cy, R * 0.985, a0, a0 + sp.len * sp.life);
+          ctx.strokeStyle = rgbaOf(hot, 0.5 * sp.life * fade);
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+        }
+      }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.995, 0, Math.PI * 2);
+      ctx.strokeStyle = rgbaOf(hot, 0.22 * CRY.glow * fade);
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+
     // ---------- Render loop ----------
     let turnAngle = 0;
     let raf = 0;
@@ -468,8 +780,14 @@ const cap = Math.max(1, Math.min(width, height));
       const now = performance.now();
       updateVisibilityScore(now);
 
+      // Click burst decay
+      if (clickBurst.active) {
+        clickBurst.t *= 0.92;
+        if (clickBurst.t < 0.01) clickBurst.active = false;
+      }
+
       // If the item is basically invisible, render less often.
-      if (visScore <= 0.01) {
+      if (visScore <= 0.02) {
         raf = requestAnimationFrame(draw);
         return;
       }
@@ -489,6 +807,12 @@ const cap = Math.max(1, Math.min(width, height));
 
       const projCenterX = W / 2;
       const projCenterY = H / 2;
+
+      // Silhouette radius of the sphere at the centre plane. The orb only turns
+      // about Y, so this circle is a stable frame for the crystal layer.
+      const cryR =
+        sphereRad * ((radiusSp * fLen * projectionScale) / (fLen - scz));
+      drawCrystalBack(now, dl, projCenterX, projCenterY, cryR);
 
       for (let i = 0; i < N; i++) {
         if (!alive[i]) continue;
@@ -580,6 +904,42 @@ const cap = Math.max(1, Math.min(width, height));
         const py = y[i] * m + projCenterY;
         if (px < -2 || px > W + 2 || py < -2 || py > H + 2) continue;
 
+        // Pointer attraction + click burst
+        if (!locked[i] && effort > 0.1) {
+          if (pointer.active && pointer.inside) {
+            const dxp = px - pointer.x;
+            const dyp = py - pointer.y;
+            const distSq = dxp * dxp + dyp * dyp;
+            const radius = 80;
+            if (distSq < radius * radius && distSq > 1) {
+              const dist = Math.sqrt(distSq);
+              const force = (1 - dist / radius) * 0.35 * effort;
+              vx[i] += (dxp / dist) * force;
+              vy[i] += (dyp / dist) * force;
+            }
+          }
+          if (clickBurst.active) {
+            const dxp = px - clickBurst.x;
+            const dyp = py - clickBurst.y;
+            const distSq = dxp * dxp + dyp * dyp;
+            const radius = 150;
+            if (distSq < radius * radius && distSq > 1) {
+              const dist = Math.sqrt(distSq);
+              const force = (1 - dist / radius) * clickBurst.t * 2.5 * effort;
+              vx[i] += (dxp / dist) * force;
+              vy[i] += (dyp / dist) * force;
+            }
+          }
+        }
+
+        // Visibility-proportional thinning. A faded orb does not need every
+        // speck, and the per-particle arc+fill is the most expensive thing in
+        // this loop. Keyed on the particle's dissolve seed, which is stable for
+        // that particle's lifetime, so the orb thins rather than flickers.
+        // Physics above still ran for every particle, so nothing freezes and
+        // the full population is back the moment the orb fades up.
+        if (effort < 1 && dissolve[i] > effort) continue;
+
         let depth = 1 - rotZ / -750;
         depth = depth < 0 ? 0 : depth > 1 ? 1 : depth;
 
@@ -615,11 +975,23 @@ const cap = Math.max(1, Math.min(width, height));
         ctx.fill();
       }
 
+      drawCrystalFront(now, dl, projCenterX, projCenterY, cryR);
+
       endFrame();
       raf = requestAnimationFrame(draw);
     }
 
     if (!reduceMotion) draw();
+
+    // draw() parks the loop while the tab is hidden. Without this listener a
+    // page loaded in a background tab would never render at all once
+    // foregrounded, because nothing restarts the frame loop.
+    const onVisibility = () => {
+      if (!document.hidden && !raf && !reduceMotion) {
+        raf = requestAnimationFrame(draw);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     window.addEventListener(
       "astro:before-swap",
@@ -629,6 +1001,12 @@ const cap = Math.max(1, Math.min(width, height));
         moTheme.disconnect();
         ro.disconnect();
         window.removeEventListener("nelumbo:scan", onScan);
+        if (pointerFine) {
+          wrap.removeEventListener("pointermove", onPointerMove);
+          wrap.removeEventListener("pointerleave", onPointerLeave);
+        }
+        wrap.removeEventListener("pointerdown", onPointerDown);
+        document.removeEventListener("visibilitychange", onVisibility);
         window.__orbMounted.delete(uid);
       },
       { once: true },

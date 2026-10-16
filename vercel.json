@@ -1,5 +1,4 @@
 {
   "buildCommand": "bun run build",
-  "outputDirectory": "dist",
   "framework": "astro"
 }

@@ -1,48 +1,32 @@
 # AGENTS.md
 
 ## Essential Commands
-- `npm run build` - Build the project
-- `npm run dev` - Start development server
-- `npm run test` - Run tests
-- `npm run astro:dev` - Start Astro development server
-- `npm run astro:build` - Build Astro site
-- `bun build` - Build with Bun
-- `bun dev` - Start Bun development server
+- `bun install` — Install dependencies
+- `bun run dev` — Start Astro dev server (`ASTRO_TELEMETRY_DISABLED=1 astro dev`)
+- `bun run dev:all` — Start dev server + ML API together (`ml/ase`, port 8000)
+- `bun run build` — Build the static site into `dist/` (also runs pagefind)
+- `bun run dev:search` — Build the pagefind search index, then run the dev server
+- `bun run astro check` — Type-check (note: there are pre-existing errors, see CI)
 
-## Code Organization
-- **Astro Pages**: Located in `src/pages/`
-- **Components**: Organized in `src/components/` with `.astro` files
-- **TypeScript**: All code uses TypeScript with `src/lib/utils.ts` as shared utilities
-- **Assets**: Static files in `public/` directory
-- **Content**: Markdown content in `content/` directory
+## Architecture
+- **Framework**: Astro 5, `output: "static"`, deployed to Vercel.
+- **Pages**: `src/pages/` — `index`, `404`, `euthymia`, `orb-test`, `petals/`, `rss.xml.js`.
+- **Content**: `src/content/petals/` — MDX posts in the `petals` collection (schema in `src/content/config.ts`).
+- **Components**: `src/components/`. `Nelumbo.astro` drives the main post deck; `Quasar.astro` / `Qi.astro` are background layers.
+- **Styling**: Tailwind 3 + custom CSS in `src/styles/`. Theme tokens are HSL CSS variables, dark by default (`html.light` inverts).
+- **Fonts**: self-hosted via `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`, imported in `src/styles/global.css`.
+- **Search**: pagefind, indexed at build time (configured in `astro.config.mjs`).
+- **On-demand route**: `src/pages/api/reactions.ts` sets `prerender = false` (Vercel KV + GitHub GraphQL). Requires `GITHUB_TOKEN` and Vercel KV.
 
-## Naming Conventions
-- **TypeScript**: Use PascalCase for interfaces/classes, camelCase for variables/functions
-- **Astro Components**: Use `.astro` extension with PascalCase filenames
-- **CSS**: Tailwind classes with custom components following BEM-like structure
+## Conventions
+- **TypeScript**: strict mode; shared utilities in `src/utils/`.
+- **Astro components**: `.astro` extension, PascalCase filenames.
+- **Imports**: use the configured aliases (`@consts`, `@components`, `@layouts`, `@utils`, `@/`) — raw `/src/...` paths are not rewritten and 404 in the production build.
 
-## Testing Approach
-- **Astro Tests**: Located in `__tests__` directories alongside components
-- **Testing Framework**: Astro's built-in testing with Jest
-- **Test Structure**: Each component has a corresponding test file (e.g., `Button.astro` → `Button.astro.test.ts`)
-
-## Important Gotchas
-- **Environment Variables**: Use `.env` files with `astro.config.mjs` for configuration
-- **TypeScript Configuration**: `tsconfig.json` must include `paths` for Astro imports
-- **Build Process**: Ensure `astro.config.mjs` includes `output` and `base` settings
-- **Static Assets**: Files in `public/` are served directly at root
-- **Content Directory**: Markdown files in `content/` are automatically imported as pages
-
-## Project-Specific Context
-- **Astro Configuration**: `astro.config.mjs` handles site metadata and build settings
-- **TypeScript Setup**: `tsconfig.json` includes `strict` mode and `esModuleInterop`
-- **Tailwind Integration**: `tailwind.config.ts` configures CSS framework
-- **Bun Support**: `bun.lock` manages dependencies for faster builds
-
-## Additional Resources
-- **CI/CD**: Vercel configuration in `vercel.json`
-- **Documentation**: README.md provides project overview
-- **Codebase Structure**: Use `ls -R` to explore nested directories
-
----
-**Generated with Crush** - Documented based on observed codebase structure and files
+## Gotchas
+- `dist/`, `.astro/`, `.vercel/`, `node_modules/` and `.env*` are gitignored — never commit them.
+- Only `bun.lock` is tracked; there is no `package-lock.json`.
+- The site is deployed at **https://sourceaura.vercel.app** — `astro.config.mjs` `site` must stay in sync.
+- `PETALS.DESCRIPTION` is used as the `/petals` meta description.
+- Posts use `post.data.description` — the content schema has no `excerpt` field.
+- `src/pages/api/reactions.ts` needs `GITHUB_TOKEN`; without it the endpoint throws at runtime.

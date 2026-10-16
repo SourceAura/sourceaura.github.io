@@ -37,8 +37,26 @@ export interface AseContext {
   referrer: string;
 }
 
+/**
+ * Dev-only. Layout.astro imports this module behind `import.meta.env.DEV`,
+ * so production builds ship none of it.
+ */
+export const ASE_ENABLED: boolean = import.meta.env.DEV;
+
+/** Ase Neural Core endpoint. Override with PUBLIC_ASE_URL when the service moves. */
+export const ASE_URL: string =
+  (import.meta.env.PUBLIC_ASE_URL as string | undefined) ??
+  "http://127.0.0.1:8000";
+
 export class AseClient {
   private static instance: AseClient;
+
+  /** The exact 8-dim vector last POSTed to /infer. The HUD reads this so it
+   *  can never drift from what is actually being sent. */
+  public lastVector: number[] = [];
+
+  /** Round-trip time of the last /infer call, in ms. */
+  public lastLatency: number | null = null;
   public metrics: AseTelemetry = {
     scrollVelocity: 0,
     idleRatio: 0,
@@ -304,6 +322,10 @@ export class AseClient {
     };
     
     // Track various user activities
+    // Declared above its first use so the handlers below never close over a
+    // `let` that is still in its temporal dead zone.
+    let lastActivity = Date.now();
+
     window.addEventListener("mousemove", () => {
       lastActivity = Date.now();
       trackSection();
@@ -323,10 +345,7 @@ export class AseClient {
     // Check for page transitions
     setInterval(checkPageTransition, 1000);
 
-    // Idle Tracking (existing)
-    let lastActivity = Date.now();
-    const updateIdle = () => { lastActivity = Date.now(); };
-
+    // Idle Tracking
     setInterval(() => {
       const now = Date.now();
       const idle = now - lastActivity;
@@ -342,6 +361,8 @@ export class AseClient {
   }
 
   public async sync() {
+    if (!ASE_ENABLED) return;
+
     // Enhanced vector with sophisticated metrics
     const vector = [
       this.clamp(this.metrics.scrollVelocity * 20),
@@ -354,8 +375,11 @@ export class AseClient {
       this.clamp(this.metrics.focusIntensity),
     ];
 
+    this.lastVector = vector;
+
     try {
-      const res = await fetch("http://localhost:8000/infer", {
+      const t0 = performance.now();
+      const res = await fetch(`${ASE_URL}/infer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -363,12 +387,13 @@ export class AseClient {
           context: this.context 
         })
       });
+      this.lastLatency = performance.now() - t0;
 
       if (res.ok) {
         const data = await res.json();
         this.status = 'connected';
         this.lastUpdate = Date.now();
-        this.dispatchUpdate(data.embedding);
+        this.dispatchUpdate(data.embedding, this.lastLatency);
         
         // Auto-Trigger HUD on behavioral variance
         if (import.meta.env.DEV && Math.abs(data.embedding[0]) > 0.85) {
@@ -383,6 +408,8 @@ export class AseClient {
   }
 
   public async logSession() {
+    if (!ASE_ENABLED) return false;
+
     // Enhanced vector for training data
     const vector = [
       this.clamp(this.metrics.scrollVelocity * 20),
@@ -396,7 +423,7 @@ export class AseClient {
     ];
 
     try {
-      const res = await fetch("http://localhost:8000/log", {
+      const res = await fetch(`${ASE_URL}/log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -421,69 +448,40 @@ export class AseClient {
     }
   }
 
-  private dispatchUpdate(embedding: number[]) {
-    window.dispatchEvent(new CustomEvent("ase:update", { detail: { embedding } }));
+  private dispatchUpdate(embedding: number[], latency: number | null = null) {
+    window.dispatchEvent(
+      new CustomEvent("ase:update", {
+        detail: {
+          embedding,
+          latency,
+          vector: this.lastVector,
+          context: this.context,
+        },
+      }),
+    );
+
     if (embedding.length > 0) {
       const wakeBias = (embedding[0] + 1) / 2;
       document.documentElement.style.setProperty("--ase-wake", wakeBias.toFixed(4));
     }
-    
-    // Autonomous training milestone detection
+
+    // Autonomous training milestone detection. Emitted as an event rather than
+    // injected as a floating DOM node — the HUD decides how to surface it.
     this.metrics.trainingEpochs++;
     const currentMilestone = Math.floor(this.metrics.trainingEpochs / 100); // Every 100 epochs
-    
+
     if (currentMilestone > this.metrics.lastMilestone) {
       this.metrics.lastMilestone = currentMilestone;
       this.metrics.breakthroughLevel = Math.max(embedding[0] || 0, this.metrics.breakthroughLevel);
-      
-      // Notify user of breakthrough
-      this.notifyBreakthrough(currentMilestone, this.metrics.breakthroughLevel);
-    }
-  }
-  
-  private notifyBreakthrough(milestone: number, level: number) {
-    const breakthroughMessages = [
-      { threshold: 0.7, message: "🌱 Ase is awakening... Initial consciousness achieved" },
-      { threshold: 0.8, message: "🧠 Ase is learning... Pattern recognition emerging" },
-      { threshold: 0.85, message: "✨ Ase is evolving... Advanced behaviors developing" },
-      { threshold: 0.9, message: "🌟 Ase is transcending... Near-human level cognition" },
-      { threshold: 0.95, message: "🚀 Ase has achieved breakthrough... Autonomous intelligence reached" }
-    ];
-    
-    const breakthrough = breakthroughMessages.find(b => level >= b.threshold);
-    if (breakthrough) {
-      console.log(`🧠 ASE BREAKTHROUGH #${milestone}: ${breakthrough.message}`);
-      
-      // Create visual notification
-      const notification = document.createElement('div');
-      notification.innerHTML = `
-        <div style="
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: rgba(0, 0, 0, 0.9);
-          color: white;
-          padding: 12px 20px;
-          border-radius: 8px;
-          font-family: monospace;
-          font-size: 12px;
-          z-index: 10000;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-          animation: slideIn 0.3s ease-out;
-        ">
-          ${breakthrough.message}
-        </div>
-      `;
-      
-      document.body.appendChild(notification);
-      
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-in';
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 300);
-      }, 5000);
+
+      window.dispatchEvent(
+        new CustomEvent("ase:milestone", {
+          detail: {
+            count: currentMilestone,
+            level: this.metrics.breakthroughLevel,
+          },
+        }),
+      );
     }
   }
 
@@ -513,31 +511,5 @@ export function initAseClient() {
 
 if (typeof window !== "undefined") {
   (window as any).__ase = ase;
-  
-  // Add breakthrough notification styles
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes slideIn {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-    
-    @keyframes slideOut {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-    }
-  `;
-  document.head.appendChild(style);
+  (window as any).__aseUrl = ASE_URL;
 }

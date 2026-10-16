@@ -1,37 +1,202 @@
-body {
-  font-family: "Courier New", Courier, monospace;
-  /* display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  background: transparent blur(#1F1F1F);
-  flex-direction: column;
-  text-align: left; */
+
+/* ══════════════════════════════════════════════════════════════
+   EUTHYMIA — cultivation chamber
+   ══════════════════════════════════════════════════════════════ */
+
+/* ---------- Ghost typography ---------- */
+.ghost-euthymia {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(4rem, 18vw, 16rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #7df9ff;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+  user-select: none;
 }
 
+/* ---------- velkaa framing ---------- */
+.euthymia-vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.euthymia-dotgrid {
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.corner-brackets {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bracket {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #7df9ff;
+  border-style: solid;
+  opacity: 0.5;
+}
+.bracket.tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+.bracket.tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+.bracket.bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+.bracket.br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+
+/* ---------- Laser scanline ---------- */
+.laser-scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #7df9ff, transparent);
+  animation: scanSweep 6s linear infinite;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes scanSweep {
+  from { top: -2%; }
+  to { top: 102%; }
+}
+
+/* ---------- Level-up flare ---------- */
+.level-flare {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, rgba(125,249,255,0.15), transparent 70%);
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.level-flare.is-active { opacity: 1; }
+
+/* ---------- Game container ---------- */
 .game-container {
-  max-width: 600px;
+  position: relative;
+  z-index: 5;
+  max-width: 640px;
   width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
+/* ---------- HUD ---------- */
+.hud {
+  padding: 1.5rem;
+  background: rgba(8, 10, 18, 0.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(125, 249, 255, 0.15);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.euthymia-headline {
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: white;
+  text-shadow:
+    0 0 30px rgba(125, 249, 255, 0.3),
+    2px 2px 0 rgba(125, 249, 255, 0.15),
+    -1px -1px 0 rgba(180, 140, 255, 0.15);
+  margin: 0 0 0.25rem;
+}
+
+.euthymia-subtitle {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 1.25rem;
+  font-style: italic;
+}
+
+.dc-char { display: inline-block; }
+
+/* ---------- HUD chips ---------- */
+.hud-stats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.hud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 249, 255, 0.3);
+  background: rgba(125, 249, 255, 0.08);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7df9ff;
+  animation: chipPulse 3.2s ease-in-out infinite;
+}
+
+.chip-label { opacity: 0.6; }
+.chip-value { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+@keyframes chipPulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+/* ---------- Ascension progress bar ---------- */
+.ascension-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ascension-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #7df9ff, #b48cff);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+/* ---------- Log (reading well) ---------- */
 .log {
-  height: 300px;
-  overflow-y: hidden;
-  background: transparent;
-  padding: 10px;
-  margin-bottom: 20px;
+  max-width: 60ch;
+  margin: 0 auto 1.5rem;
+  padding: 1rem;
+  background: rgba(8, 10, 18, 0.6);
   border-radius: 8px;
-  border: 1px solid #333;
-  box-sizing: border-box;
+  border: 1px solid rgba(125, 249, 255, 0.1);
   position: relative;
 }
 
-.log::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
-}
-
+/* ⛔ SACRED — DO NOT TOUCH the text fade ⛔ */
 .log-entry {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
   opacity: 1;
   transition:
     opacity 3s ease-in-out,
@@ -48,94 +213,299 @@ body {
     filter 5s ease-in-out,
     transform 5s ease-in-out;
 }
+/* ⛔ END SACRED ⛔ */
 
-.hud {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px;
-  background: transparent;
-  border-radius: 8px;
-  border: 1px solid #333;
-}
-
-.hud-stats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.hud-item {
-  margin: 5px;
-}
-
+/* ---------- Action pills ---------- */
 .actions {
   display: flex;
   justify-content: center;
-  width: 100%;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-.actions button {
-  margin: 5px;
-  padding: 10px 20px;
-  background: blur;
-  border: none;
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 249, 255, 0.3);
+  background: linear-gradient(135deg, rgba(125,249,255,0.12), rgba(180,140,255,0.08));
+  color: #7df9ff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
-  border-radius: 4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* Modal Styling */
+.action-pill:hover {
+  transform: translateY(-2px);
+  border-color: #7df9ff;
+  box-shadow: 0 4px 16px rgba(125, 249, 255, 0.2);
+}
+
+.action-pill:active { transform: translateY(0); }
+
+.action-pill--small {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.65rem;
+  margin-top: 1rem;
+}
+
+/* ---------- Modals ---------- */
 .modal {
-  display: none; /* Hidden by default */
+  display: none;
   position: fixed;
-  z-index: 1;
+  z-index: 100;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.1); /* Black with transparency */
-  backdrop-filter: blur(10px); /* Apply backdrop blur */
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-content {
-  background-color: transparent;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-  max-width: 400px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  background: rgba(8, 10, 18, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  margin: 5% auto;
+  padding: 2rem;
+  border: 1px solid rgba(125, 249, 255, 0.15);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalIn 0.3s cubic-bezier(0.22, 1.4, 0.36, 1);
 }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-brackets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.modal-brackets .bracket {
+  width: 16px;
+  height: 16px;
+  opacity: 0.4;
+}
+.modal-brackets .bracket.tl { top: 8px; left: 8px; }
+.modal-brackets .bracket.tr { top: 8px; right: 8px; }
+.modal-brackets .bracket.bl { bottom: 8px; left: 8px; }
+.modal-brackets .bracket.br { bottom: 8px; right: 8px; }
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 1rem;
+  letter-spacing: 0.05em;
+}
+
+.modal-log-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 0.5rem;
+}
+
+.modal-log {
+  max-height: 150px;
+  overflow-y: auto;
+  font-family: "Geist Mono", monospace;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.modal-log::-webkit-scrollbar { width: 4px; }
+.modal-log::-webkit-scrollbar-thumb { background: rgba(125,249,255,0.3); border-radius: 999px; }
 
 .close {
-  color: #aaa;
+  color: rgba(255, 255, 255, 0.4);
   float: right;
-  font-size: 28px;
+  font-size: 1.5rem;
   font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-  color: black;
-  text-decoration: none;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
+.close:hover { color: #7df9ff; }
 
-/* Inventory Modal Styling */
-.inventory {
+/* ---------- Innovate modal ---------- */
+.innovation {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.inventory-item {
-  padding: 5px;
-  margin: 5px;
-  background-color: transparent;
-  border-radius: 4px;
+.innovate-item {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- Crafting modal ---------- */
+.crafting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crafting-list button {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(125, 249, 255, 0.2);
+  background: rgba(125, 249, 255, 0.06);
+  color: #7df9ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.crafting-list button:hover {
+  background: rgba(125, 249, 255, 0.12);
+  border-color: rgba(125, 249, 255, 0.4);
+}
+
+/* ---------- Cultivate modal ---------- */
+.cultivate-content { text-align: center; }
+
+.cultivate-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 0.25rem;
+}
+
+.cultivate-subtitle {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 1.5rem;
+  font-style: italic;
+}
+
+.cultivate-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cultivate-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(125, 249, 255, 0.2);
+  background: rgba(8, 10, 18, 0.8);
+  cursor: pointer;
+  transition: transform 0.2s ease-out, border-color 0.2s ease;
+  min-width: 140px;
+}
+
+.cultivate-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(125,249,255,0.1), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cultivate-card:hover::before { opacity: 1; }
+
+.cultivate-card:hover {
+  border-color: rgba(125, 249, 255, 0.5);
+}
+
+.cultivate-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.cultivate-desc {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Explore modal ---------- */
+#exploreOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#exploreOptions button {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(125, 249, 255, 0.2);
+  background: rgba(125, 249, 255, 0.06);
+  color: #7df9ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+#exploreOptions button:hover {
+  background: rgba(125, 249, 255, 0.12);
+  border-color: rgba(125, 249, 255, 0.4);
+}
+
+/* ---------- Sparks ---------- */
+.spark {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #7df9ff;
+  pointer-events: none;
+  z-index: 200;
+  animation: sparkFly 0.5s ease-out forwards;
+}
+@keyframes sparkFly {
+  from { opacity: 1; transform: translate(0,0) scale(1); }
+  to { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 360px) {
+  .game-container { padding: 1rem 0.5rem; }
+  .hud { padding: 1rem; }
+  .hud-chip { font-size: 0.55rem; padding: 0.25rem 0.5rem; }
+  .action-pill { padding: 0.5rem 0.8rem; font-size: 0.65rem; }
+  .cultivate-card { min-width: 120px; padding: 1rem; }
+  .bracket { width: 16px; height: 16px; }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .spark { display: none; }
+  .laser-scanline { animation: none; }
+  .hud-chip { animation: none; }
+  .action-pill, .cultivate-card { transition: none; }
+  .modal-content { animation: none; }
+  .level-flare { transition: none; }
 }

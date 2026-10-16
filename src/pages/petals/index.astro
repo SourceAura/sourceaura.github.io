@@ -3,6 +3,11 @@ import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
 import Nelumbo from "@components/Nelumbo.astro";
 import { getCollection } from "astro:content";
+import { PETALS } from "@consts";
+import {
+  extractFirstImageFromMarkdown,
+  readingTimeMinutes,
+} from "@lib/post";
 
 const posts = (await getCollection("petals"))
   .filter((p) => !p.data.draft)
@@ -11,7 +16,7 @@ const posts = (await getCollection("petals"))
   );
 ---
 
-<Layout title="Petals">
+<Layout title="Petals" description={PETALS.DESCRIPTION}>
   <head>
     <meta name="pagefind:filter" content="nav" />
   </head>
@@ -20,24 +25,46 @@ const posts = (await getCollection("petals"))
     <!-- ───────────────── CHRONICLE DECK ───────────────── -->
     <section class="chronicle space-y-12 py-24" data-pagefind-body>
       {
-        posts.map((post) => {
+        posts.map((post, i) => {
           const d = new Date(post.data.date);
           const day = d.getDate();
           const month = d.toLocaleString("default", { month: "long" });
           const year = d.getFullYear();
+          const img = extractFirstImageFromMarkdown(post.body) ?? "";
+          const readTime = readingTimeMinutes(post.body);
 
           return (
-            <a href={`/petals/${post.slug}`} class="chronicle-card group">
-              <div class="date-block">
-                <span class="day">{day}</span>
-                <span class="month">{month}</span>
-                <span class="year">{year}</span>
+            <a
+              href={`/petals/${post.slug}`}
+              class="chronicle-card"
+              data-spotlight
+              data-reveal
+              style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}
+            >
+              <header class="chron-rail">
+                <span class="chron-idx">{String(i + 1).padStart(2, "0")}</span>
+                <span class="chron-date">
+                  {month} {day}, {year}
+                </span>
+              </header>
+
+              <div class="chron-main">
+                {img && (
+                  <figure class="chron-thumb">
+                    <img src={img} alt="" loading="lazy" decoding="async" />
+                  </figure>
+                )}
+
+                <div class="chron-text">
+                  <h2 data-decrypt>{post.data.title}</h2>
+                  {post.data.description && <p>{post.data.description}</p>}
+                </div>
               </div>
 
-              <div class="content-block">
-                <h2>{post.data.title}</h2>
-                {post.data.description && <p>{post.data.description}</p>}
-              </div>
+              <footer class="chron-rail">
+                <span class="chron-read">{readTime}</span>
+                <span class="chron-cta">Open</span>
+              </footer>
             </a>
           );
         })
@@ -60,88 +87,112 @@ const posts = (await getCollection("petals"))
   }
 
   .chronicle-card {
-    display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 2rem;
-    padding: 2rem 1.5rem;
-    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border-radius: 14px;
+    overflow: hidden;
     text-decoration: none;
     color: inherit;
-
     background: color-mix(in oklch, currentColor 3%, transparent);
     border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
-
     transition:
       transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
       background 0.35s ease,
-      box-shadow 0.35s ease;
+      border-color 0.35s ease;
   }
 
   .chronicle-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     background: color-mix(in oklch, currentColor 6%, transparent);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    border-color: color-mix(in oklch, currentColor 22%, transparent);
   }
 
-  /* ───────── DATE BLOCK (Test.astro DNA) ───────── */
+  /* ───────── RAILS: index/date above, read time + CTA below ───────── */
 
-  .date-block {
-    position: relative;
+  .chron-rail {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    line-height: 1;
-    opacity: 0.45;
-  }
-
-  .date-block .day {
-    font-size: 4rem;
-    font-weight: 700;
-  }
-
-  .date-block .month {
-    font-size: 0.9rem;
-    letter-spacing: 0.12em;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 1.25rem;
+    border-bottom: 1px solid color-mix(in oklch, currentColor 8%, transparent);
+    font-family: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo,
+      monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-  }
-
-  .date-block .year {
-    font-size: 0.8rem;
     opacity: 0.6;
+    transition: opacity 0.3s ease;
   }
 
-  .group:hover .date-block {
-    opacity: 0.75;
+  .chronicle-card > .chron-rail:last-child {
+    border-bottom: none;
+    border-top: 1px solid color-mix(in oklch, currentColor 8%, transparent);
   }
 
-  /* ───────── CONTENT BLOCK ───────── */
-
-  .content-block h2 {
-    font-size: 1.25rem;
-    margin-bottom: 0.4rem;
+  .chronicle-card:hover .chron-rail {
+    opacity: 0.9;
   }
 
-  .content-block p {
-    opacity: 0.7;
-    max-width: 46ch;
+  .chron-idx,
+  .chron-date,
+  .chron-read {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ───────── BODY: thumbnail + text ───────── */
+
+  .chron-main {
+    display: grid;
+    grid-template-columns: 128px 1fr;
+    gap: 1.25rem;
+    align-items: center;
+    padding: 1.25rem;
+  }
+
+  .chron-main:not(:has(.chron-thumb)) {
+    grid-template-columns: 1fr;
+  }
+
+  .chron-thumb {
+    margin: 0;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklch, currentColor 8%, transparent);
+    background: color-mix(in oklch, currentColor 4%, transparent);
+  }
+
+  .chron-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .chron-text h2 {
+    font-size: 1.1rem;
+    line-height: 1.25;
+    margin-bottom: 0.35rem;
+  }
+
+  .chron-text p {
+    opacity: 0.65;
+    max-width: 48ch;
     line-height: 1.5;
+    font-size: 0.88rem;
   }
 
   /* ───────── RESPONSIVE ───────── */
 
   @media (max-width: 640px) {
-    .chronicle-card {
+    .chron-main {
       grid-template-columns: 1fr;
     }
 
-    .date-block {
-      flex-direction: row;
-      gap: 0.75rem;
-      align-items: baseline;
-    }
-
-    .date-block .day {
-      font-size: 2.4rem;
+    .chron-thumb {
+      aspect-ratio: 16 / 9;
     }
   }
 </style>

@@ -17,52 +17,12 @@ import Giscus from "@components/Giscus.astro";
 const { posts } = Astro.props;
 import "@styles/nelumbo.css";
 
-function extractFirstImageFromMarkdown(md = ""): string | null {
-  const m = md.match(/!\[.*?\]\((.*?)\)/);
-  if (!m?.[1]) return null;
-  const raw = String(m[1]).trim();
-  if (raw.startsWith("http") || raw.startsWith("/")) return raw;
-  return `/images/${raw.replace(/^\.?\//, "")}`;
-}
-
-function stripMarkdownToText(md = ""): string {
-  let t = String(md);
-
-  t = t.replace(/^---[\s\S]*?---\s*/g, "");
-  t = t.replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1");
-  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1");
-  t = t.replace(/`([^`]+)`/g, "$1");
-  t = t.replace(/^\s{0,3}#{1,6}\s+/gm, "");
-  t = t.replace(/^\s{0,3}>\s?/gm, "");
-  t = t.replace(/^\s*[-*+]\s+/gm, "");
-  t = t.replace(/^\s*\d+\.\s+/gm, "");
-  t = t.replace(/(\*\*|__)(.*?)\1/g, "$2");
-  t = t.replace(/(\*|_)(.*?)\1/g, "$2");
-  t = t.replace(/^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/gm, "");
-  t = t.replace(/\n{3,}/g, "\n\n");
-
-  return t.trim();
-}
-
-function readingTimeMinutes(md = ""): string {
-  const words = stripMarkdownToText(md).split(/\s+/).filter(Boolean).length;
-  const mins = Math.max(1, Math.round(words / 200));
-  return `${mins} min`;
-}
-
-function formatDate(d: any): string {
-  try {
-    const date = new Date(d);
-    if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleDateString(undefined, {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return "";
-  }
-}
+import {
+  extractFirstImageFromMarkdown,
+  stripMarkdownToText,
+  readingTimeMinutes,
+  formatDate,
+} from "@lib/post";
 ---
 
 <div class="carousel-layer" id="petal-shell" hidden aria-hidden="true">
@@ -90,7 +50,7 @@ function formatDate(d: any): string {
             >
               <div class="parallax-layer">
                 <div class="petal-surface" data-petal-surface>
-                  <Orb post={post} />
+                  <Orb post={post} crystal />
                   <div class="petal-content">
                     <h1>{post.data.title}</h1>
                     <p>{post.data.description}</p>
@@ -147,103 +107,156 @@ function formatDate(d: any): string {
 
   <!-- HUD Overlay (DOCKED under PageFind input) -->
   <div class="hud" id="petal-hud" aria-hidden="true">
+    <div class="hud-progress" aria-hidden="true"></div>
     <div class="hud-frame">
-      <div class="hud-seg hud-mediaStats">
-        <div class="hud-media-wrap">
-          <img data-hud-img alt="" />
-          <div class="hud-scan" aria-hidden="true"></div>
+      <!-- chrome layer: clipped glass, vignette, dot grid, spotlight, star border -->
+      <div class="hud-chrome" aria-hidden="true">
+        <div class="hud-spot"></div>
+        <div class="hud-dots"></div>
+        <div class="hud-vignette"></div>
+        <div class="hud-star"></div>
 
-          <div class="hud-titleOverlay" aria-hidden="true">
-            <div class="hud-titleText" data-hud-title></div>
+        <!-- HUD corner brackets -->
+        <span class="hud-bracket hb-tl" aria-hidden="true"></span>
+        <span class="hud-bracket hb-tr" aria-hidden="true"></span>
+        <span class="hud-bracket hb-bl" aria-hidden="true"></span>
+        <span class="hud-bracket hb-br" aria-hidden="true"></span>
+
+        <!-- giant ghost typography looming behind the content -->
+        <div class="hud-ghost" aria-hidden="true"></div>
+      </div>
+
+      <!-- content floats above the chrome -->
+      <div class="hud-tilt">
+        <button
+          class="hud-close"
+          type="button"
+          id="hud-close"
+          aria-label="Close HUD"
+        >
+          <span class="hud-close-k">ESC</span>
+          <span class="hud-close-x" aria-hidden="true">×</span>
+        </button>
+
+        <div class="hud-seg hud-mediaStats">
+          <div class="hud-media-wrap glare">
+            <img data-hud-img alt="" />
+            <div class="hud-scan" aria-hidden="true"></div>
+            <div class="hud-laser" aria-hidden="true"></div>
+            <div class="hud-glare" aria-hidden="true"></div>
+            <div class="hud-titleOverlay" aria-hidden="true">
+              <div class="hud-titleText" data-hud-title></div>
+            </div>
           </div>
 
-          <div class="hud-chips" aria-label="Post stats">
-            <div class="hud-chip">
+          <!-- telemetry strip: DATE · READ, directly beneath the hero -->
+          <div class="hud-telemetry" aria-label="Post stats">
+            <span class="hud-chip">
               <span class="hud-chip-k">DATE</span>
               <span class="hud-chip-v" data-hud-date></span>
-            </div>
-            <div class="hud-chip">
+            </span>
+            <span class="hud-chip-sep" aria-hidden="true">·</span>
+            <span class="hud-chip">
               <span class="hud-chip-k">READ</span>
               <span class="hud-chip-v" data-hud-rt></span>
-            </div>
+            </span>
           </div>
         </div>
 
-        <div class="hud-desc" data-hud-desc></div>
-      </div>
-
-      <div class="hud-seg hud-article">
-        <div class="hud-sub">ARTICLE</div>
-        <div class="hud-article-body" data-hud-article></div>
-      </div>
-
-      <div class="hud-controls" aria-label="HUD controls">
-        <a class="hud-ctl hud-reactions" data-hud-reactions href="#" aria-label="Reactions" title="Reactions">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="1.1em"
-            height="1.1em"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+        <div class="hud-seg hud-article">
+          <div class="hud-sub">ARTICLE</div>
+          <p class="hud-quote" data-hud-desc></p>
+          <div class="hud-article-body" data-hud-article></div>
+          <a
+            class="hud-pill"
+            data-hud-link
+            data-spark
+            href="#"
+            aria-label="Open post"
+            title="Access Entry"
           >
-            <path
-              d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"
-            ></path>
-          </svg>
-          <span class="count" data-hud-reactions-count></span>
-        </a>
+            READ ENTRY <span aria-hidden="true">↗</span>
+          </a>
+        </div>
 
-        <a class="hud-ctl hud-comments" data-hud-comments href="#" aria-label="Comments" title="Comments">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="1.1em"
-            height="1.1em"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+        <div class="hud-controls" aria-label="Post controls">
+          <a
+            class="hud-ctl hud-reactions"
+            data-hud-reactions
+            data-spark
+            href="#"
+            aria-label="Reactions"
+            title="Reactions"
           >
-            <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-          </svg>
-          <span class="count" data-hud-comments-count></span>
-        </a>
-
-        <a
-          class="hud-ctl hud-open"
-          data-hud-link
-          href="#"
-          aria-label="Open post"
-          title="Access Entry"
-        >
-          ↗
-        </a>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.1em"
+              height="1.1em"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"
+              ></path>
+            </svg>
+            <span class="count" data-hud-reactions-count></span>
+          </a>
+          <a
+            class="hud-ctl hud-comments"
+            data-hud-comments
+            data-spark
+            href="#"
+            aria-label="Comments"
+            title="Comments"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.1em"
+              height="1.1em"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+            </svg>
+            <span class="count" data-hud-comments-count></span>
+          </a>
+        </div>
       </div>
-
-      <button
-        class="hud-close"
-        type="button"
-        id="hud-close"
-        aria-label="Close HUD"
-      >
-        ×
-      </button>
 
       <div class="hud-glow" aria-hidden="true"></div>
       <div class="hud-specks" aria-hidden="true"></div>
       <div class="hud-signalNoise" aria-hidden="true"></div>
     </div>
   </div>
-</div>
 
 <!-- Collapsible Giscus Comments Section (completely separate from HUD) -->
 <div class="hud-comments-section is-collapsed" id="hud-comments-section">
   <div class="hud-frame">
+    <!-- chrome layer: clipped glass, vignette, dot grid, spotlight, star border -->
+    <div class="hud-chrome" aria-hidden="true">
+      <div class="hud-spot"></div>
+      <div class="hud-dots"></div>
+      <div class="hud-vignette"></div>
+      <div class="hud-star"></div>
+
+      <!-- HUD corner brackets -->
+      <span class="hud-bracket hb-tl" aria-hidden="true"></span>
+      <span class="hud-bracket hb-tr" aria-hidden="true"></span>
+      <span class="hud-bracket hb-bl" aria-hidden="true"></span>
+      <span class="hud-bracket hb-br" aria-hidden="true"></span>
+
+      <!-- giant ghost typography looming behind the content -->
+      <div class="hud-ghost" aria-hidden="true"></div>
+    </div>
+
     <div class="hud-seg hud-mediaStats">
       <div class="hud-media-wrap">
       </div>
@@ -261,7 +274,8 @@ function formatDate(d: any): string {
       id="hud-comments-close"
       aria-label="Close Comments"
     >
-      ×
+      <span class="hud-close-k">ESC</span>
+      <span class="hud-close-x" aria-hidden="true">×</span>
     </button>
 
     <div class="hud-glow" aria-hidden="true"></div>
@@ -302,7 +316,10 @@ function formatDate(d: any): string {
   const hudReactionsCount = hud?.querySelector("[data-hud-reactions-count]");
   const hudCommentsCount = hud?.querySelector("[data-hud-comments-count]");
   const hudCommentsSection = document.getElementById("hud-comments-section");
-  const hudCommentsClose = document.getElementById("hud-comments-close");
+  function hudCommentsClose() {
+    return document.getElementById("hud-comments-close");
+  }
+  const hudCommentsFrame = hudCommentsSection?.querySelector(".hud-frame");
   const hudGiscusWrapper = document.getElementById("hud-giscus-wrapper");
 
   let activeGiscusTerm = "/";
@@ -395,9 +412,13 @@ function formatDate(d: any): string {
         .then((r) => r.json())
         .then((d) => {
           if (typeof d.total !== "number") return;
-          hudReactionsCount.textContent = formatCount(d.total);
           hudReactions?.setAttribute("data-has-reactions", "true");
           animateCount(hudReactionsCount);
+
+          // Count the number up, but not the "99+" cap — that is a label,
+          // not a value.
+          if (d.total > 99) hudReactionsCount.textContent = "99+";
+          else window.__countUp?.(hudReactionsCount, d.total, 600);
         })
         .catch(() => {});
     }
@@ -433,11 +454,99 @@ function formatDate(d: any): string {
     if (!petalsOpen) focusedIndex = -1;
   }
 
+  // The ring pitches only while a card is displayed, as if making room for it.
+  // Driving the variable (not the transform) keeps the ring and the per-orb
+  // billboard compensation in sync, since both read --orbit-tilt.
+  function rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    const d = max - min;
+    let h = 0;
+    let s = 0;
+    if (d !== 0) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      if (max === r) h = ((g - b) / d) % 6;
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h *= 60;
+      if (h < 0) h += 360;
+    }
+    return { h, s: s * 100, l: l * 100 };
+  }
+
+  // Sample the dominant hue of the hero image, ignoring near-black /
+  // near-white / grey pixels. Returns { accent, accent2 } or null.
+  function sampleImageColor(img) {
+    try {
+      const size = 32;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, size, size);
+      const data = ctx.getImageData(0, 0, size, size).data;
+      const hues = [];
+      let satSum = 0;
+      let litSum = 0;
+      let count = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        if (max < 40 || min > 220 || max - min < 30) continue;
+        const hsl = rgbToHsl(r, g, b);
+        hues.push(hsl.h);
+        satSum += hsl.s;
+        litSum += hsl.l;
+        count++;
+      }
+      if (count < 5) return null;
+      hues.sort((a, b) => a - b);
+      const h = hues[Math.floor(hues.length / 2)];
+      const s = Math.min(95, (satSum / count) * 1.15);
+      const l = Math.min(62, Math.max(38, litSum / count));
+      return {
+        accent: `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}%)`,
+        accent2: `hsl(${Math.round((h + 40) % 360)} ${Math.round(s * 0.85)}% ${Math.round(l * 0.88)}%)`,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function setRingTilt(on) {
+    shell
+      ?.querySelector(".carousel-viewport")
+      ?.style.setProperty("--orbit-tilt", on ? "" : "0deg");
+  }
+
   let hudOpen = false;
   let hudBootToken = 0;
 
   function setHudOpen(next) {
     hudOpen = !!next;
+    setRingTilt(hudOpen);
+    document.body.classList.toggle("hud-open", hudOpen);
+
+    // The comments card is a sibling, not a descendant, so it does not
+    // inherit the accent vars. Mirror them so both cards share one mood.
+    if (hudCommentsFrame) {
+      hudCommentsFrame.style.setProperty(
+        "--pc-accent",
+        hud.style.getPropertyValue("--pc-accent") || "#7df9ff",
+      );
+      hudCommentsFrame.style.setProperty(
+        "--pc-accent2",
+        hud.style.getPropertyValue("--pc-accent2") || "#b48cff",
+      );
+    }
+
     if (!hud) return;
 
     hud.classList.toggle("is-open", hudOpen);
@@ -532,14 +641,17 @@ function formatDate(d: any): string {
     stop();
   }
 
+  // Toggling must go through the same transitions as every other open/close
+  // path. Inverting petalsOpen here and then calling closePetals() would make
+  // it early-return on its own `if (!petalsOpen) return` guard, leaving the
+  // shell stuck with data-petals-open set - the close direction never worked.
   window.addEventListener("qi:toggle-petals", () => {
-    petalsOpen = !petalsOpen;
-
-    if (!petalsOpen) {
+    if (petalsOpen) {
       closePetals();
       return;
     }
 
+    petalsOpen = true;
     updatePetalVisibility();
     scheduleIdleSnap();
     start();
@@ -616,12 +728,52 @@ function formatDate(d: any): string {
   }
 
   let radius = 300;
+  let stretch = 1;
   const mq = matchMedia("(max-width: 768px)");
   function updateRadius() {
     radius = mq.matches ? 220 : 300;
   }
   mq.addEventListener("change", updateRadius);
   updateRadius();
+
+  // ---------- Orbit: pointer parallax ----------
+  // The camera leans a few degrees toward the pointer. Small on purpose: this
+  // should be felt rather than seen.
+  //
+  // It runs on its own rAF because Nelumbo's main loop parks itself once the
+  // ring settles — the camera has to keep tracking while the ring is at rest.
+  const PARALLAX_X = 3.4;
+  const PARALLAX_Y = 2.2;
+  let panX = 0;
+  let panY = 0;
+  let panTargetX = 0;
+  let panTargetY = 0;
+  let panRaf = 0;
+
+  function panTick() {
+    panX += (panTargetX - panX) * 0.06;
+    panY += (panTargetY - panY) * 0.06;
+
+    const vpEl = ring?.closest(".carousel-viewport");
+    if (vpEl) {
+      vpEl.style.setProperty("--orbit-pan-x", `${panX.toFixed(3)}deg`);
+      vpEl.style.setProperty("--orbit-pan-y", `${panY.toFixed(3)}deg`);
+    }
+
+    const settled =
+      Math.abs(panTargetX - panX) < 0.01 && Math.abs(panTargetY - panY) < 0.01;
+    panRaf = settled ? 0 : requestAnimationFrame(panTick);
+  }
+
+  window.addEventListener(
+    "pointermove",
+    (e) => {
+      panTargetX = (e.clientX / window.innerWidth - 0.5) * 2 * PARALLAX_X;
+      panTargetY = (e.clientY / window.innerHeight - 0.5) * -2 * PARALLAX_Y;
+      if (!panRaf) panRaf = requestAnimationFrame(panTick);
+    },
+    { passive: true },
+  );
 
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const snapAngle = (a) => Math.round(a / step) * step;
@@ -920,6 +1072,17 @@ function formatDate(d: any): string {
         hudImg.src = img;
         hudImg.alt = title;
         hudImg.style.display = "block";
+        const applyAccent = () => {
+          const colors = sampleImageColor(hudImg);
+          if (!colors) return;
+          hud.style.setProperty("--pc-accent", colors.accent);
+          hud.style.setProperty("--pc-accent2", colors.accent2);
+        };
+        if (hudImg.complete && hudImg.naturalWidth > 0) {
+          applyAccent();
+        } else {
+          hudImg.addEventListener("load", applyAccent, { once: true });
+        }
       } else {
         hudImg.removeAttribute("src");
         hudImg.alt = "";
@@ -1185,7 +1348,7 @@ function formatDate(d: any): string {
     if (angle === lastAngle) return;
     lastAngle = angle;
 
-    ring.style.transform = `translateZ(0) rotateY(${angle + snapElastic}deg)`;
+    ring.style.transform = `translateZ(0) rotateX(var(--orbit-tilt, -16deg)) rotateY(${angle + snapElastic}deg)`;
 
     const normalized = ((angle % 360) + 360) % 360;
     const active = ((Math.round(-normalized / step) % count) + count) % count;
@@ -1246,7 +1409,7 @@ function formatDate(d: any): string {
 
       el.style.setProperty("--item-yaw", `${yawTotal}deg`);
 
-      const PERSPECTIVE = 1200;
+      const PERSPECTIVE = 1500;
       const z = Math.cos((yawTotal * Math.PI) / 180) * radius;
       const sizeFix = (PERSPECTIVE - z) / PERSPECTIVE;
 
@@ -1254,7 +1417,7 @@ function formatDate(d: any): string {
 
       el.style.transform = `translate(-50%, -50%)
         rotateY(${i * step}deg)
-        translateZ(${radius}px)`;
+        translateZ(${radius * stretch}px)`;
     });
 
     snapHudToDock(false);
@@ -1284,6 +1447,10 @@ function formatDate(d: any): string {
     angle += vel;
     vel *= friction;
 
+    // Orbit: swell the ring with angular speed. The camera pan lives in its own
+    // loop (panTick) because this one parks as soon as the ring settles.
+    stretch = 1 + Math.min(1, Math.abs(vel) / velClamp) * 0.1;
+
     if (snapTarget !== null) {
       const d = snapTarget - angle;
       angle += d * snapStrength;
@@ -1311,6 +1478,7 @@ function formatDate(d: any): string {
     }
 
     applyTransforms();
+    updateTether();
     rafId = requestAnimationFrame(tick);
   }
 
@@ -1319,6 +1487,9 @@ function formatDate(d: any): string {
     running = true;
     rafId = requestAnimationFrame(tick);
   }
+
+  window.addEventListener("resize", updateTether, { passive: true });
+  document.addEventListener("astro:page-load", () => updateTether());
 
   function stop() {
     running = false;
@@ -1361,6 +1532,7 @@ function formatDate(d: any): string {
   applyTransforms();
   updatePetalVisibility();
   stop();
+  setRingTilt(false);
 
   window.addEventListener(
     "astro:before-swap",
@@ -1369,4 +1541,147 @@ function formatDate(d: any): string {
     },
     { once: true },
   );
+
+  // ── HUD card: vanilla ports of SpotlightCard / TiltedCard / ClickSpark ──
+  //    Tether cord ─────────────────────────────────────────────────
+  // Tether cord: draw a live SVG line between the HUD card and the
+  // comments card so the two read as one instrument in two modes.
+  const tetherSvg = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "svg",
+  );
+  tetherSvg.setAttribute("class", "hud-tether");
+  tetherSvg.setAttribute("aria-hidden", "true");
+  tetherSvg.innerHTML =
+    '<line class="hud-tether-line" x1="0" y1="0" x2="0" y2="0"/>' +
+    '<circle class="hud-tether-dot" r="2" cx="0" cy="0"/>';
+  document.body.appendChild(tetherSvg);
+  const tetherLine = tetherSvg.querySelector(".hud-tether-line");
+  const tetherDot = tetherSvg.querySelector(".hud-tether-dot");
+
+  function updateTether() {
+    if (!hudOpen || !hudCommentsSection) {
+      tetherSvg.style.opacity = "0";
+      return;
+    }
+    const show =
+      !hudCommentsSection.classList.contains("is-collapsed");
+    tetherSvg.style.opacity = show ? "1" : "0";
+    if (!show) return;
+    const a = hud.getBoundingClientRect();
+    const b = hudCommentsSection.getBoundingClientRect();
+    // Drive the cord with transforms only. Mutating SVG attributes per frame
+    // forces layout; transforms stay on the compositor.
+    const h = Math.max(10, a.bottom - b.top - 16);
+    const angle =
+      Math.atan2(a.bottom - b.top - 16, a.left - b.left) * (180 / Math.PI);
+    tetherSvg.style.transform = `translate(${(b.left + a.left) / 2 + a.width / 2 - b.width / 2}px, ${b.top + 8}px)`;
+    tetherLine.setAttribute("y2", h);
+    tetherLine.style.transformOrigin = "0 0";
+    tetherLine.style.transform = `rotate(${angle}deg)`;
+    tetherDot.setAttribute("cy", h);
+  }
+  (() => {
+
+  // Reading progress bar — passive scroll listener
+  const progress = hud.querySelector(".hud-progress");
+  const articleBody = hud.querySelector(".hud-article-body");
+  if (progress && articleBody) {
+    articleBody.addEventListener("scroll", () => {
+      const max = articleBody.scrollHeight - articleBody.clientHeight;
+      progress.style.width =
+        max > 0 ? `${(articleBody.scrollTop / max) * 100}%` : "0%";
+    }, { passive: true });
+  }
+
+  // Keyboard: j/k or arrows scroll the article; Esc closes
+  document.addEventListener("keydown", (e) => {
+    if (!hudOpen) return;
+    if (e.key === "Escape") return; // handled above
+    const ab = hud.querySelector(".hud-article-body");
+    if (!ab) return;
+    if (e.key === "j" || e.key === "ArrowDown") {
+      ab.scrollTop += 60;
+      e.preventDefault();
+    } else if (e.key === "k" || e.key === "ArrowUp") {
+      ab.scrollTop -= 60;
+      e.preventDefault();
+    }
+  });
+
+  //    Spotlight / tilt / ghost / spark / progress / keys ─────────
+  const hud = document.getElementById("petal-hud");
+  if (!hud) return;
+
+  const reduce = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  const fine = window.matchMedia("(pointer: fine)").matches;
+  const live = fine && !reduce;
+  const tilt = hud.querySelector(".hud-tilt");
+
+  // SpotlightCard + TiltedCard — rAF-throttled, transforms only
+  let raf = 0;
+  hud.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!live) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const r = hud.getBoundingClientRect();
+        hud.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        hud.style.setProperty("--my", `${e.clientY - r.top}px`);
+        if (!tilt) return;
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        tilt.style.transform = `perspective(1100px) rotateX(${(-py * 8).toFixed(2)}deg) rotateY(${(px * 8).toFixed(2)}deg)`;
+      });
+    },
+    { passive: true },
+  );
+  hud.addEventListener("pointerleave", () => {
+    if (tilt)
+      tilt.style.transform =
+        "perspective(1100px) rotateX(0deg) rotateY(0deg)";
+  });
+
+  // Ghost typography mirrors whatever the title settles on
+  const ghost = hud.querySelector(".hud-ghost");
+  const titleEl = hud.querySelector("[data-hud-title]");
+  if (ghost && titleEl) {
+    const sync = () => {
+      ghost.textContent = titleEl.textContent;
+    };
+    new MutationObserver(sync).observe(titleEl, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+    sync();
+  }
+
+  // ClickSpark — a small burst off the controls
+  if (!reduce) {
+    hud.querySelectorAll("[data-spark]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const r = btn.getBoundingClientRect();
+        const n = btn.classList.contains("hud-pill") ? 14 : 9;
+        for (let i = 0; i < n; i++) {
+          const sp = document.createElement("span");
+          sp.className = "hud-spark";
+          const a = Math.random() * Math.PI * 2;
+          const d = 16 + Math.random() * 24;
+          sp.style.setProperty("--sx", `${(Math.cos(a) * d).toFixed(1)}px`);
+          sp.style.setProperty("--sy", `${(Math.sin(a) * d).toFixed(1)}px`);
+          sp.style.left = `${e.clientX - r.left}px`;
+          sp.style.top = `${e.clientY - r.top}px`;
+          btn.appendChild(sp);
+          setTimeout(() => sp.remove(), 600);
+        }
+      });
+    });
+  }
+
+
+  })();
 </script>

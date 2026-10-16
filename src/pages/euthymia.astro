@@ -11,36 +11,71 @@ import "../styles/404.css";
   <head>
     <meta name="pagefind:filter" content="nav" />
   </head>
-
   <Container>
+    <!-- velkaa framing -->
+    <div class="ghost-euthymia" aria-hidden="true">EUTHYMIA</div>
+    <div class="euthymia-vignette" aria-hidden="true"></div>
+    <div class="euthymia-dotgrid" aria-hidden="true"></div>
+    <div class="corner-brackets" aria-hidden="true">
+      <span class="bracket tl"></span>
+      <span class="bracket tr"></span>
+      <span class="bracket bl"></span>
+      <span class="bracket br"></span>
+    </div>
+    <div class="laser-scanline" aria-hidden="true"></div>
+    <div class="level-flare" aria-hidden="true"></div>
+
     <div class="game-container">
+      <!-- HUD -->
       <div id="hud" class="hud">
-        <div class="hud-stats short">
-          <div class="hud-item">
-            euthymia: <span id="euthymiaLevel">1</span>
+        <h1 class="euthymia-headline" data-decrypt>EUTHYMIA</h1>
+        <p class="euthymia-subtitle" data-decrypt>Awakened to a Dream</p>
+        <div class="hud-stats">
+          <div class="hud-chip">
+            <span class="chip-label">Euthymia</span>
+            <span class="chip-value"><span id="euthymiaLevel">1</span></span>
           </div>
-          <div class="hud-item">focus: <span id="focus">100</span></div>
-          <div class="hud-item">qi: <span id="qi">100</span></div>
-          <div class="hud-item">xp: <span id="experience">0</span></div>
+          <div class="hud-chip">
+            <span class="chip-label">Focus</span>
+            <span class="chip-value"><span id="focus">100</span></span>
+          </div>
+          <div class="hud-chip">
+            <span class="chip-label">Qi</span>
+            <span class="chip-value"><span id="qi">100</span></span>
+          </div>
+          <div class="hud-chip">
+            <span class="chip-label">XP</span>
+            <span class="chip-value"><span id="experience">0</span></span>
+          </div>
+        </div>
+        <div class="ascension-bar">
+          <div class="ascension-fill" id="ascensionFill"></div>
         </div>
       </div>
 
+      <!-- Log -->
       <div id="log" class="log"></div>
 
-      <div class="actions bordered">
-        <button id="cultivate">cultivate</button>
-        <button id="meditate">meditate</button>
-        <button id="toggleInnovate">innovate</button>
-        <button id="explore">explore</button>
+      <!-- Actions -->
+      <div class="actions">
+        <button id="cultivate" class="action-pill">Cultivate</button>
+        <button id="meditate" class="action-pill">Meditate</button>
+        <button id="toggleInnovate" class="action-pill">Innovate</button>
+        <button id="explore" class="action-pill">Explore</button>
       </div>
     </div>
 
     <!-- Innovate Modal -->
     <div id="innovateModal" class="modal">
       <div class="modal-content">
+        <div class="modal-brackets" aria-hidden="true">
+          <span class="bracket tl"></span>
+          <span class="bracket tr"></span>
+          <span class="bracket bl"></span>
+          <span class="bracket br"></span>
+        </div>
         <span class="close" id="closeInnovateModal">&times;</span>
-        <h2>Innovate:</h2>
-        <br />
+        <h2 class="modal-title">Innovate</h2>
         <div class="innovation">
           <div id="innovateHerbs" class="innovate-item"></div>
           <div id="innovatePapyrus" class="innovate-item"></div>
@@ -50,12 +85,10 @@ import "../styles/404.css";
           <div id="innovateTomes" class="innovate-item"></div>
           <div id="innovateTea" class="innovate-item"></div>
         </div>
-        <br />
-        <button id="toggleCrafting">Toggle Crafting Interface</button>
+        <button id="toggleCrafting" class="action-pill action-pill--small">Toggle Crafting</button>
       </div>
-
       <div class="modal-background">
-        <h3>Log:</h3>
+        <h3 class="modal-log-title">Log</h3>
         <div id="modalLog" class="modal-log"></div>
       </div>
     </div>
@@ -63,13 +96,18 @@ import "../styles/404.css";
     <!-- Crafting Modal -->
     <div id="craftingModal" class="modal">
       <div class="modal-content">
+        <div class="modal-brackets" aria-hidden="true">
+          <span class="bracket tl"></span>
+          <span class="bracket tr"></span>
+          <span class="bracket bl"></span>
+          <span class="bracket br"></span>
+        </div>
         <span class="close" id="closeCraftingModal">&times;</span>
-        <h2>Craft:</h2>
-        <br />
+        <h2 class="modal-title">Craft</h2>
         <div id="craftingContainer" class="crafting-list"></div>
       </div>
       <div class="modal-background">
-        <h3>Log:</h3>
+        <h3 class="modal-log-title">Log</h3>
         <div id="modalLogCrafting" class="modal-log"></div>
       </div>
     </div>
@@ -77,26 +115,26 @@ import "../styles/404.css";
     <!-- Cultivate Modal -->
     <div id="cultivateModal" class="modal cultivate-modal">
       <div class="modal-content cultivate-content">
+        <div class="modal-brackets" aria-hidden="true">
+          <span class="bracket tl"></span>
+          <span class="bracket tr"></span>
+          <span class="bracket bl"></span>
+          <span class="bracket br"></span>
+        </div>
         <span class="close" id="closeCultivateModal">&times;</span>
-
-        <h2 class="cultivate-title">Cultivation</h2>
-        <p class="cultivate-subtitle">
-          Direct your attention into the material world
-        </p>
-
+        <h2 class="modal-title cultivate-title">Cultivation</h2>
+        <p class="cultivate-subtitle">Direct your attention into the material world</p>
         <div class="cultivate-actions">
-          <button id="performGarden" class="cultivate-card garden">
+          <button id="performGarden" class="cultivate-card garden" data-spotlight>
             <span class="cultivate-label">Garden</span>
             <span class="cultivate-desc">Grow herbs through patience</span>
           </button>
-
-          <button id="performMine" class="cultivate-card mine">
+          <button id="performMine" class="cultivate-card mine" data-spotlight>
             <span class="cultivate-label">Mine</span>
             <span class="cultivate-desc">Extract crystals from depth</span>
           </button>
         </div>
       </div>
-
       <div class="modal-background cultivate-log-bg">
         <div id="modalLogCultivate" class="modal-log"></div>
       </div>
@@ -105,8 +143,14 @@ import "../styles/404.css";
     <!-- Explore Modal -->
     <div id="exploreModal" class="modal">
       <div class="modal-content">
+        <div class="modal-brackets" aria-hidden="true">
+          <span class="bracket tl"></span>
+          <span class="bracket tr"></span>
+          <span class="bracket bl"></span>
+          <span class="bracket br"></span>
+        </div>
         <span class="close" id="closeExploreModal">&times;</span>
-        <h2>Explore Locations:</h2>
+        <h2 class="modal-title">Explore Locations</h2>
         <div id="exploreOptions"></div>
       </div>
       <div class="modal-background">
@@ -114,7 +158,7 @@ import "../styles/404.css";
       </div>
     </div>
 
-    <!-- SCRIPT (UNCHANGED) -->
+    <!-- GAME SCRIPT (UNCHANGED) -->
     <script is:inline>
       document.addEventListener("DOMContentLoaded", function () {
         let qi = 100;
@@ -136,13 +180,11 @@ import "../styles/404.css";
           amount: 0,
           variations: { amethyst: 0, opal: 0, citrine: 0, quartz: 0 },
         };
-
         let innovate = {
           tea: { amount: 0, rarity: "common" },
           wand: { amount: 0, rarity: "common" },
           tome: { amount: 0, rarity: "common" },
         };
-
         const craftRecipes = {
           tea: { herbs: 1, papyrus: 1, materia: 1, rarity: "common" },
           wand: {
@@ -161,7 +203,6 @@ import "../styles/404.css";
           },
         };
 
-        // available localez the adept/user can astral project to
         const localez = {
           einSof: { name: "Ein Sof", unlocked: true },
           1: { name: "Locale I: Tiphereth", unlocked: false },
@@ -169,10 +210,8 @@ import "../styles/404.css";
           3: { name: "Locale III: Kether", unlocked: false },
         };
 
-        // ✅ CRITICAL FIX — expose to global scope
         window.localez = localez;
 
-        // html constants
         const log = document.getElementById("log");
         const modalLog = document.getElementById("modalLog");
         const modalLogCultivate = document.getElementById("modalLogCultivate");
@@ -200,7 +239,6 @@ import "../styles/404.css";
         const exploreBtn = document.getElementById("explore");
         const exploreOptions = document.getElementById("exploreOptions");
 
-        // initializations
         let initialLog = true;
 
         function updateHUD() {
@@ -234,7 +272,6 @@ import "../styles/404.css";
         }
 
         function updateCraftingInterface() {
-          // Update crafting items in innovate modal
           document.getElementById("innovateHerbs").innerHTML =
             `Herbs: ${herbs.amount}`;
           document.getElementById("innovatePapyrus").innerHTML =
@@ -244,7 +281,6 @@ import "../styles/404.css";
           document.getElementById("innovateMateria").innerHTML =
             `Materia: ${materia.amount}`;
 
-          // Clear crafting container
           craftingContainer.innerHTML = "";
 
           Object.keys(craftRecipes).forEach((item) => {
@@ -274,7 +310,7 @@ import "../styles/404.css";
 
         cultivateBtn.addEventListener("click", () => {
           cultivateModal.style.display = "block";
-          modalLogCultivate.innerHTML = ""; // Clear previous messages
+          modalLogCultivate.innerHTML = "";
         });
 
         performGardenButton.addEventListener("click", () => {
@@ -393,16 +429,13 @@ import "../styles/404.css";
             logMessage("Not enough focus!");
             return false;
           }
-          // Add similar checks for other resources
-
-          // If checks pass, update the resource
           window[type] += amount;
           return true;
         }
 
         function checkLevelUp() {
           const nextLevel = euthymiaLevel + 1;
-          const requiredXP = nextLevel * 100; // Simple formula, adjust as needed
+          const requiredXP = nextLevel * 100;
           if (experience >= requiredXP) {
             euthymiaLevel++;
             logMessage(
@@ -424,16 +457,104 @@ import "../styles/404.css";
           }
         };
 
-        // Initial HUD update
         updateHUD();
       });
     </script>
 
-    <style>
-      .log,
-      .modal-log {
-        text-align: center;
-      }
-    </style>
+    <!-- VISUAL EFFECTS SCRIPT (does not touch game logic) -->
+    <script is:inline>
+      (() => {
+        const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const pointerFine = matchMedia("(pointer: fine)").matches;
+
+        /* ── Ascension progress bar ───────────── */
+        const ascensionFill = document.getElementById("ascensionFill");
+        if (ascensionFill) {
+          setInterval(() => {
+            const xp = parseInt(document.getElementById("experience")?.textContent) || 0;
+            const level = parseInt(document.getElementById("euthymiaLevel")?.textContent) || 1;
+            const requiredXP = (level + 1) * 100;
+            const pct = Math.min((xp / requiredXP) * 100, 100);
+            ascensionFill.style.width = pct + "%";
+          }, 500);
+        }
+
+        /* ── Level-up flare ────────────────────── */
+        let lastLevel = 1;
+        const flare = document.querySelector(".level-flare");
+        if (flare) {
+          setInterval(() => {
+            const level = parseInt(document.getElementById("euthymiaLevel")?.textContent) || 1;
+            if (level > lastLevel) {
+              lastLevel = level;
+              if (!reduceMotion) {
+                flare.classList.add("is-active");
+                setTimeout(() => flare.classList.remove("is-active"), 1000);
+              }
+            }
+          }, 500);
+        }
+
+        /* ── Action pill spark bursts ──────────── */
+        document.querySelectorAll(".action-pill").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            if (reduceMotion) return;
+            const rect = btn.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            for (let i = 0; i < 6; i++) {
+              const spark = document.createElement("span");
+              spark.className = "spark";
+              const angle = (Math.PI * 2 * i) / 6 + Math.random() * 0.5;
+              const dist = 20 + Math.random() * 15;
+              spark.style.setProperty("--tx", Math.cos(angle) * dist + "px");
+              spark.style.setProperty("--ty", Math.sin(angle) * dist + "px");
+              spark.style.left = cx + "px";
+              spark.style.top = cy + "px";
+              document.body.appendChild(spark);
+              setTimeout(() => spark.remove(), 500);
+            }
+          });
+        });
+
+        /* ── Cultivate card spotlight + tilt ───── */
+        document.querySelectorAll(".cultivate-card").forEach((card) => {
+          if (pointerFine && !reduceMotion) {
+            card.addEventListener("pointermove", (e) => {
+              const rect = card.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              card.style.setProperty("--mx", x + "px");
+              card.style.setProperty("--my", y + "px");
+              const rx = (y / rect.height - 0.5) * -8;
+              const ry = (x / rect.width - 0.5) * 8;
+              card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+            });
+            card.addEventListener("pointerleave", () => {
+              card.style.transform = "";
+            });
+          }
+        });
+
+        /* ── Decrypt headline fallback ─────────── */
+        document.querySelectorAll("[data-decrypt]").forEach((el) => {
+          if (el.querySelector(".dc-char")) return; // motion.ts already handled it
+          const text = el.textContent;
+          el.textContent = "";
+          const pool = "!<>-_\\/[]{}=+*^?#________";
+          text.split("").forEach((ch) => {
+            const span = document.createElement("span");
+            span.className = "dc-char";
+            span.textContent = pool[Math.floor(Math.random() * pool.length)];
+            el.appendChild(span);
+          });
+          el.querySelectorAll(".dc-char").forEach((span, i) => {
+            setTimeout(() => {
+              span.textContent = text[i];
+            }, 200 + i * 40);
+          });
+        });
+      })();
+    </script>
   </Container>
 </Layout>

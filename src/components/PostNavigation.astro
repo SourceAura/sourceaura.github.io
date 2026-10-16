@@ -2,34 +2,19 @@
 const { prevPost, nextPost } = Astro.props;
 ---
 
-<div class="grid grid-cols-2 gap-1.5 sm:gap-3">
+<nav class="post-nav" aria-label="Post navigation">
   {
     prevPost?.slug ? (
       <a
         href={prevPost?.slug}
-        class="group relative flex flex-nowrap rounded-lg border border-black/15 px-4 py-3 pl-10 no-underline transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
+        class="nav-pill nav-prev"
+        title={prevPost?.data.title}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          class="absolute left-2 top-1/2 size-5 -translate-y-1/2 fill-none stroke-current stroke-2"
-        >
-          <line
-            x1="5"
-            y1="12"
-            x2="19"
-            y2="12"
-            class="translate-x-3 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"
-          />
-          <polyline
-            points="12 5 5 12 12 19"
-            class="translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"
-          />
-        </svg>
-        <div class="flex items-center text-sm">{prevPost?.data.title}</div>
+        <span class="nav-arrow" aria-hidden="true">←</span>
+        <span class="nav-label">Prev</span>
       </a>
     ) : (
-      <div class="invisible" />
+      <span class="nav-pill nav-pill--placeholder" aria-hidden="true" />
     )
   }
 
@@ -37,31 +22,84 @@ const { prevPost, nextPost } = Astro.props;
     nextPost?.slug ? (
       <a
         href={nextPost?.slug}
-        class="group relative flex flex-grow flex-row-reverse flex-nowrap rounded-lg border border-black/15 px-4 py-4 pr-10 no-underline transition-colors duration-300 ease-in-out hover:bg-black/5 hover:text-black focus-visible:bg-black/5 focus-visible:text-black dark:border-white/20 dark:hover:bg-white/5 dark:hover:text-white dark:focus-visible:bg-white/5 dark:focus-visible:text-white"
+        class="nav-pill nav-next"
+        title={nextPost?.data.title}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          class="absolute right-2 top-1/2 size-5 -translate-y-1/2 fill-none stroke-current stroke-2"
-        >
-          <line
-            x1="5"
-            y1="12"
-            x2="19"
-            y2="12"
-            class="translate-x-3 scale-x-0 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100 group-focus-visible:translate-x-0 group-focus-visible:scale-x-100"
-          />
-          <polyline
-            points="12 5 19 12 12 19"
-            class="-translate-x-1 transition-transform duration-300 ease-in-out group-hover:translate-x-0 group-focus-visible:translate-x-0"
-          />
-        </svg>
-        <div class="flex items-center rounded text-sm">
-          {nextPost?.data.title}
-        </div>
+        <span class="nav-label">Next</span>
+        <span class="nav-arrow" aria-hidden="true">→</span>
       </a>
     ) : (
-      <div class="invisible" />
+      <span class="nav-pill nav-pill--placeholder" aria-hidden="true" />
     )
   }
-</div>
+</nav>
+
+<style>
+  .post-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklch, var(--pc-accent) 30%, transparent);
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--pc-accent) 12%, transparent),
+      color-mix(in oklch, var(--pc-accent2) 8%, transparent)
+    );
+    color: var(--pc-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-pill:hover {
+    transform: translateY(-2px);
+    border-color: var(--pc-accent);
+    box-shadow: 0 4px 16px color-mix(in oklch, var(--pc-accent) 20%, transparent);
+  }
+
+  .nav-pill--placeholder {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .nav-arrow {
+    font-size: 1em;
+    line-height: 1;
+  }
+
+  .nav-label {
+    line-height: 1;
+  }
+
+  @media (max-width: 640px) {
+    .post-nav {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nav-pill {
+      padding: 0.5rem 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-pill {
+      transition: none;
+    }
+  }
+</style>

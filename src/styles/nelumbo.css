@@ -56,12 +56,22 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate3d(-50%, -50%, 0);
+
+  /* "orbit" layout: the camera is pitched down onto the ring and leans a few
+     degrees toward the pointer, so the ring reads as a volume rather than a
+     flat strip. Nelumbo's tick loop drives the pan values; the defaults here
+     keep it level until JS runs. */
+  --orbit-tilt: -16deg;
+  --orbit-pan-x: 0deg;
+  --orbit-pan-y: 0deg;
+
+  transform: translate3d(-50%, -50%, 0)
+    rotateY(var(--orbit-pan-x)) rotateX(var(--orbit-pan-y));
   overflow: visible; /* ensure beams can glow outside */
   width: var(--nel-vp);
   height: var(--nel-vp);
   z-index: 2;
-  perspective: 1200px;
+  perspective: 1500px;
   transform-style: preserve-3d;
 }
 /* ─────────────────────────────────────────────
@@ -164,8 +174,11 @@
   touch-action: manipulation;
 
   /* keep orb round */
+  /* Billboard: cancel the parent chain's rotation exactly. The ring now carries
+     rotateX(tilt) rotateY(yaw), so the surface needs rotateY(-yaw) followed by
+     rotateX(-tilt) — in that order — to face the camera square on. */
   transform: translateZ(0) rotateY(calc(var(--item-yaw, 0deg) * -1))
-    scale(var(--size-fix, 1));
+    rotateX(calc(var(--orbit-tilt, 0deg) * -1)) scale(var(--size-fix, 1));
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
@@ -468,7 +481,7 @@
     left 260ms cubic-bezier(0.2, 0.9, 0.2, 1),
     top 260ms cubic-bezier(0.2, 0.9, 0.2, 1);
 
-  overflow: hidden; /* for scanline sweep */
+  overflow: visible;
 }
 
 .hud.is-open {
@@ -492,33 +505,23 @@
   width: 100%;
   height: 100%;
   pointer-events: auto;
-
-  border: none;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-
-  border-radius: 0px;
   overflow: visible;
 
   display: grid;
-  grid-template-columns: 1.15fr 1.55fr;
+  grid-template-columns: 1.05fr 1.55fr;
   grid-template-rows: 1fr;
-  gap: 10px;
-  padding: 12px;
+  gap: 14px;
+  padding: 0;
 
   transform: translate3d(0, 0, 0);
-  border: 1px solid color-mix(in oklch, currentColor 12%, transparent);
-  box-shadow:
-    inset 0 0 20px color-mix(in oklch, currentColor 8%, transparent),
-    0 0 40px color-mix(in oklch, currentColor 5%, transparent);
+  contain: layout paint;
 }
 
-.hud.is-booting .hud-frame {
+.hud.is-booting .hud-chrome {
   animation: hudFlicker 0.45s steps(4) infinite alternate;
 }
 
-.hud::after {
+.hud-chrome::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -532,11 +535,11 @@
   width: 100%;
   opacity: 0.15;
   pointer-events: none;
-  z-index: 100;
+  z-index: 2;
   transform: translateY(-100%);
 }
 
-.hud.is-booting::after {
+.hud.is-booting .hud-chrome::after {
   animation: scanlineSweep 2.5s linear infinite;
 }
 
@@ -617,9 +620,9 @@
       transparent 55%
     );
   opacity: 0.55;
-  filter: blur(10px);
   pointer-events: none;
   animation: hudGlow 3.8s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 @keyframes hudGlow {
@@ -664,6 +667,7 @@
       transparent 2px
     );
   animation: hudSpecks 2.6s linear infinite;
+  will-change: transform;
 }
 
 @keyframes hudSpecks {
@@ -722,15 +726,17 @@
 }
 
 .hud-mediaStats {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   min-width: 0;
+  padding: 0;
+  border-radius: 0;
 }
 
 .hud-article {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr auto;
   gap: 8px;
   min-width: 0;
   transform: translate3d(
@@ -750,11 +756,19 @@
 
 .hud-media-wrap {
   position: relative;
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
   background: transparent;
-  min-height: 140px;
-  transform: translate3d(var(--seg-img-x, 0px), var(--seg-img-y, 0px), 0);
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(125, 249, 255, 0.08);
+  transform: translate3d(
+    calc(-56px + var(--seg-img-x, 0px)),
+    var(--seg-img-y, 0px),
+    0
+  );
 }
 
 .hud-mediaStats img {
@@ -817,16 +831,11 @@
 }
 
 .hud-chips {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
   display: flex;
   gap: 6px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   pointer-events: auto;
-  transform: translate3d(var(--seg-chips-x, 0px), var(--seg-chips-y, 0px), 0);
 }
 
 .hud-chip {
@@ -858,13 +867,6 @@
   opacity: 0.95;
 }
 
-.hud-desc {
-  font-size: 12px;
-  line-height: 1.35;
-  opacity: 0.85;
-  text-shadow: 0 0 10px color-mix(in oklch, currentColor 18%, transparent);
-}
-
 .hud-article-body {
   position: relative;
   overflow: auto;
@@ -878,14 +880,11 @@
 }
 
 .hud-controls {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
   display: inline-flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
   pointer-events: auto;
-  z-index: 10;
 }
 
 .hud-ctl {
@@ -938,28 +937,70 @@
   line-height: 1;
 }
 
+/* ── ESC pill ──────────────────────────────────────────────────────
+   The close control is a dismiss pill, not a delete button. It reads as
+   "dismiss" via the ESC label, and the × rotates 45° into a + on hover to
+   signal collapse. Absolutely positioned so it floats over the chrome
+   rather than sitting inside a bar. */
 .hud-close {
   position: absolute;
-  right: 10px;
-  top: 8px;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  border: none;
-  background: color-mix(in oklch, transparent 82%, currentColor 10%);
-  color: inherit;
-  font-size: 18px;
-  line-height: 1;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--pc-accent) 25%, transparent);
+  background: color-mix(in oklch, var(--pc-accent) 7%, transparent);
+  color: var(--pc-text);
+  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   cursor: pointer;
   pointer-events: auto;
-  z-index: 10;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.hud-close-k {
+  color: var(--pc-accent);
+}
+
+.hud-close-x {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in oklch, var(--pc-accent) 14%, transparent);
+  color: var(--pc-accent);
+  font-size: 12px;
+  line-height: 1;
+  transition: transform 0.25s ease;
 }
 
 .hud-close:hover {
-  background: color-mix(in oklch, transparent 74%, currentColor 12%);
+  transform: translateY(-1px);
+  border-color: color-mix(in oklch, var(--pc-accent) 55%, transparent);
+  background: color-mix(in oklch, var(--pc-accent) 12%, transparent);
+  box-shadow: 0 0 18px color-mix(in oklch, var(--pc-accent) 22%, transparent);
 }
+
+.hud-close:hover .hud-close-x {
+  transform: rotate(45deg);
+}
+
+.hud-close:active {
+  transform: scale(0.96);
+}
+
+
 
 /* Comments Section (mirror reflection of HUD) */
 .hud-comments-section {
@@ -1081,3 +1122,536 @@
     filter: blur(0px);
   }
 }
+
+/* accent vars are registered so they cross-fade between posts */
+@property --pc-accent {
+  syntax: "<color>";
+  initial-value: #7df9ff;
+  inherits: true;
+}
+@property --pc-accent2 {
+  syntax: "<color>";
+  initial-value: #b48cff;
+  inherits: true;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HUD CARD — "a captured star"
+   Vanilla ports: SpotlightCard · StarBorder · TiltedCard ·
+                  ClickSpark · DecryptedText (already via scrambleText)
+   Inspiration: velkaa "Kinetic Interface v4", Blog Card Slider
+   ════════════════════════════════════════════════════════════════ */
+
+/* palette: near-black glass, cyan-teal + violet, prism star */
+.hud {
+  --hud-bg: rgba(8, 10, 18, 0.86);
+  --hud-text: #e8ecf4;
+  --hud-dim: rgba(232, 236, 244, 0.62);
+  --pc-accent: #7df9ff;
+  --pc-accent2: #b48cff;
+  transition: --pc-accent 0.4s ease, --pc-accent2 0.4s ease;
+}
+
+/* the shell condenses out of the particle field; close stays a quick fade */
+.hud.is-open .hud-frame {
+  animation: hudIn 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+@keyframes hudIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* ── chrome: the clipped glass everything floats above ── */
+.hud-chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--hud-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 0 80px rgba(0, 0, 0, 0.55),
+    0 0 60px rgba(180, 140, 255, 0.07);
+}
+
+/* vignette — edges dissolve inward so the rectangle stops reading as a box */
+.hud-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 52%,
+    rgba(2, 3, 8, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+/* dot-grid texture */
+.hud-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1.6px
+  );
+  background-size: 7px 7px;
+  pointer-events: none;
+}
+
+/* cursor spotlight */
+.hud-spot {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(125, 249, 255, 0.1),
+    rgba(180, 140, 255, 0.05) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* shooting star — the nagerboshi tracing the edge */
+@property --sa {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.hud-star {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--sa),
+    transparent 0deg,
+    transparent 300deg,
+    #fff 330deg,
+    var(--pc-accent) 345deg,
+    var(--pc-accent2) 355deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: hudOrbit 5s linear infinite;
+  pointer-events: none;
+}
+@keyframes hudOrbit {
+  to {
+    --sa: 360deg;
+  }
+}
+
+/* HUD corner brackets */
+.hud-bracket {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in oklch, var(--pc-accent) 35%, transparent);
+  pointer-events: none;
+  z-index: 3;
+}
+.hb-tl {
+  top: 14px;
+  left: 14px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 6px;
+}
+.hb-tr {
+  top: 14px;
+  right: 14px;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 6px;
+}
+.hb-bl {
+  bottom: 14px;
+  left: 14px;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 6px;
+}
+.hb-br {
+  bottom: 14px;
+  right: 14px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 6px;
+}
+
+/* giant ghost typography looming behind the content */
+.hud-ghost {
+  position: absolute;
+  top: 46%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: clamp(3rem, 12vh, 6.5rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  color: rgba(232, 236, 244, 0.035);
+  pointer-events: none;
+  user-select: none;
+  font-family: ui-monospace, monospace;
+  z-index: 0;
+}
+
+/* ── content floats above the chrome ── */
+.hud-tilt {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1.05fr 1.55fr;
+  gap: 14px;
+  padding: 18px 18px 24px;
+  min-height: 0;
+  transition: transform 0.25s ease-out;
+  will-change: transform;
+  transform-style: preserve-3d;
+  contain: layout;
+}
+
+
+
+.hud-chip {
+  border-color: color-mix(in oklch, var(--pc-accent) 22%, transparent);
+  background: color-mix(in oklch, var(--pc-accent) 5%, transparent);
+  animation: hudChipPulse 3.2s ease-in-out infinite;
+}
+.hud-chip-v {
+  color: var(--pc-accent);
+}
+@keyframes hudChipPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+/* the hero image breathes */
+.hud-mediaStats img {
+  animation: hudDrift 24s ease-in-out infinite alternate;
+}
+@keyframes hudDrift {
+  from {
+    transform: scale(1.02) translate(0, 0);
+  }
+  to {
+    transform: scale(1.1) translate(-1.5%, 1.5%);
+  }
+}
+
+/* laser scanline sweeping the image */
+.hud-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--pc-accent) 35%, transparent),
+    rgba(255, 255, 255, 0.55),
+    color-mix(in oklch, var(--pc-accent) 35%, transparent),
+    transparent
+  );
+  box-shadow: 0 0 18px color-mix(in oklch, var(--pc-accent) 40%, transparent);
+  animation: hudScan 4.5s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes hudScan {
+  from {
+    transform: translateY(-2%);
+  }
+  to {
+    transform: translateY(102%);
+  }
+}
+
+/* glare sweep on hover */
+.hud-glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.9s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.hud-media-wrap:hover .hud-glare {
+  transform: translateX(120%);
+}
+
+/* title over the image — layered shadow for print depth */
+.hud-titleOverlay {
+  left: 12px;
+  right: 12px;
+  top: auto;
+  bottom: 12px;
+  padding: 2rem 1rem 0.9rem;
+  background: linear-gradient(to top, rgba(4, 6, 12, 0.9), transparent);
+}
+.hud-titleText {
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  font-family: ui-monospace, monospace;
+  text-shadow:
+    1px 1px 0 color-mix(in oklch, var(--pc-accent) 50%, transparent),
+    2px 2px 0 color-mix(in oklch, var(--pc-accent) 28%, transparent),
+    3px 3px 0 rgba(90, 60, 140, 0.35),
+    5px 5px 24px rgba(0, 0, 0, 0.9);
+}
+
+/* scroll region: the article body scrolls inside the card */
+.hud-article-body {
+  overflow-y: auto;
+  max-height: min(60vh, 520px);
+  min-height: 0;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--pc-accent) 40%, transparent)
+    transparent;
+  mask-image: linear-gradient(
+    to bottom, transparent 0%, black 22px,
+    black calc(100% - 22px), transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom, transparent 0%, black 22px,
+    black calc(100% - 22px), transparent 100%
+  );
+}
+.hud-article-body::-webkit-scrollbar { width: 8px; }
+.hud-article-body::-webkit-scrollbar-track { background: transparent; }
+.hud-article-body::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--pc-accent) 40%, transparent);
+  border-radius: 4px;
+}
+
+/* telemetry strip: DATE · READ beneath the hero image */
+.hud-telemetry {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hud-telemetry .hud-chip-sep {
+  opacity: 0.35;
+  font-size: 0.68rem;
+  font-family: "Geist Mono Variable", ui-monospace, monospace;
+}
+
+/* quote — the post description, set like a pull-quote */
+.hud-quote {
+  color: var(--pc-accent);
+  font-style: italic;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  border-left: 3px solid color-mix(in oklch, var(--pc-accent) 50%, transparent);
+  padding-left: 0.8rem;
+  margin: 0;
+}
+
+.hud-sub {
+  color: var(--pc-accent2);
+}
+
+/* ── staggered entrance: image/title → article → controls ── */
+.hud.is-open .hud-tilt > * {
+  opacity: 0;
+  transform: translateY(25px);
+  animation: hudRise 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hud.is-open .hud-tilt > *:nth-child(1) {
+  animation-delay: 0.3s;
+}
+.hud.is-open .hud-tilt > *:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.hud.is-open .hud-tilt > *:nth-child(3) {
+  animation-delay: 0.5s;
+}
+@keyframes hudRise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── pill CTA ── */
+.hud-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1.6rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  font-family: ui-monospace, monospace;
+  color: #06121a;
+  text-decoration: none;
+  background: linear-gradient(120deg, var(--pc-accent), var(--pc-accent2));
+  box-shadow: 0 10px 34px color-mix(in oklch, var(--pc-accent) 28%, transparent);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  overflow: hidden;
+  justify-self: start;
+}
+.hud-pill:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 14px 44px rgba(180, 140, 255, 0.4);
+}
+.hud-pill:active {
+  transform: scale(0.97);
+}
+
+/* reading progress along the card's top edge */
+.hud-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--pc-accent);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* controls row */
+.hud-controls {
+  grid-column: 1 / -1;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 10px;
+  padding-bottom: 4px;
+}
+
+/* click sparks */
+.hud-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--pc-accent);
+  box-shadow: 0 0 8px var(--pc-accent);
+  pointer-events: none;
+  z-index: 5;
+  animation: hudSparkFly 0.55s ease-out forwards;
+}
+@keyframes hudSparkFly {
+  to {
+    transform: translate(var(--sx), var(--sy)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* the comments panel reuses .hud-frame; keep it boxed */
+/* The comments card shares the HUD card's shell: same radius, same
+   chrome, same accent vars. Only the content differs. */
+.hud-comments-section .hud-frame {
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+/* ── reduced motion: calm fade, nothing else ── */
+@media (prefers-reduced-motion: reduce) {
+  .hud.is-open .hud-frame {
+    animation: hudInSimple 0.2s ease both;
+  }
+  @keyframes hudInSimple {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .hud-star,
+  .hud-mediaStats img,
+  .hud-laser,
+  .hud-media-wrap:hover .hud-glare,
+  .hud-chip {
+    animation: none;
+  }
+  .hud-spot,
+  .hud-ghost {
+    display: none;
+  }
+  .hud.is-open .hud-tilt > * {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ── tether cord: links the HUD card to the comments card ── */
+.hud-tether {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 57;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hud-tether-line {
+  stroke: var(--pc-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.45;
+}
+
+.hud-tether-dot {
+  fill: var(--pc-accent);
+  stroke: var(--pc-accent);
+  stroke-width: 1;
+}
+
+/* ── ambient tint + depth-of-field while the card is open ── */
+body.hud-open::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in oklch, var(--pc-accent) 7%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 58;
+}
+
+

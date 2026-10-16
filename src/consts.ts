@@ -13,6 +13,8 @@ export const SITE = {
   ALIAS: "nagerboshi",
   DESCRIPTION: "euthymia [ eu·​thy·​mia] (noun): ",
   DEFINITION: "a normal, tranquil mental state or mood.",
+  SEO_DESCRIPTION:
+    "sourceaura — a sandbox of poetry and programming. Interactive experiments, notes, and projects, built with Astro.",
   NUM_POSTS_ON_HOMEPAGE: 7,
   NUM_PROJECTS_ON_HOMEPAGE: 7,
   EMAIL: "sourceaura@proton.me",
@@ -28,7 +30,7 @@ export const HERO: Metadata = {
 
 export const HOME: Metadata = {
   TITLE: "home",
-  DESCRIPTION: "An accessible theme for Astro.",
+  DESCRIPTION: SITE.SEO_DESCRIPTION,
   GITHUB: "github.com/sourceaura",
   TWITTER: "twitter.com/sourceaura",
   MASTODON: "mastodon.social/@SourceAura",

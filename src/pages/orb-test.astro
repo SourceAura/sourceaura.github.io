@@ -1,67 +1,138 @@
 ---
-import Orb from '../components/Orb.astro';
+/*
+  Dev-only A/B harness for the crystal orb layer.
 
-// Get the first available post for testing
-import { getCollection } from 'astro:content';
-const posts = await getCollection('petals');
-const testPost = posts[0]; // Use first available post
+  Row 1 is the current orb vs the crystal layer at defaults.
+  Row 2 sweeps the parameters so you can judge each effect in isolation.
+  Nothing here ships to production — this page is not linked from the site.
+*/
+import Orb from "../components/Orb.astro";
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("petals");
+const post = posts.find((p) => !p.data.draft) ?? posts[0];
+
+const variants = [
+  { label: "before · crystal off", props: {} },
+  { label: "adopted · intense", props: { crystal: true } },
+  // Tuning directions, in case the adopted look needs dialling.
+  // The sweep runs at a lower particle count so six orbs stay interactive;
+  // the two above are full fidelity.
+  {
+    label: "softer rim",
+    props: { crystal: true, maxParticles: 2400, glow: 0.6, crackle: 0.5 },
+  },
+  {
+    label: "fewer strands",
+    props: { crystal: true, maxParticles: 2400, strands: 3 },
+  },
+  {
+    label: "no haze",
+    props: { crystal: true, maxParticles: 2400, haze: 0 },
+  },
+  {
+    label: "calmer",
+    props: {
+      crystal: true,
+      maxParticles: 2400,
+      glow: 0.75,
+      haze: 0.5,
+      strands: 4,
+      crackle: 0.4,
+      flares: 0.5,
+      sparks: 0.4,
+    },
+  },
+];
 ---
 
-<html>
-<head>
-  <title>Orb Test</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 2rem;
-      background: #000;
-      color: #fff;
-      font-family: system-ui;
-    }
-    .orb-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 500px;
-      border: 1px solid #333;
-      margin: 2rem 0;
-      position: relative;
-    }
-    .debug-info {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.1);
-      padding: 10px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Orb Visibility Test</h1>
-  <p>Testing with post: {testPost?.data.title || 'No posts found'}</p>
-  
-  <div class="orb-container">
-    <div class="debug-info">
-      <div>Looking for Orb...</div>
-      <div id="orb-status">Checking...</div>
-    </div>
-    {testPost && <Orb post={testPost} />}
-  </div>
-  
-  <script>
-    setTimeout(() => {
-      const canvas = document.querySelector('canvas');
-      const status = document.getElementById('orb-status');
-      if (canvas) {
-        status.textContent = `Canvas found: ${canvas.width}x${canvas.height}`;
-        status.style.color = '#0f0';
-      } else {
-        status.textContent = 'No canvas found';
-        status.style.color = '#f00';
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Orb A/B — crystal layer</title>
+    <style>
+      :root {
+        color-scheme: dark;
       }
-    }, 1000);
-  </script>
-</body>
+      body {
+        margin: 0;
+        padding: 2rem;
+        background: #000;
+        color: #fff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      h1 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 0.35rem;
+        letter-spacing: 0.02em;
+      }
+      .meta {
+        color: #888;
+        margin-bottom: 1.75rem;
+      }
+      .meta code {
+        color: #ccc;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+      .cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .stage {
+        width: 100%;
+        max-width: 300px;
+        aspect-ratio: 1 / 1;
+        display: grid;
+        place-items: center;
+      }
+      .label {
+        color: #bbb;
+        letter-spacing: 0.03em;
+      }
+      .note {
+        margin-top: 2.5rem;
+        color: #777;
+        line-height: 1.6;
+        max-width: 70ch;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Orb A/B — crystal layer</h1>
+    <div class="meta">
+      material: <code>{post?.data.title ?? "no post"}</code> — colour and particles
+      are both sampled from this post's first image
+    </div>
+
+    <div class="grid">
+      {
+        variants.map((v) => (
+          <div class="cell">
+            <div class="stage">
+              {post && <Orb post={post} {...v.props} />}
+            </div>
+            <div class="label">{v.label}</div>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="note">
+      All six use the identical particle sphere. The crystal layer only adds a
+      rim, strands, flares, sparks and haze, tinted by the image's dominant tone
+      and drawn behind the particles so the material stays unobscured. If the
+      orb's own image ever fails to load, the layer stays silent rather than
+      rendering a white ring.
+    </p>
+  </body>
 </html>

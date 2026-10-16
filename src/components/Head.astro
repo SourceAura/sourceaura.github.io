@@ -13,7 +13,7 @@ interface Props {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const { title, description, image = "/blog-placeholder-1.jpg" } = Astro.props;
+const { title, description, image = "/og.png" } = Astro.props;
 ---
 
 <!-- Global Metadata -->
@@ -26,21 +26,14 @@ const { title, description, image = "/blog-placeholder-1.jpg" } = Astro.props;
 />
 <meta name="generator" content={Astro.generator} />
 
-<!-- Font preloads -->
-<link
-  rel="preload"
-  href="/fonts/geist.woff2"
-  as="font"
-  type="font/woff2"
-  crossorigin
-/>
-<link
-  rel="preload"
-  href="/fonts/geist-mono.woff2"
-  as="font"
-  type="font/woff2"
-  crossorigin
-/>
+<!-- Motion gate. Set before first paint so the reveal states never flash, and
+     deliberately the ONLY thing that enables them: if this script does not run,
+     no element is ever hidden. -->
+<script is:inline>
+  document.documentElement.classList.add("js-motion");
+</script>
+
+<!-- Fonts are self-hosted via @fontsource-variable (imported in global.css) -->
 
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
@@ -52,17 +45,18 @@ const { title, description, image = "/blog-placeholder-1.jpg" } = Astro.props;
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website" />
-<meta property="og:url" content={Astro.url} />
+<meta property="og:site_name" content="sourceaura" />
+<meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:image" content={new URL(image, Astro.site)} />
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={Astro.url} />
+<meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image, Astro.url)} />
+<meta property="twitter:image" content={new URL(image, Astro.site)} />
 
 <!-- PageFind -->
 <!-- <link href="/pagefind/pagefind-ui.css" rel="stylesheet" /> -->

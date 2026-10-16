@@ -8,13 +8,13 @@ import Footer from "@components/Footer.astro"
 import PageFind from "@components/PageFind.astro"
 import AseHud from "@components/AseHud.astro"
 
-const { title, description, prev, next } = Astro.props
+const { title, description, image, prev, next } = Astro.props
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <Head title={`${title} | ${SITE.TITLE}`} description={description} />
+    <Head title={`${title} | ${SITE.TITLE}`} description={description} image={image} />
   </head>
 
   <body data-route={Astro.props["data-route"]}>
@@ -37,10 +37,20 @@ const { title, description, prev, next } = Astro.props
       </script>
     ) : null}
 
-    <!-- ✅ Ase bootstrap (bundled for reliability) -->
+    <!-- Ase bootstrap — DEV ONLY.
+         Dynamic import behind a build-time-false branch, so the telemetry
+         client is tree-shaken out of production entirely: external visitors
+         get no listeners, no timers, and no requests to the local Ase service. -->
     <script>
-      import "../lib/ase";
-      console.log("[ASE] bootstrap active");
+      if (import.meta.env.DEV) {
+        import("../lib/ase");
+      }
+    </script>
+
+    <!-- Motion primitives: glare, entry reveal, blur-text, count-up.
+         Self-boots on load and on astro:page-load. -->
+    <script>
+      import "../lib/motion";
     </script>
 
     <!-- Existing gesture script (unchanged) -->

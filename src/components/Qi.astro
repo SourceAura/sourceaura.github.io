@@ -1,8 +1,8 @@
 <div id="qi-root">
   <canvas id="qi-vis"></canvas>
 
-  <!-- ✅ click target for toggling Nelumbo (does not block the page) -->
-  <button id="qi-core-hit" type="button" aria-label="Toggle petals"></button>
+  <!-- short click = post card display · long press = Qi orb display -->
+  <button id="qi-core-hit" type="button" aria-label="Qi core"></button>
 </div>
 
 <style>
@@ -52,10 +52,8 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ✅ When petals are open, core click is disabled too */
-  body:has(#petal-shell[data-petals-open]) #qi-core-hit {
-    pointer-events: none;
-  }
+  /* The core stays pressable while cards are open so a long press can close
+     them again. It sits at dead centre, clear of the ring (radius 300/220). */
 </style>
 
 <script>
@@ -75,9 +73,13 @@
 
   let cssW = 0;
   let cssH = 0;
-  // Debug
+  // Long press toggles the post-card display (Nelumbo). Short press only
+  // touches Qi's own orb display.
   function emitPetalToggle() {
     window.dispatchEvent(new CustomEvent("qi:toggle-petals"));
+  }
+
+  function touchQiDisplay() {
     window.__pulse?.touch?.();
   }
 
@@ -94,6 +96,10 @@
   }
 
   // ✅ Switch interaction to the dedicated core hit target (no page-blocking)
+  const HOLD_MS = 420;
+  let holdTimer = 0;
+  let holdFired = false;
+
   qiCoreHit.addEventListener(
     "pointerdown",
     (e) => {
@@ -102,10 +108,35 @@
       e.preventDefault();
       e.stopPropagation();
 
+      holdFired = false;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        holdFired = true;
+        touchQiDisplay();
+      }, HOLD_MS);
+    },
+    { passive: false },
+  );
+
+  // Short click toggles the carousel. A long press already fired on Qi's own
+  // display, so swallow the release to avoid a double-toggle.
+  qiCoreHit.addEventListener(
+    "pointerup",
+    () => {
+      clearTimeout(holdTimer);
+      if (holdFired) {
+        holdFired = false;
+        return;
+      }
       emitPetalToggle();
     },
     { passive: false },
   );
+
+  qiCoreHit.addEventListener("pointercancel", () => {
+    clearTimeout(holdTimer);
+    holdFired = false;
+  });
 
   /* ───────── PETAL TOGGLE (CORE-LIMITED) ───────── */
 
