@@ -164,6 +164,20 @@ body:has(#home-telemetry) #qi-root {
   z-index: 3;
 }
 
+/* shooting-star border instrument — HUD cards, PageFind, Beacon share it.
+   The comet's color comes from each host's accent (petal-driven). */
+@property --sa {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes starOrbit {
+  to { --sa: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-star, .bcn-star { animation: none !important; }
+}
+
 /* peripheral fade — breaks the rigid rectangle, velkaa-style */
 body::after {
   content: "";
