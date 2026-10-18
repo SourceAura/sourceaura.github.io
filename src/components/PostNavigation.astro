@@ -48,7 +48,12 @@ const { prevPost, nextPost } = Astro.props;
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
-    border-radius: 999px;
+    border-radius: 0;
+    clip-path: polygon(
+          9px 0, 100% 0,
+          100% calc(100% - 9px), calc(100% - 9px) 100%,
+          0 100%, 0 9px
+        );
     border: 1px solid color-mix(in oklch, var(--pc-accent) 30%, transparent);
     background: linear-gradient(
       135deg,
