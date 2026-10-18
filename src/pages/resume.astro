@@ -99,11 +99,6 @@ import Container from "@components/Container.astro";
   </Container>
 
   <style>
-    /* Resume page scopes the site's accent tokens (same values as the petal page) */
-    :root {
-      --pc-accent: #7df9ff;
-      --pc-accent2: #b48cff;
-    }
     .ghost-title {
       position: relative;
       font-size: clamp(4rem, 14vw, 11rem);
@@ -142,6 +137,12 @@ import Container from "@components/Container.astro";
       position: absolute; inset: 0; pointer-events: none;
       background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
       background-size: 20px 20px;
+    }
+    /* Light mode: guarantee a dark scrim so the white title always reads */
+    html.light .hero-frame::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(5,7,15,0.55), rgba(5,7,15,0.78));
+      pointer-events: none;
     }
     .hero-title {
       position: absolute; bottom: 3.2rem; left: 1.5rem; right: 1.5rem;
