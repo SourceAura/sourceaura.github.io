@@ -26,6 +26,7 @@ const posts = (await getCollection("petals"))
     <div
       class="root flex min-h-[60vh] flex-col items-center justify-center text-center"
     >
+      <div class="home-ghost ghost-drift-center" aria-hidden="true">0xSRCAURA</div>
       <section
         class="w-full max-w-2xl
           -translate-y-20
@@ -50,6 +51,9 @@ const posts = (await getCollection("petals"))
                 {SITE.DEFINITION}
               </span>
             </div>
+          </div>
+          <div id="home-telemetry" class="home-telemetry" aria-hidden="true">
+            <span>0xSrcAura</span><span class="ht-sep">·</span><span>web developer</span><span class="ht-sep">·</span><span>oasis &rsquo;83</span>
           </div>
         </article>
       </section>
@@ -81,9 +85,10 @@ const posts = (await getCollection("petals"))
       primary?.classList.add("fade-out");
     }, 3600);
 
-    // Remove only after both have fully dissolved
+    // Remove only after both have fully dissolved — then light the telemetry
     setTimeout(() => {
       entry.remove();
+      document.getElementById("home-telemetry")?.classList.add("lit");
     }, 8200);
   });
 </script>
@@ -167,5 +172,38 @@ const posts = (await getCollection("petals"))
       animation: none;
       filter: none;
     }
+  }
+
+  /* idle state — the ghost that was always there */
+  .home-ghost {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(4rem, 20vw, 17rem);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--pc-accent);
+    opacity: 0.05;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+  }
+  .home-telemetry {
+    margin-top: 1.5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ui-muted);
+    opacity: 0;
+    transition: opacity 2.4s ease;
+  }
+  .home-telemetry.lit { opacity: 1; }
+  .home-telemetry .ht-sep {
+    margin: 0 0.7em;
+    color: var(--pc-accent);
   }
 </style>
