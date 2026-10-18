@@ -102,6 +102,10 @@ import Container from "@components/Container.astro";
   // Resume terminal: view-transition-safe, event-bridged to the footer toggle.
   // Elements are re-queried fresh on every run; document listeners bind once.
   (() => {
+    // The arena's address. Flip this to the standalone deployment when it goes live;
+    // everything that points at the game (play command, contact line) follows.
+    const EUTHYMIA_URL = "/euthymia";
+
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const els = () => ({
       term: document.getElementById("resume-term"),
@@ -138,7 +142,7 @@ import Container from "@components/Container.astro";
       contact: [
         "mail ......... sourceaura.dev@gmail.com",
         "code ......... github.com/SourceAura",
-        "play ......... /euthymia",
+        "play ......... " + EUTHYMIA_URL,
       ],
       hire: [
         "Portfolio first, applications daily.",
@@ -255,7 +259,7 @@ import Container from "@components/Container.astro";
         setTimeout(() => setTerm(false), 350);
       } else if (cmd === "play") {
         print(["loading euthymia…"]);
-        setTimeout(() => (window.location.href = "/euthymia"), 450);
+        setTimeout(() => (window.location.href = EUTHYMIA_URL), 450);
       } else if (cmd === "sudo hire me") {
         print(["nice try. write to sourceaura.dev@gmail.com — that's the real sudo."]);
       } else if (DATA[cmd]) {
