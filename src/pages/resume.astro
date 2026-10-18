@@ -32,15 +32,6 @@ import Container from "@components/Container.astro";
          COMMAND DECK
          ══════════════════════════════════════════ -->
     <!-- ══════════════════════════════════════════
-         ACTIONS — the interactive layer
-         ══════════════════════════════════════════ -->
-    <div class="resume-actions" data-reveal>
-      <button class="action-btn sw-btn" id="term-toggle" aria-pressed="true" aria-controls="resume-term">
-        <span aria-hidden="true">&#128196;</span> <span id="term-toggle-label">Document</span>
-      </button>
-    </div>
-
-    <!-- ══════════════════════════════════════════
          TERMINAL VIEW (hidden until summoned)
          ══════════════════════════════════════════ -->
     <div class="article-card term-card" id="resume-term">
@@ -48,10 +39,10 @@ import Container from "@components/Container.astro";
         <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
         <span class="term-title">src@euthymia — resume.sh</span>
         <span class="term-tools">
-          <a class="term-tool" href="https://github.com/SourceAura" target="_blank" rel="noopener" aria-label="GitHub">gh &#8599;</a>
-          <a class="term-tool" href="mailto:sourceaura.dev@gmail.com" aria-label="Email">mail</a>
-          <button class="term-tool" id="copy-email" aria-label="Copy email address"><span id="copy-label">copy</span></button>
-          <button class="term-tool" id="print-btn" aria-label="Print or save as PDF">print</button>
+          <a class="term-tool" href="https://github.com/SourceAura" target="_blank" rel="noopener" aria-label="GitHub" data-tip="GitHub" data-tip-pos="below">gh &#8599;</a>
+          <a class="term-tool" href="mailto:sourceaura.dev@gmail.com" aria-label="Email" data-tip="Email" data-tip-pos="below">mail</a>
+          <button class="term-tool" id="copy-email" aria-label="Copy email address" data-tip="Copy email" data-tip-pos="below"><span id="copy-label">copy</span></button>
+          <button class="term-tool" id="print-btn" aria-label="Print or save as PDF" data-tip="Print / PDF" data-tip-pos="below">print</button>
         </span>
       </div>
       <div class="term-body" id="term-output" role="log" aria-label="Terminal output"></div>
@@ -127,18 +118,16 @@ import Container from "@components/Container.astro";
   </Container>
 
 <script is:inline>
-  // Resume interactions: terminal toggle, print, copy-email, mini shell.
+  // Resume terminal: view-transition-safe, event-bridged to the footer toggle.
+  // Elements are re-queried fresh on every run; document listeners bind once.
   (() => {
-    if (window.__resumeInit) return;
-    window.__resumeInit = true;
-
-    const toggle = document.getElementById("term-toggle");
-    const toggleLabel = document.getElementById("term-toggle-label");
-    const doc = document.getElementById("resume-doc");
-    const term = document.getElementById("resume-term");
-    const out = document.getElementById("term-output");
-    const input = document.getElementById("term-input");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const els = () => ({
+      term: document.getElementById("resume-term"),
+      doc: document.getElementById("resume-doc"),
+      out: document.getElementById("term-output"),
+      input: document.getElementById("term-input"),
+    });
 
     const DATA = {
       whoami: [
@@ -176,116 +165,93 @@ import Container from "@components/Container.astro";
         "write to sourceaura.dev@gmail.com — it's yours.",
       ],
       petals: [
-        "recent petals \u2014",
-        "  13 \u00b7 i am that is, that is i am",
-        "  12 \u00b7 Meet Me",
-        "  11 \u00b7 The Small Hours",
-        "  10 \u00b7 Euthymia: Soul Alterz",
-        "  09 \u00b7 Valence: Ghost in the Shell",
+        "recent petals —",
+        "  13 · i am that is, that is i am",
+        "  12 · Meet Me",
+        "  11 · The Small Hours",
+        "  10 · Euthymia: Soul Alterz",
+        "  09 · Valence: Ghost in the Shell",
         "read them at /petals",
       ],
     };
 
     function print(lines) {
+      const { out } = els();
+      if (!out) return;
       lines.forEach((l) => {
         const div = document.createElement("div");
         div.className = "term-line";
-        div.textContent = l === "" ? "\u00a0" : l;
+        div.textContent = l === "" ? " " : l;
         out.appendChild(div);
       });
       out.scrollTop = out.scrollHeight;
     }
 
     function typeBoot(done) {
+      const { out } = els();
+      if (!out) {
+        done();
+        return;
+      }
       const boot = [
         "euthymia resume shell v1.0 — all systems nominal",
-        "type \u2018help\u2019 to list commands.",
+        "type ‘help’ to list commands.",
       ];
       if (reduce) {
         print(boot);
         done();
         return;
       }
-      let li = 0, ci = 0;
-      const div = document.createElement("div");
-      div.className = "term-line term-accent";
-      out.appendChild(div);
-      (function tick() {
+      let li = 0;
+      const step = () => {
         if (li >= boot.length) {
           done();
           return;
         }
         const line = boot[li];
-        if (ci <= line.length) {
-          div.textContent = line.slice(0, ci);
-          ci++;
-          setTimeout(tick, 14);
-        } else {
-          const nd = document.createElement("div");
-          nd.className = "term-line term-accent";
-          out.appendChild(nd);
-          li++;
-          ci = 0;
-          // swap the working div reference
-          tick.div = nd;
-          const old = div;
-          (function next() {
-            if (li >= boot.length) {
-              done();
-              return;
-            }
-            const ln = boot[li];
-            if (ci <= ln.length) {
-              tick.div.textContent = ln.slice(0, ci);
-              ci++;
-              setTimeout(next, 14);
-            } else {
-              li++;
-              ci = 0;
-              const ndiv = document.createElement("div");
-              ndiv.className = "term-line term-accent";
-              out.appendChild(ndiv);
-              tick.div = ndiv;
-              out.scrollTop = out.scrollHeight;
-              next();
-            }
-          })();
-          return;
-        }
-        out.scrollTop = out.scrollHeight;
-      })();
+        const div = document.createElement("div");
+        div.className = "term-line term-accent";
+        out.appendChild(div);
+        let ci = 0;
+        const tick = () => {
+          if (ci <= line.length) {
+            div.textContent = line.slice(0, ci);
+            ci++;
+            setTimeout(tick, 14);
+          } else {
+            li++;
+            out.scrollTop = out.scrollHeight;
+            step();
+          }
+        };
+        tick();
+      };
+      step();
     }
 
     let booted = false;
     function setTerm(open, scroll = true) {
+      const { term, doc, input, out } = els();
+      if (!term || !doc) return;
       term.hidden = !open;
       doc.hidden = open;
-      toggle.setAttribute("aria-pressed", String(open));
-      toggle.classList.toggle("is-on", open);
-      if (toggleLabel) toggleLabel.textContent = open ? "Document" : "Terminal";
+      window.dispatchEvent(new CustomEvent("resume:view", { detail: { terminal: open } }));
       if (open) {
         if (!booted) {
           booted = true;
-          out.innerHTML = "";
-          typeBoot(() => input.focus({ preventScroll: true }));
-        } else {
+          if (out) out.innerHTML = "";
+          typeBoot(() => input && input.focus({ preventScroll: true }));
+        } else if (input) {
           input.focus({ preventScroll: true });
         }
         if (scroll) term.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
       }
     }
 
-    toggle.addEventListener("click", () => setTerm(term.hidden));
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !term.hidden) setTerm(false);
-    });
-
-    input.addEventListener("keydown", (e) => {
-      if (e.key !== "Enter") return;
-      const raw = input.value.trim();
-      input.value = "";
-      const cmd = raw.toLowerCase();
+    function runCommand(raw) {
+      const cmd = raw.trim().toLowerCase();
+      const { out } = els();
+      if (!out) return;
       const echo = document.createElement("div");
       echo.className = "term-line";
       const ps = document.createElement("span");
@@ -302,7 +268,7 @@ import Container from "@components/Container.astro";
       if (cmd === "clear") {
         out.innerHTML = "";
       } else if (cmd === "help") {
-        print(["whoami","experience","arsenal","education","contact","petals","play","hire","doc","clear"].join(" \u00b7 "));
+        print([["whoami", "experience", "arsenal", "education", "contact", "petals", "play", "hire", "doc", "clear"].join(" · ")]);
       } else if (cmd === "doc" || cmd === "gui" || cmd === "document") {
         print(["switching to the formal document…"]);
         setTimeout(() => setTerm(false), 350);
@@ -314,28 +280,63 @@ import Container from "@components/Container.astro";
       } else if (DATA[cmd]) {
         print(DATA[cmd]);
       } else {
-        print([`command not found: ${raw} — try \u2018help\u2019.`]);
+        print(["command not found: " + raw + " — try ‘help’."]);
       }
       out.scrollTop = out.scrollHeight;
-    });
+    }
 
-    setTerm(true, false); // terminal-first: the shell is the front door
-
-document.getElementById("print-btn").addEventListener("click", () => window.print());
-
-    const copyBtn = document.getElementById("copy-email");
-    const copyLabel = document.getElementById("copy-label");
-    copyBtn.addEventListener("click", async () => {
+    async function copyEmail() {
       try {
         await navigator.clipboard.writeText("sourceaura.dev@gmail.com");
-        copyLabel.textContent = "Copied ✓";
+        const label = document.getElementById("copy-label");
+        if (label) {
+          label.textContent = "Copied ✓";
+          setTimeout(() => (label.textContent = "copy"), 1800);
+        }
       } catch {
-        copyLabel.textContent = "sourceaura.dev@gmail.com";
+        const label = document.getElementById("copy-label");
+        if (label) label.textContent = "sourceaura.dev@gmail.com";
       }
-      setTimeout(() => (copyLabel.textContent = "Copy email"), 1800);
-    });
+    }
+
+    // one-time document bindings (survive view transitions; elements re-queried)
+    if (!window.__resumeInit) {
+      window.__resumeInit = true;
+
+      document.addEventListener("resume:toggle-view", () => {
+        const { term } = els();
+        if (term) setTerm(term.hidden);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const { term } = els();
+          if (term && !term.hidden) setTerm(false);
+          return;
+        }
+        if (e.key === "Enter" && e.target && e.target.id === "term-input") {
+          const value = e.target.value;
+          e.target.value = "";
+          runCommand(value);
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        const t = e.target;
+        if (!(t instanceof Element)) return;
+        if (t.closest("#print-btn")) {
+          window.print();
+          return;
+        }
+        if (t.closest("#copy-email")) copyEmail();
+      });
+    }
+
+    // terminal-first: the shell is the front door
+    setTerm(true, false);
   })();
 </script>
+
 
 <style>
   /* synthwave '84 tokens, scoped to the resume */
@@ -447,30 +448,6 @@ document.getElementById("print-btn").addEventListener("click", () => window.prin
   .chip-label { opacity: 0.6; }
   .chip-link { text-decoration: none; cursor: pointer; transition: border-color 0.25s ease, transform 0.25s ease; }
   .chip-link:hover { border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 60%, transparent); transform: translateY(-1px); }
-
-  /* ── action buttons: edged, not pills ── */
-  .resume-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 2rem; }
-  .action-btn {
-    font: inherit;
-    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--ui-text);
-    background: color-mix(in oklch, var(--ui-text) 5%, transparent);
-    border: 1px solid color-mix(in oklch, var(--ui-text) 18%, transparent);
-    padding: 0.55rem 1rem;
-    cursor: pointer;
-    clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
-    transition: transform 160ms ease, background 160ms ease;
-  }
-  .action-btn:hover { transform: translateY(-1px); background: color-mix(in oklch, var(--ui-text) 9%, transparent); }
-  .action-btn:focus-visible { outline: 2px solid var(--sw2); outline-offset: 2px; }
-  .sw-btn {
-    border: none;
-    background: var(--sw-grad);
-    color: #0b0e1a;
-    padding: 0.6rem 1.05rem;
-  }
-  html.dark .sw-btn { color: #0b0e1a; }
-  .sw-btn.is-on { filter: saturate(1.4) brightness(1.1); }
 
   /* ── terminal ── */
   .term-card { margin-bottom: 2rem; overflow: hidden; }
