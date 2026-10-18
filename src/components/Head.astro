@@ -160,9 +160,10 @@ const { title, description, image = "/og.png" } = Astro.props;
 
   function scrollToTop(event) {
     event.preventDefault();
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior: reduce ? "auto" : "smooth",
     });
   }
 
