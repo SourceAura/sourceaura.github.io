@@ -1,0 +1,187 @@
+---
+/*
+Resume: an interactive resume page in the site's own visual language.
+*/
+import Layout from "@layouts/Layout.astro";
+import Container from "@components/Container.astro";
+---
+
+<Layout title="Resume" description="Marvin L. Hall Jr. — Junior Web Developer, Entry-Level Cybersecurity">
+  <Container>
+    <!-- Ghost typography looming behind everything -->
+    <div class="ghost-title" aria-hidden="true">RÉSUMÉ</div>
+
+    <!-- ══════════════════════════════════════════
+         CINEMATIC HERO
+         ══════════════════════════════════════════ -->
+    <section class="hero" data-hero>
+      <div class="hero-frame">
+        <div class="hero-fallback" aria-hidden="true"></div>
+        <div class="hero-scanline" aria-hidden="true"></div>
+        <div class="hero-vignette" aria-hidden="true"></div>
+        <div class="hero-dotgrid" aria-hidden="true"></div>
+      </div>
+      <h1 class="hero-title" data-decrypt>Marvin L. Hall Jr.</h1>
+      <p class="hero-sub" data-decrypt>0xSrcAura — Junior Web Developer · Entry-Level Cybersecurity</p>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         TELEMETRY STRIP
+         ══════════════════════════════════════════ -->
+    <div class="telemetry" data-reveal>
+      <span class="chip"><span class="chip-label">Base</span><span class="chip-value">Clarksville, TN</span></span>
+      <span class="chip"><span class="chip-label">Mode</span><span class="chip-value">Open to Remote</span></span>
+      <span class="chip"><span class="chip-label">Typing</span><span class="chip-value">71 GWAM</span></span>
+      <a class="chip chip-link" href="https://github.com/SourceAura" target="_blank" rel="noopener">
+        <span class="chip-label">Code</span><span class="chip-value">&#8599; GitHub</span>
+      </a>
+      <a class="chip chip-link" href="mailto:sourceaura.dev@gmail.com">
+        <span class="chip-label">Mail</span><span class="chip-value">&#8599; Contact</span>
+      </a>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ARTICLE — THE READING CHAMBER
+         ══════════════════════════════════════════ -->
+    <article class="article-card" data-pagefind-body data-reveal>
+      <div class="corner-brackets" aria-hidden="true">
+        <span class="bracket tl"></span><span class="bracket tr"></span>
+        <span class="bracket bl"></span><span class="bracket br"></span>
+      </div>
+      <div class="article-vignette" aria-hidden="true"></div>
+      <div class="article-dotgrid" aria-hidden="true"></div>
+
+      <div class="article-content">
+        <p class="lede" data-reveal>
+          Self-taught builder working in the small hours. I ship real systems —
+          multiplayer game servers, voice-driven Linux shells, recon automation —
+          and I verify everything I claim.
+        </p>
+
+        <div class="article prose dark:prose-invert" data-blur-headings>
+          <h2>Experience</h2>
+          <h3>Independent Web Developer <span class="dim">— 2024 → present</span></h3>
+          <ul>
+            <li>Designed and built <strong>Euthymia: Soul Alterz</strong> — a full TypeScript multiplayer client/server web game (Protocol War lore, 3 races, 2 factions, base building, in-game economy, gamified ethical-hacking loop).</li>
+            <li>Building <strong>Valence: Ghost in the Shell</strong> — a voice-driven XR shell for Linux; Phase 1 voice loop verified end-to-end (Whisper wake-word → command dispatch → live compositor control), 20/20 test suite green.</li>
+            <li>Runs a local-first <strong>bug-bounty recon workflow</strong> — scope-guarded automation (subfinder → httpx → nuclei) with two-stage local triage; every finding verified by hand.</li>
+          </ul>
+
+          <h3>Tier 2 Technical Support <span class="dim">— Agero, 2015 → 2017</span></h3>
+          <ul>
+            <li><strong>Promoted to Tier 2</strong> — premium, escalation-level support handling the complex customer issues Tier 1 could not resolve.</li>
+            <li>Received and resolved a wide variety of customer transactions and issues, efficiently and ethically.</li>
+            <li>Provided technical assistance and support to team members and customers alike; maintained compliance with all company protocols and policies.</li>
+          </ul>
+
+          <h2>Arsenal</h2>
+          <ul>
+            <li><strong>Languages:</strong> TypeScript, JavaScript, HTML5, CSS3, Python, Bash</li>
+            <li><strong>Backend:</strong> Node.js server &amp; multiplayer architecture, OAuth 2.0 (fail-closed), REST, WebSockets</li>
+            <li><strong>Systems:</strong> Linux (Arch), Git/GitHub, Docker Compose, Tailscale, SSH, systemd, homelab networking</li>
+            <li><strong>Security:</strong> recon tooling (nuclei, httpx, subfinder), manual verification discipline, scope-guard automation</li>
+            <li><strong>ML/Voice:</strong> Whisper integration, on-device pipelines, audio device wrangling</li>
+            <li><strong>Workflow:</strong> AI-assisted development, roadmap-driven builds, test suites before commits</li>
+          </ul>
+
+          <h2>Education</h2>
+          <p>Independence University — coursework in Graphic Arts <span class="dim">(did not complete; no degree awarded)</span>. Design coursework feeds the front-end work.</p>
+
+          <h2>Now</h2>
+          <p>Portfolio first, applications daily. The work is public at <a href="https://github.com/SourceAura">github.com/SourceAura</a> and playable at <a href="/euthymia">/euthymia</a>. If you want the formal document, <a href="mailto:sourceaura.dev@gmail.com">ask and it's yours</a>.</p>
+        </div>
+      </div>
+    </article>
+
+    <a href="/petals" class="back-to-orbit">
+      <span aria-hidden="true">←</span> Back to orbit
+    </a>
+  </Container>
+
+  <style>
+    .ghost-title {
+      position: relative;
+      font-size: clamp(4rem, 14vw, 11rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      opacity: 0.07;
+      user-select: none;
+      margin: 2rem 0 -1rem;
+      text-align: center;
+    }
+    .hero { position: relative; margin-bottom: 1.5rem; }
+    .hero-frame {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      min-height: 220px;
+      border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
+      background: color-mix(in oklch, currentColor 3%, transparent);
+    }
+    .hero-fallback {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 110%, color-mix(in oklch, var(--pc-accent, #8b5cf6) 22%, transparent), transparent),
+        radial-gradient(ellipse 40% 35% at 50% 40%, color-mix(in oklch, var(--pc-accent2, #22d3ee) 14%, transparent), transparent);
+    }
+    .hero-scanline {
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,0.12) 3px 4px);
+    }
+    .hero-vignette {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+    }
+    .hero-dotgrid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .hero-title {
+      position: absolute; bottom: 3.2rem; left: 1.5rem; right: 1.5rem;
+      font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin: 0; line-height: 1.15;
+      color: white; text-shadow: 0 0 20px rgba(0,0,0,0.8), 2px 2px 0 var(--pc-accent, #8b5cf6);
+    }
+    .hero-sub {
+      position: absolute; bottom: 1.4rem; left: 1.5rem; right: 1.5rem; margin: 0;
+      font-size: 0.95rem; opacity: 0.85; color: white; text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+    }
+    .telemetry { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.8rem; border-radius: 999px;
+      border: 1px solid color-mix(in oklch, var(--pc-accent, #8b5cf6) 30%, transparent);
+      background: color-mix(in oklch, var(--pc-accent, #8b5cf6) 8%, transparent);
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--pc-accent, #b7a6f5);
+    }
+    .chip-label { opacity: 0.6; }
+    .chip-link { text-decoration: none; cursor: pointer; transition: border-color 0.25s ease, transform 0.25s ease; }
+    .chip-link:hover { border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 60%, transparent); transform: translateY(-1px); }
+    .article-card {
+      position: relative; border-radius: 14px; overflow: hidden;
+      border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
+      background: color-mix(in oklch, currentColor 3%, transparent);
+      margin-bottom: 2rem;
+    }
+    .article-content { padding: 2rem clamp(1.25rem, 4vw, 3rem); position: relative; z-index: 1; }
+    .lede { font-size: 1.15rem; line-height: 1.7; opacity: 0.92; margin-bottom: 2rem; }
+    .article h2 { margin-top: 2.25rem; }
+    .article h3 { margin-top: 1.5rem; }
+    .dim { opacity: 0.55; font-weight: 400; }
+    .article-vignette, .article-dotgrid { position: absolute; inset: 0; pointer-events: none; }
+    .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%); }
+    .article-dotgrid {
+      background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    .corner-brackets span { position: absolute; width: 22px; height: 22px; border-color: var(--pc-accent, #8b5cf6); opacity: 0.7; }
+    .corner-brackets .tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+    .corner-brackets .tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+    .corner-brackets .bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+    .corner-brackets .br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+    .back-to-orbit { display: inline-block; margin-bottom: 4rem; text-decoration: none; opacity: 0.8; }
+    .back-to-orbit:hover { opacity: 1; }
+  </style>
+</Layout>
