@@ -12,7 +12,7 @@ import Search from "astro-pagefind/components/Search";
   class="pointer-events-none invisible fixed inset-0 z-40"
 >
   <div id="pagefind-shell" class="flex justify-center">
-    <div id="pagefind-container" class="relative flex max-h-[70vh] w-full max-w-screen-sm flex-col overflow-hidden">
+    <div id="pagefind-container" class="relative flex max-h-[70vh] w-full max-w-screen-sm flex-col overflow-hidden" role="dialog" aria-modal="true" aria-label="Search the site">
       <!-- corner brackets -->
       <span class="pf-bracket pf-tl" aria-hidden="true"></span>
       <span class="pf-bracket pf-tr" aria-hidden="true"></span>
@@ -44,7 +44,7 @@ import Search from "astro-pagefind/components/Search";
 
         <!-- telemetry strip -->
         <div id="pf-status">
-          <span id="pf-count"></span>
+          <span id="pf-count" role="status" aria-live="polite"></span>
           <span class="pf-hint"><kbd>↑</kbd><kbd>↓</kbd> navigate · <kbd>↵</kbd> open · <kbd>esc</kbd> close</span>
         </div>
       </div>
@@ -71,6 +71,8 @@ import Search from "astro-pagefind/components/Search";
   let isOpen = false;
   let scrollMemory = 0;
   let activeIdx = -1;
+  let openerEl = null;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Spring physics for the open/close motion
   let y = -14, v = 0, target = -14, rafSpring = 0, lastT = 0;
@@ -116,7 +118,12 @@ import Search from "astro-pagefind/components/Search";
     const items = resultItems();
     if (!items.length) return;
     activeIdx = Math.max(0, Math.min(i, items.length - 1));
-    items.forEach((el, j) => el.classList.toggle("pf-active", j === activeIdx));
+    items.forEach((el, j) => {
+      const on = j === activeIdx;
+      el.classList.toggle("pf-active", on);
+      if (on) el.setAttribute("aria-selected", "true");
+      else el.removeAttribute("aria-selected");
+    });
     items[activeIdx]?.scrollIntoView({ block: "nearest" });
   }
 
@@ -152,11 +159,13 @@ import Search from "astro-pagefind/components/Search";
   function openPagefind() {
     query();
     if (!backdrop || !container) return;
+    openerEl = document.activeElement;
     isOpen = true;
     backdrop.classList.remove("invisible", "pointer-events-none");
     backdrop.classList.add("visible");
     target = 0;
-    startSpring();
+    if (reduceMotion) { y = 0; v = 0; applySpringStyles(); }
+    else startSpring();
     attachObserver();
     window.dispatchEvent(new Event("open-pagefind"));
     requestAnimationFrame(() => {
@@ -179,6 +188,9 @@ import Search from "astro-pagefind/components/Search";
     const input = document.querySelector("#search input");
     if (input) input.value = "";
     refreshResults();
+    // return focus to whatever opened search
+    if (openerEl?.focus) openerEl.focus({ preventScroll: true });
+    openerEl = null;
   }
 
   window.togglePagefind = () => (isOpen ? closePagefind() : openPagefind());
@@ -211,6 +223,24 @@ import Search from "astro-pagefind/components/Search";
 
       if (e.key === "Escape") {
         closePagefind();
+        return;
+      }
+
+      // focus trap
+      if (e.key === "Tab") {
+        query();
+        const f = [...container.querySelectorAll(
+          'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+        )].filter((el) => el.offsetParent !== null);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
         return;
       }
       // command-palette navigation
@@ -267,13 +297,13 @@ import Search from "astro-pagefind/components/Search";
      ════════════════════════════════════════════════════════════ */
 
   #pagefind-shell {
-    --pf-bg: rgba(8, 10, 18, 0.92);
+    --pf-bg: rgba(8, 10, 18, 0.8);
     --pf-text: #e8ecf4;
     --pf-dim: rgba(232, 236, 244, 0.6);
     --pf-line: color-mix(in oklch, var(--pf-text) 14%, transparent);
   }
   html.light #pagefind-shell {
-    --pf-bg: rgba(250, 250, 252, 0.95);
+    --pf-bg: rgba(250, 250, 252, 0.86);
     --pf-text: #0b0e1a;
     --pf-dim: rgba(11, 14, 26, 0.6);
   }
@@ -284,12 +314,12 @@ import Search from "astro-pagefind/components/Search";
     transition: background 240ms ease;
   }
   #backdrop.visible {
-    background: color-mix(in oklch, black 45%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: color-mix(in oklch, black 22%, transparent);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
   }
   html.light #backdrop.visible {
-    background: color-mix(in oklch, white 45%, transparent);
+    background: color-mix(in oklch, white 28%, transparent);
   }
 
   /* ── the panel ── */
@@ -301,13 +331,13 @@ import Search from "astro-pagefind/components/Search";
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     box-shadow:
-      0 24px 80px rgba(0, 0, 0, 0.45),
-      0 0 60px color-mix(in oklch, var(--pc-accent) 12%, transparent);
+      0 12px 44px rgba(0, 0, 0, 0.35),
+      0 0 40px color-mix(in oklch, var(--pc-accent) 8%, transparent);
   }
   html.light #pagefind-container {
     box-shadow:
-      0 24px 70px rgba(11, 14, 26, 0.18),
-      0 0 60px color-mix(in oklch, var(--pc-accent) 14%, transparent);
+      0 12px 40px rgba(11, 14, 26, 0.14),
+      0 0 40px color-mix(in oklch, var(--pc-accent) 10%, transparent);
   }
 
   .pf-dots {
@@ -476,17 +506,25 @@ import Search from "astro-pagefind/components/Search";
   .pf-qlink {
     font-size: 0.78rem;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--pf-text);
     text-decoration: none;
-    padding: 0.35rem 0.75rem;
-    border-radius: 999px;
-    border: 1px solid color-mix(in oklch, var(--pc-accent) 30%, transparent);
+    padding: 0.4rem 0.85rem;
+    border-radius: 0;
+    border: 1px solid color-mix(in oklch, var(--pc-accent) 35%, transparent);
     background: color-mix(in oklch, var(--pc-accent) 8%, transparent);
-    transition: border-color 160ms ease, transform 160ms ease;
+    /* chamfered tag corners — edgy, no pills */
+    clip-path: polygon(
+      9px 0, 100% 0,
+      100% calc(100% - 9px), calc(100% - 9px) 100%,
+      0 100%, 0 9px
+    );
+    transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
   }
   .pf-qlink:hover {
-    border-color: color-mix(in oklch, var(--pc-accent) 65%, transparent);
+    border-color: color-mix(in oklch, var(--pc-accent) 70%, transparent);
+    background: color-mix(in oklch, var(--pc-accent) 16%, transparent);
     transform: translateY(-1px);
   }
 
@@ -539,5 +577,14 @@ import Search from "astro-pagefind/components/Search";
 
   #pagefind-container .pagefind-ui ::selection {
     background: color-mix(in oklch, var(--pc-accent) 35%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #backdrop,
+    #pagefind-shell,
+    #pagefind-container .pagefind-ui__result,
+    .pf-qlink {
+      transition: none;
+    }
   }
 </style>
