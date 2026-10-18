@@ -28,6 +28,9 @@
   pointer-events: none;
   z-index: 1;
 }
+html.light .euthymia-vignette {
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.18) 100%);
+}
 
 .euthymia-dotgrid {
   position: fixed;
