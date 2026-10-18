@@ -13,7 +13,7 @@ import { HERO, SITE } from "@consts";
     class="connect-trigger is-visible text-sm opacity-80"
     aria-expanded="false"
   >
-    {SITE.TITLE} | 🫀 • 🫁 • 🧠 | © {new Date().getFullYear()}
+    0xSrcAura | 🫀 • 🫁 • 🧠 | © 2027
   </button>
 
   <!-- Links -->
@@ -195,21 +195,31 @@ import { HERO, SITE } from "@consts";
     setOpen(true);
   });
 
-  // Click / touch anywhere outside closes
-  document.addEventListener("pointerdown", (e) => {
-    if (!open) return;
-    if (!root.contains(e.target)) setOpen(false);
-  });
-
-  // ESC closes
-  document.addEventListener("keydown", (e) => {
-    if (open && e.key === "Escape") setOpen(false);
-  });
-
-  // Route change closes (Astro)
-  document.addEventListener("astro:before-swap", () => {
-    if (open) setOpen(false);
-  });
+  // Click / touch outside, ESC, and route changes close the cluster.
+  // Bound once: this script re-runs on every view transition, so the
+  // handlers re-query fresh elements instead of closing over stale ones.
+  // Open state is read from the DOM (the is-visible class), not a closure.
+  if (!window.__connectGlobal) {
+    window.__connectGlobal = true;
+    const isOpen = () =>
+      document.getElementById("connectCenter")?.classList.contains("is-visible");
+    const closeCluster = () => {
+      document.getElementById("connectToggle")?.setAttribute("aria-expanded", "false");
+      document.getElementById("connectToggle")?.classList.toggle("is-visible", true);
+      document.getElementById("connectCenter")?.classList.toggle("is-visible", false);
+    };
+    document.addEventListener("pointerdown", (e) => {
+      if (!isOpen()) return;
+      const r = document.getElementById("connectRoot");
+      if (r && !r.contains(e.target)) closeCluster();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (isOpen() && e.key === "Escape") closeCluster();
+    });
+    document.addEventListener("astro:before-swap", () => {
+      if (isOpen()) closeCluster();
+    });
+  }
 </script>
 
 <style>
