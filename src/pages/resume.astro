@@ -1,6 +1,7 @@
 ---
 /*
 Resume: an interactive resume page in the site's own visual language.
+Document view + terminal view, print stylesheet, synthwave '84 accents.
 */
 import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
@@ -12,11 +13,13 @@ import Container from "@components/Container.astro";
     <div class="ghost-title" aria-hidden="true">RÉSUMÉ</div>
 
     <!-- ══════════════════════════════════════════
-         CINEMATIC HERO
+         CINEMATIC HERO — synthwave sun
          ══════════════════════════════════════════ -->
     <section class="hero" data-hero>
       <div class="hero-frame">
         <div class="hero-fallback" aria-hidden="true"></div>
+        <div class="sw-sun" aria-hidden="true"></div>
+        <div class="sw-grid" aria-hidden="true"></div>
         <div class="hero-scanline" aria-hidden="true"></div>
         <div class="hero-vignette" aria-hidden="true"></div>
         <div class="hero-dotgrid" aria-hidden="true"></div>
@@ -41,9 +44,46 @@ import Container from "@components/Container.astro";
     </div>
 
     <!-- ══════════════════════════════════════════
+         ACTIONS — the interactive layer
+         ══════════════════════════════════════════ -->
+    <div class="resume-actions" data-reveal>
+      <button class="action-btn sw-btn" id="term-toggle" aria-pressed="false" aria-controls="resume-term">
+        <span aria-hidden="true">&gt;_</span> Terminal
+      </button>
+      <button class="action-btn" id="print-btn">
+        <span aria-hidden="true">&#9113;</span> Print / PDF
+      </button>
+      <button class="action-btn" id="copy-email">
+        <span aria-hidden="true">&#128279;</span> <span id="copy-label">Copy email</span>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         TERMINAL VIEW (hidden until summoned)
+         ══════════════════════════════════════════ -->
+    <div class="article-card term-card" id="resume-term" hidden>
+      <div class="term-chrome" aria-hidden="true">
+        <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+        <span class="term-title">src@euthymia — resume.sh</span>
+      </div>
+      <div class="term-body" id="term-output" role="log" aria-label="Terminal output"></div>
+      <div class="term-input-row">
+        <span class="term-prompt" aria-hidden="true">src@euthymia:~$</span>
+        <input
+          id="term-input"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-label="Terminal input — type help for commands"
+        />
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
          ARTICLE — THE READING CHAMBER
          ══════════════════════════════════════════ -->
-    <article class="article-card" data-pagefind-body data-reveal>
+    <article class="article-card" id="resume-doc" data-pagefind-body data-reveal>
       <div class="corner-brackets" aria-hidden="true">
         <span class="bracket tl"></span><span class="bracket tr"></span>
         <span class="bracket bl"></span><span class="bracket br"></span>
@@ -98,100 +138,451 @@ import Container from "@components/Container.astro";
     </a>
   </Container>
 
-  <style>
-    .ghost-title {
-      position: relative;
-      font-size: clamp(4rem, 14vw, 11rem);
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      line-height: 1;
-      opacity: 0.07;
-      user-select: none;
-      margin: 2rem 0 -1rem;
-      text-align: center;
+<script is:inline>
+  // Resume interactions: terminal toggle, print, copy-email, mini shell.
+  (() => {
+    if (window.__resumeInit) return;
+    window.__resumeInit = true;
+
+    const toggle = document.getElementById("term-toggle");
+    const doc = document.getElementById("resume-doc");
+    const term = document.getElementById("resume-term");
+    const out = document.getElementById("term-output");
+    const input = document.getElementById("term-input");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const DATA = {
+      whoami: [
+        "Marvin L. Hall Jr. — 0xSrcAura",
+        "Junior Web Developer · Entry-Level Cybersecurity",
+        "Base: Nashville, TN — open to remote · typing 71 GWAM",
+      ],
+      experience: [
+        "Independent Web Developer — 2024 → present",
+        "  · Euthymia: Soul Alterz — TypeScript multiplayer client/server web game",
+        "  · Valence: Ghost in the Shell — voice-driven XR shell for Linux (Phase 1 live)",
+        "  · Local-first bug-bounty recon workflow (subfinder → httpx → nuclei)",
+        "",
+        "Tier 2 Technical Support — Agero, 2015 → 2017",
+        "  · Promoted to Tier 2 — premium escalation-level support",
+      ],
+      arsenal: [
+        "TypeScript · JavaScript · HTML5 · CSS3 · Python · Bash",
+        "Node.js · OAuth 2.0 (fail-closed) · REST · WebSockets",
+        "Linux (Arch) · Git/GitHub · Docker Compose · Tailscale · SSH · homelab",
+        "nuclei · httpx · subfinder · Whisper on-device pipelines",
+      ],
+      education: [
+        "Independence University — coursework in Graphic Arts",
+        "(did not complete; no degree awarded) — design feeds the front-end work.",
+      ],
+      contact: [
+        "mail ......... sourceaura.dev@gmail.com",
+        "code ......... github.com/SourceAura",
+        "play ......... /euthymia",
+      ],
+      hire: [
+        "Portfolio first, applications daily.",
+        "The work is public and playable. If you want the formal document,",
+        "write to sourceaura.dev@gmail.com — it's yours.",
+      ],
+    };
+
+    function print(lines) {
+      lines.forEach((l) => {
+        const div = document.createElement("div");
+        div.className = "term-line";
+        div.textContent = l === "" ? "\u00a0" : l;
+        out.appendChild(div);
+      });
+      out.scrollTop = out.scrollHeight;
     }
-    .hero { position: relative; margin-bottom: 1.5rem; }
-    .hero-frame {
-      position: relative;
-      border-radius: 14px;
-      overflow: hidden;
-      min-height: 220px;
-      border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
-      background: color-mix(in oklch, currentColor 3%, transparent);
+
+    function typeBoot(done) {
+      const boot = [
+        "euthymia resume shell v1.0 — all systems nominal",
+        "type \u2018help\u2019 to list commands.",
+      ];
+      if (reduce) {
+        print(boot);
+        done();
+        return;
+      }
+      let li = 0, ci = 0;
+      const div = document.createElement("div");
+      div.className = "term-line term-accent";
+      out.appendChild(div);
+      (function tick() {
+        if (li >= boot.length) {
+          done();
+          return;
+        }
+        const line = boot[li];
+        if (ci <= line.length) {
+          div.textContent = line.slice(0, ci);
+          ci++;
+          setTimeout(tick, 14);
+        } else {
+          const nd = document.createElement("div");
+          nd.className = "term-line term-accent";
+          out.appendChild(nd);
+          li++;
+          ci = 0;
+          // swap the working div reference
+          tick.div = nd;
+          const old = div;
+          (function next() {
+            if (li >= boot.length) {
+              done();
+              return;
+            }
+            const ln = boot[li];
+            if (ci <= ln.length) {
+              tick.div.textContent = ln.slice(0, ci);
+              ci++;
+              setTimeout(next, 14);
+            } else {
+              li++;
+              ci = 0;
+              const ndiv = document.createElement("div");
+              ndiv.className = "term-line term-accent";
+              out.appendChild(ndiv);
+              tick.div = ndiv;
+              out.scrollTop = out.scrollHeight;
+              next();
+            }
+          })();
+          return;
+        }
+        out.scrollTop = out.scrollHeight;
+      })();
     }
-    .hero-fallback {
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 60% 50% at 50% 110%, color-mix(in oklch, var(--pc-accent, #8b5cf6) 22%, transparent), transparent),
-        radial-gradient(ellipse 40% 35% at 50% 40%, color-mix(in oklch, var(--pc-accent2, #22d3ee) 14%, transparent), transparent);
+
+    let booted = false;
+    function setTerm(open) {
+      term.hidden = !open;
+      doc.hidden = open;
+      toggle.setAttribute("aria-pressed", String(open));
+      toggle.classList.toggle("is-on", open);
+      if (open) {
+        if (!booted) {
+          booted = true;
+          out.innerHTML = "";
+          typeBoot(() => input.focus({ preventScroll: true }));
+        } else {
+          input.focus({ preventScroll: true });
+        }
+        term.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+      }
     }
-    .hero-scanline {
-      position: absolute; inset: 0; pointer-events: none;
-      background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,0.12) 3px 4px);
-    }
-    .hero-vignette {
-      position: absolute; inset: 0; pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
-    }
-    html.light .hero-vignette {
-      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.14) 100%);
-    }
-    .hero-dotgrid {
-      position: absolute; inset: 0; pointer-events: none;
-      background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
-      background-size: 20px 20px;
-    }
-    /* Light mode: guarantee a dark scrim so the white title always reads */
-    html.light .hero-frame::after {
-      content: ""; position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(5,7,15,0.55), rgba(5,7,15,0.78));
-      pointer-events: none;
-    }
-    .hero-title {
-      position: absolute; bottom: 3.2rem; left: 1.5rem; right: 1.5rem;
-      font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin: 0; line-height: 1.15;
-      color: white; text-shadow: 0 0 20px rgba(0,0,0,0.8), 2px 2px 0 var(--pc-accent);
-    }
-    .hero-sub {
-      position: absolute; bottom: 1.4rem; left: 1.5rem; right: 1.5rem; margin: 0;
-      font-size: 0.95rem; opacity: 0.85; color: white; text-shadow: 0 1px 8px rgba(0,0,0,0.8);
-    }
-    .telemetry { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 0.4rem;
-      padding: 0.4rem 0.8rem; border-radius: 999px;
-      border: 1px solid color-mix(in oklch, var(--pc-accent, #8b5cf6) 30%, transparent);
-      background: color-mix(in oklch, var(--pc-accent, #8b5cf6) 8%, transparent);
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--pc-accent, #b7a6f5);
-    }
-    .chip-label { opacity: 0.6; }
-    .chip-link { text-decoration: none; cursor: pointer; transition: border-color 0.25s ease, transform 0.25s ease; }
-    .chip-link:hover { border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 60%, transparent); transform: translateY(-1px); }
-    .article-card {
-      position: relative; border-radius: 14px; overflow: hidden;
-      border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
-      background: color-mix(in oklch, currentColor 3%, transparent);
-      margin-bottom: 2rem;
-    }
-    .article-content { padding: 2rem clamp(1.25rem, 4vw, 3rem); position: relative; z-index: 1; color: var(--ui-text); }
-    .lede { font-size: 1.15rem; line-height: 1.7; opacity: 0.92; margin-bottom: 2rem; }
-    .article h2 { margin-top: 2.25rem; }
-    .article h3 { margin-top: 1.5rem; }
-    .dim { opacity: 0.78; font-weight: 400; }
-    .article-vignette, .article-dotgrid { position: absolute; inset: 0; pointer-events: none; }
-    .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%); }
-    html.light .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.10) 100%); }
+
+    toggle.addEventListener("click", () => setTerm(term.hidden));
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !term.hidden) setTerm(false);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const raw = input.value.trim();
+      input.value = "";
+      const cmd = raw.toLowerCase();
+      const echo = document.createElement("div");
+      echo.className = "term-line";
+      const ps = document.createElement("span");
+      ps.className = "term-prompt-inline";
+      ps.textContent = "src@euthymia:~$ ";
+      echo.appendChild(ps);
+      echo.appendChild(document.createTextNode(raw));
+      out.appendChild(echo);
+
+      if (!cmd) {
+        out.scrollTop = out.scrollHeight;
+        return;
+      }
+      if (cmd === "clear") {
+        out.innerHTML = "";
+      } else if (cmd === "help") {
+        print(["commands: whoami · experience · arsenal · education · contact · hire · clear"]);
+      } else if (cmd === "sudo hire me") {
+        print(["nice try. write to sourceaura.dev@gmail.com — that's the real sudo."]);
+      } else if (DATA[cmd]) {
+        print(DATA[cmd]);
+      } else {
+        print([`command not found: ${raw} — try \u2018help\u2019.`]);
+      }
+      out.scrollTop = out.scrollHeight;
+    });
+
+    document.getElementById("print-btn").addEventListener("click", () => window.print());
+
+    const copyBtn = document.getElementById("copy-email");
+    const copyLabel = document.getElementById("copy-label");
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText("sourceaura.dev@gmail.com");
+        copyLabel.textContent = "Copied ✓";
+      } catch {
+        copyLabel.textContent = "sourceaura.dev@gmail.com";
+      }
+      setTimeout(() => (copyLabel.textContent = "Copy email"), 1800);
+    });
+  })();
+</script>
+
+<style>
+  /* synthwave '84 tokens, scoped to the resume */
+  :root {
+    --sw1: #ff71ce;
+    --sw2: #b967ff;
+    --sw3: #ff9e00;
+    --sw-grad: linear-gradient(100deg, var(--sw1), var(--sw2) 50%, var(--sw3));
+  }
+  html.light {
+    --sw1: #d12d7f;
+    --sw2: #7c3aed;
+    --sw3: #c26a00;
+  }
+
+  .ghost-title {
+    position: relative;
+    font-size: clamp(4rem, 14vw, 11rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    opacity: 0.07;
+    user-select: none;
+    margin: 2rem 0 -1rem;
+    text-align: center;
+  }
+  .hero { position: relative; margin-bottom: 1.5rem; }
+  .hero-frame {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    min-height: 220px;
+    border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
+    background: color-mix(in oklch, currentColor 3%, transparent);
+  }
+  .hero-fallback {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 110%, color-mix(in oklch, var(--pc-accent, #8b5cf6) 22%, transparent), transparent),
+      radial-gradient(ellipse 40% 35% at 50% 40%, color-mix(in oklch, var(--pc-accent2, #22d3ee) 14%, transparent), transparent);
+  }
+  /* synthwave sun rising behind the name */
+  .sw-sun {
+    position: absolute;
+    left: 50%;
+    bottom: -38px;
+    width: 300px;
+    height: 300px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--sw1), var(--sw2) 55%, var(--sw3));
+    opacity: 0.5;
+    -webkit-mask-image: repeating-linear-gradient(180deg, black 0 14px, transparent 14px 20px);
+    mask-image: repeating-linear-gradient(180deg, black 0 14px, transparent 14px 20px);
+    filter: blur(1px) saturate(1.2);
+    pointer-events: none;
+  }
+  .sw-grid {
+    position: absolute; inset: auto 0 0 0; height: 90px; pointer-events: none;
+    background-image:
+      linear-gradient(color-mix(in oklch, var(--sw2) 35%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklch, var(--sw2) 35%, transparent) 1px, transparent 1px);
+    background-size: 34px 22px;
+    transform: perspective(220px) rotateX(48deg);
+    transform-origin: bottom;
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(180deg, transparent, black 70%);
+    mask-image: linear-gradient(180deg, transparent, black 70%);
+  }
+  .hero-scanline {
+    position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,0.12) 3px 4px);
+  }
+  .hero-vignette {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+  }
+  html.light .hero-vignette {
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.14) 100%);
+  }
+  .hero-dotgrid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  html.light .hero-frame::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5,7,15,0.55), rgba(5,7,15,0.78));
+    pointer-events: none;
+  }
+  .hero-title {
+    position: absolute; bottom: 3.2rem; left: 1.5rem; right: 1.5rem;
+    font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin: 0; line-height: 1.15;
+    color: white; text-shadow: 0 0 20px rgba(0,0,0,0.8), 2px 2px 0 var(--pc-accent);
+  }
+  .hero-sub {
+    position: absolute; bottom: 1.4rem; left: 1.5rem; right: 1.5rem; margin: 0;
+    font-size: 0.95rem; opacity: 0.85; color: white; text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+  }
+  .telemetry { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.4rem 0.8rem; border-radius: 999px;
+    border: 1px solid color-mix(in oklch, var(--pc-accent, #8b5cf6) 30%, transparent);
+    background: color-mix(in oklch, var(--pc-accent, #8b5cf6) 8%, transparent);
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--pc-accent, #b7a6f5);
+  }
+  .chip-label { opacity: 0.6; }
+  .chip-link { text-decoration: none; cursor: pointer; transition: border-color 0.25s ease, transform 0.25s ease; }
+  .chip-link:hover { border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 60%, transparent); transform: translateY(-1px); }
+
+  /* ── action buttons: edged, not pills ── */
+  .resume-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .action-btn {
+    font: inherit;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ui-text);
+    background: color-mix(in oklch, var(--ui-text) 5%, transparent);
+    border: 1px solid color-mix(in oklch, var(--ui-text) 18%, transparent);
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+    clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+    transition: transform 160ms ease, background 160ms ease;
+  }
+  .action-btn:hover { transform: translateY(-1px); background: color-mix(in oklch, var(--ui-text) 9%, transparent); }
+  .action-btn:focus-visible { outline: 2px solid var(--sw2); outline-offset: 2px; }
+  .sw-btn {
+    border: none;
+    background: var(--sw-grad);
+    color: #0b0e1a;
+    padding: 0.6rem 1.05rem;
+  }
+  html.dark .sw-btn { color: #0b0e1a; }
+  .sw-btn.is-on { filter: saturate(1.4) brightness(1.1); }
+
+  /* ── terminal ── */
+  .term-card { margin-bottom: 2rem; overflow: hidden; }
+  .term-chrome {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid color-mix(in oklch, var(--ui-text) 12%, transparent);
+    background: color-mix(in oklch, var(--ui-text) 4%, transparent);
+  }
+  .term-dot { width: 10px; height: 10px; border-radius: 50%; background: color-mix(in oklch, var(--ui-text) 22%, transparent); }
+  .term-dot:first-child { background: var(--sw1); }
+  .term-dot:nth-child(2) { background: var(--sw2); }
+  .term-dot:nth-child(3) { background: var(--sw3); }
+  .term-title {
+    margin-left: 0.5rem; font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; opacity: 0.55; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .term-body {
+    min-height: 280px; max-height: 420px; overflow-y: auto;
+    padding: 1rem 1.25rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem; line-height: 1.65;
+    color: var(--ui-text);
+  }
+  .term-line { white-space: pre-wrap; word-break: break-word; }
+  .term-accent { color: var(--sw1); }
+  .term-input-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.8rem 1.25rem 1.1rem;
+    border-top: 1px solid color-mix(in oklch, var(--ui-text) 10%, transparent);
+  }
+  .term-prompt, .term-prompt-inline {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem; font-weight: 700; white-space: nowrap;
+    background: var(--sw-grad);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  #term-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--ui-text); caret-color: var(--sw1);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem;
+  }
+
+  /* ── article ── */
+  .article-card {
+    position: relative; border-radius: 14px; overflow: hidden;
+    border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
+    background: color-mix(in oklch, currentColor 3%, transparent);
+    margin-bottom: 2rem;
+  }
+  .article-content { padding: 2rem clamp(1.25rem, 4vw, 3rem); position: relative; z-index: 1; color: var(--ui-text); }
+  .lede { font-size: 1.15rem; line-height: 1.7; opacity: 0.92; margin-bottom: 2rem; }
+  .article h2 {
+    margin-top: 2.25rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(100deg, var(--sw1), var(--sw2) 50%, var(--sw3)) 1;
+  }
+  .article h3 { margin-top: 1.5rem; }
+  .dim { opacity: 0.78; font-weight: 400; }
+  .article-vignette, .article-dotgrid { position: absolute; inset: 0; pointer-events: none; }
+  .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%); }
+  html.light .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.10) 100%); }
+  .article-dotgrid {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .corner-brackets span { position: absolute; width: 22px; height: 22px; border-color: var(--pc-accent, #8b5cf6); opacity: 0.7; }
+  .corner-brackets .tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .corner-brackets .tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .corner-brackets .bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .corner-brackets .br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+  .back-to-orbit { display: inline-block; margin-bottom: 4rem; text-decoration: none; opacity: 0.8; }
+  .back-to-orbit:hover { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .action-btn, .chip-link { transition: none; }
+  }
+</style>
+
+<style is:global>
+  /* ── print: the formal document ── */
+  @media print {
+    [data-role="app-header"],
+    .app-footer,
+    #backdrop,
+    #qi-root,
+    quasar-background,
+    .ghost-title,
+    .hero,
+    .telemetry,
+    .resume-actions,
+    #resume-term,
+    .back-to-orbit,
+    .corner-brackets,
+    .article-vignette,
     .article-dotgrid {
-      background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
-      background-size: 22px 22px;
+      display: none !important;
     }
-    .corner-brackets span { position: absolute; width: 22px; height: 22px; border-color: var(--pc-accent, #8b5cf6); opacity: 0.7; }
-    .corner-brackets .tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
-    .corner-brackets .tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
-    .corner-brackets .bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
-    .corner-brackets .br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
-    .back-to-orbit { display: inline-block; margin-bottom: 4rem; text-decoration: none; opacity: 0.8; }
-    .back-to-orbit:hover { opacity: 1; }
-  </style>
+    body {
+      background: #fff !important;
+    }
+    .article-card {
+      border: none !important;
+      background: none !important;
+      border-radius: 0 !important;
+    }
+    .article-content {
+      color: #000 !important;
+      padding: 0 !important;
+    }
+    .article-content a {
+      color: #000 !important;
+      text-decoration: none !important;
+    }
+    .article h2 {
+      border-image: none !important;
+      border-bottom: 2px solid #000 !important;
+    }
+  }
+</style>
 </Layout>
