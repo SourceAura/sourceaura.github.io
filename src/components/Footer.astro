@@ -173,6 +173,21 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
       bottom: calc(100% + 8px);
     }
 
+    /* language toggle: minimal — no pill, no background */
+    .footer-controls .language-toggle,
+    html.light .footer-controls .language-toggle {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      padding: 6px 2px;
+    }
+    .footer-controls .language-toggle:hover,
+    html.light .footer-controls .language-toggle:hover {
+      background: transparent;
+    }
+
     .resume-view-toggle {
       display: flex;
       align-items: center;
@@ -237,7 +252,7 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
 
     const btn = document.getElementById("resume-view-toggle");
     if (btn) {
-      btn.addEventListener("click", () => window.dispatchEvent(new Event("resume:toggle-view")));
+      btn.addEventListener("click", () => document.dispatchEvent(new Event("resume:toggle-view")));
       sync(true); // terminal-first default
     }
     if (!window.__rvtSync) {
