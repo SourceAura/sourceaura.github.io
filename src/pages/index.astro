@@ -64,11 +64,13 @@ const posts = (await getCollection("petals"))
 </Layout>
 
 <script is:inline>
-  document.addEventListener("DOMContentLoaded", () => {
+  // Runs immediately: DOMContentLoaded never fires after view transitions,
+  // and this classic script re-executes on every visit to /.
+  {
     const lines = document.querySelectorAll("#intro-log .log-line");
     lines.forEach((l) => l.classList.add("shimmer-once"));
-  });
-  document.addEventListener("DOMContentLoaded", () => {
+  }
+  {
     const entry = document.querySelector("#intro-log .log-entry");
     if (!entry) return;
 
@@ -90,7 +92,7 @@ const posts = (await getCollection("petals"))
       entry.remove();
       document.getElementById("home-telemetry")?.classList.add("lit");
     }, 8200);
-  });
+  }
 </script>
 
 <style is:global>
