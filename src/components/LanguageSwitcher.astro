@@ -291,11 +291,11 @@ LanguageSwitcher: Dropdown for changing site language
     const dropdown = document.getElementById('language-dropdown');
     
     if (toggle) {
-      toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      toggle.setAttribute('aria-expanded', String(isOpen));
     }
     
     if (dropdown) {
-      dropdown.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+      dropdown.setAttribute('aria-hidden', String(!isOpen));
     }
   }
 
@@ -313,15 +313,19 @@ LanguageSwitcher: Dropdown for changing site language
     }
   }
 
-  // Initialize
-  document.addEventListener('DOMContentLoaded', () => {
+  // Init runs immediately (DOMContentLoaded never fires after view
+  // transitions) and re-runs per page. Document-level handlers bind once.
+  function initLanguageSwitcher() {
+    isOpen = false;
     updateCurrentLanguage();
-    
     const toggle = document.getElementById('language-toggle');
-    if (toggle) {
+    if (toggle && !toggle.dataset.lsBound) {
+      toggle.dataset.lsBound = "1";
       toggle.addEventListener('click', toggleDropdown);
     }
-    
+  }
+  if (!window.__langGlobal) {
+    window.__langGlobal = true;
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       const switcher = document.getElementById('language-switcher');
@@ -329,12 +333,12 @@ LanguageSwitcher: Dropdown for changing site language
         closeDropdown();
       }
     });
-    
     // Close dropdown on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeDropdown();
       }
     });
-  });
+  }
+  initLanguageSwitcher();
 </script>
