@@ -260,9 +260,13 @@ import Search from "astro-pagefind/components/Search";
     });
 
     document.addEventListener("click", (e) => {
-      // backdrop click closes
+      // click-away closes: anything in the overlay but outside the panel.
+      // (Clicks land on #pagefind-shell, not #backdrop itself, so an
+      // e.target === backdrop check never fires.)
       const bd = document.getElementById("backdrop");
-      if (pf.open && bd && e.target === bd) closePagefind();
+      const pc = document.getElementById("pagefind-container");
+      if (pf.open && bd && pc && bd.contains(e.target) && !pc.contains(e.target))
+        closePagefind();
 
       // thumbnail click navigates
       const thumb = e.target.closest(".pagefind-ui__result-thumb");
