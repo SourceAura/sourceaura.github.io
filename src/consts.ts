@@ -10,7 +10,7 @@ interface Metadata {
 
 export const SITE = {
   TITLE: "sourceaura",
-  ALIAS: "nagerboshi",
+  ALIAS: "nagareboshi",
   DESCRIPTION: "euthymia [ eu·​thy·​mia] (noun): ",
   DEFINITION: "a normal, tranquil mental state or mood.",
   SEO_DESCRIPTION:
