@@ -133,6 +133,9 @@ import Container from "@components/Container.astro";
       position: absolute; inset: 0; pointer-events: none;
       background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
     }
+    html.light .hero-vignette {
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.14) 100%);
+    }
     .hero-dotgrid {
       position: absolute; inset: 0; pointer-events: none;
       background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
@@ -178,6 +181,7 @@ import Container from "@components/Container.astro";
     .dim { opacity: 0.78; font-weight: 400; }
     .article-vignette, .article-dotgrid { position: absolute; inset: 0; pointer-events: none; }
     .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%); }
+    html.light .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.10) 100%); }
     .article-dotgrid {
       background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
       background-size: 22px 22px;
