@@ -9,7 +9,7 @@ import Container from "@components/Container.astro";
     aria-expanded="false"
     aria-haspopup="dialog"
     aria-controls="beacon-panel"
-    aria-label="0xSrcAura's status — open now panel"
+    aria-label="Insei — keeper of the ark — open"
     class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
     style="background-color: transparent; cursor: pointer;"
   >
@@ -37,7 +37,7 @@ import Container from "@components/Container.astro";
 
   <!-- BEACON NOW PANEL -->
   <div id="beacon-scrim" aria-hidden="true" hidden transition:persist></div>
-  <div id="beacon-panel" role="dialog" aria-label="Now" tabindex="-1" hidden transition:persist>
+  <div id="beacon-panel" role="dialog" aria-label="Insei" tabindex="-1" hidden transition:persist>
     <span class="bcn-corner tl" aria-hidden="true"></span>
     <span class="bcn-corner tr" aria-hidden="true"></span>
     <span class="bcn-corner bl" aria-hidden="true"></span>
@@ -46,20 +46,16 @@ import Container from "@components/Container.astro";
     <span class="bcn-star" aria-hidden="true"></span>
     <div class="bcn-body">
     <div class="bcn-strip">
-      <span class="bcn-now"><span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span> now</span>
+      <span class="bcn-now"><span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span> insei <span id="insei-wake-word" class="bcn-wake"></span></span>
       <span class="bcn-hint"><kbd>esc</kbd> close</span>
     </div>
-    <p id="bcn-status" class="bcn-status"></p>
-    <p id="bcn-sub" class="bcn-sub"></p>
-    <hr class="bcn-rule" aria-hidden="true" />
-    <a id="bcn-book" class="bcn-book" href="mailto:sourceaura@proton.me?subject=Computer%20repair%20booking">
-      <canvas id="bcn-spark" aria-hidden="true"></canvas>
-      <span class="bcn-book-label"><span aria-hidden="true">⌁</span> Book a repair</span>
-    </a>
-    <div class="bcn-links">
-      <a href="https://github.com/SourceAura" target="_blank" rel="noopener" data-tip="GitHub">gh ↗</a>
-      <a href="mailto:sourceaura@proton.me" data-tip="Email">mail</a>
-    </div>
+    <canvas id="insei-pulse" aria-hidden="true"></canvas>
+    <div id="insei-transcript" role="log" aria-live="polite" aria-label="Conversation with Insei"></div>
+    <div id="insei-routes" aria-label="Suggested paths"></div>
+    <form id="insei-form">
+      <input id="insei-input" type="text" autocomplete="off" maxlength="200" placeholder="ask of the ark&hellip;" aria-label="Ask Insei" />
+      <button id="insei-send" type="submit" aria-label="Send">&rarr;</button>
+    </form>
     </div>
   </div>
 
@@ -105,7 +101,7 @@ import Container from "@components/Container.astro";
     const MID = H / 2;
 
     // panel sparkline — the pill's heartbeat unfolded
-    const spark = document.getElementById("bcn-spark");
+    const spark = document.getElementById("insei-pulse");
     const sctx = spark ? spark.getContext("2d") : null;
     let SW = 0, SH = 0, SMID = 0;
     let sx = 0;
@@ -150,7 +146,7 @@ import Container from "@components/Container.astro";
       const styles = getComputedStyle(document.documentElement);
       __live.t = now;
       __live.phase = parseFloat(styles.getPropertyValue("--pulse-phase")) || 0;
-      __live.wake = parseFloat(styles.getPropertyValue("--ase-wake")) || 0.5;
+      __live.wake = parseFloat(styles.getPropertyValue("--insei-wake")) || 0.5;
       return __live;
     }
     function getQiPhase() {
@@ -209,9 +205,9 @@ import Container from "@components/Container.astro";
       const rgb = getRGB();
       const phase = getQiPhase();
       
-      // Sync with Ase neural network mood
+      // Sync with Insei's sensed mood (local-only, no network)
       let aseWake = 0.5;
-      if (typeof window !== "undefined" && window.__ase) {
+      if (typeof window !== "undefined" && window.__insei) {
         aseWake = readLiveStyles().wake;
       }
       
@@ -392,12 +388,152 @@ import Container from "@components/Container.astro";
         pd.classList.toggle("lab", st.dot === "lab");
         pd.classList.toggle("rest", st.dot === "rest");
       }
-      const s1 = document.getElementById("bcn-status");
-      const s2 = document.getElementById("bcn-sub");
-      if (s1) s1.textContent = st.label;
-      if (s2) s2.textContent = st.key === "rest" ? labCountdown() : st.sub;
-      const bk = document.getElementById("bcn-book");
-      if (bk) bk.href = BOOKING_URL;
+      updateWakeWord();
+    }
+
+    /* ===============================
+       INSEI — the keeper window
+       =============================== */
+    const inseiApi = () => window.__insei;
+    let inseiGreeted = false;
+    let inseiIdleNudged = false;
+    let inseiWakeTimer = 0;
+
+    function inseiStatusLine() {
+      const st = beaconState();
+      if (st.key === "lab") return "Sensei is in the lab — the small hours are sensei's hours.";
+      if (st.key === "bookings") return "Sensei is taking commissions — the mending of machines, Nashville.";
+      return "Sensei rests — the lab rekindles in " + labCountdown().replace("back in the lab in ", "") + ".";
+    }
+
+    function updateWakeWord() {
+      const el = document.getElementById("insei-wake-word");
+      if (!el) return;
+      const w = readLiveStyles().wake;
+      el.textContent = w < 0.35 ? "listening" : w > 0.7 ? "dreaming" : "awake";
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function inseiAddMsg(kind, html, whisper) {
+      const t = document.getElementById("insei-transcript");
+      if (!t) return;
+      while (t.children.length >= 40) t.removeChild(t.firstChild);
+      const d = document.createElement("div");
+      d.className = kind === "you" ? "insei-you" : "insei-her";
+      if (whisper) d.setAttribute("data-whisper", "1");
+      d.innerHTML = html;
+      const nearBottom = t.scrollHeight - t.scrollTop - t.clientHeight < 60;
+      t.appendChild(d);
+      if (nearBottom) t.scrollTop = t.scrollHeight;
+    }
+
+    function inseiRenderRoutes(routes) {
+      const r = document.getElementById("insei-routes");
+      if (!r) return;
+      r.textContent = "";
+      const api = inseiApi();
+      (routes || []).forEach(function (id) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "insei-route";
+        b.textContent = api && api.routeLabel ? api.routeLabel(id) : id;
+        b.addEventListener("click", function () { inseiSend(id, true); });
+        r.appendChild(b);
+      });
+    }
+
+    function inseiRenderAnswer(ans) {
+      let html = "<p>" + escHtml(ans.text) + "</p>";
+      if (ans.facts && ans.facts.length) {
+        html += '<ul class="insei-facts">' + ans.facts.map(function (f) {
+          let li = escHtml(f.text);
+          if (f.link) {
+            li += ' <a href="' + f.link + '"' +
+              (f.link.indexOf("http") === 0 ? ' target="_blank" rel="noopener"' : "") +
+              ">" + escHtml(f.linkLabel || "open") + "</a>";
+          }
+          return "<li>" + li + "</li>";
+        }).join("") + "</ul>";
+      }
+      inseiAddMsg("her", html, false);
+      inseiRenderRoutes(ans.routes || []);
+    }
+
+    function inseiGreet() {
+      const api = inseiApi();
+      const line = inseiIdleNudged
+        ? "Still here? Ask me anything."
+        : (api && api.greeting ? api.greeting() : "I am Insei — keeper of this ark.");
+      inseiIdleNudged = false;
+      inseiAddMsg("her", "<p>" + escHtml(line) + "</p>", false);
+      inseiRenderRoutes(["sanctums", "steel", "service", "booking"]);
+    }
+
+    function inseiSend(text, isRoute) {
+      const api = inseiApi();
+      if (!api) return;
+      const shown = isRoute && api.routeLabel ? api.routeLabel(text) : text;
+      inseiAddMsg("you", "<p>" + escHtml(shown) + "</p>", false);
+      let ans = null;
+      try {
+        ans = isRoute ? api.whisper(text) : api.ask(text, { statusLine: inseiStatusLine });
+      } catch (e) { ans = null; }
+      if (!ans) {
+        ans = { text: "That is beyond what sensei has entrusted to me.", facts: [], routes: ["sanctums", "steel", "service"] };
+      }
+      inseiRenderAnswer(ans);
+    }
+
+    function inseiBindForm() {
+      const form = document.getElementById("insei-form");
+      if (!form || form.dataset.bound === "1") return;
+      form.dataset.bound = "1";
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const inp = document.getElementById("insei-input");
+        if (!inp) return;
+        const v = inp.value.trim();
+        if (!v) return;
+        inp.value = "";
+        inseiSend(v, false);
+      });
+    }
+
+    if (!window.__inseiWhisper) {
+      window.__inseiWhisper = true;
+      window.addEventListener("insei:whisper", function (e) {
+        const d = (e && e.detail) || {};
+        if (d.trigger === "idle-quiet") {
+          inseiIdleNudged = true;
+          const dot = document.getElementById("bcn-dot");
+          if (dot) dot.setAttribute("data-nudge", "1");
+          return;
+        }
+        const panel = document.getElementById("beacon-panel");
+        if (panel && !panel.hidden && d.entryId) {
+          const api = inseiApi();
+          const ans = api && api.whisper ? api.whisper(d.entryId) : null;
+          if (ans) {
+            inseiAddMsg("her", "<p>" + escHtml(ans.text) + "</p>", true);
+            inseiRenderRoutes(ans.routes || []);
+          }
+        }
+      });
+    }
+
+    if (!window.__inseiKeys) {
+      window.__inseiKeys = true;
+      document.addEventListener("keydown", function (e) {
+        const tag = (document.activeElement && document.activeElement.tagName) || "";
+        if (tag === "INPUT" || tag === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.key === "a" || e.key === "A") {
+          const panel = document.getElementById("beacon-panel");
+          if (panel && panel.hidden) openBeacon();
+        }
+      });
     }
 
     function openBeacon() {
@@ -405,12 +541,13 @@ import Container from "@components/Container.astro";
       renderBeacon();
       bPanel.hidden = false;
       bcnOpen = true;
-      // the sparkline lives in the button now: size to it, wear the petal accent
-      const bk = document.getElementById("bcn-book");
-      if (bk && spark && sctx) {
-        const r = bk.getBoundingClientRect();
+      inseiBindForm();
+      // her pulse: size the presence canvas, wear the petal accent
+      const pulse = document.getElementById("insei-pulse");
+      if (pulse && spark && sctx) {
+        const r = pulse.getBoundingClientRect();
         SW = Math.max(1, Math.round(r.width));
-        SH = Math.max(1, Math.round(r.height));
+        SH = Math.max(1, Math.round(r.height || 26));
         SMID = SH / 2;
         spark.width = SW;
         spark.height = SH;
@@ -425,7 +562,16 @@ import Container from "@components/Container.astro";
         requestAnimationFrame(() => requestAnimationFrame(() => bScrim.classList.add("visible")));
       }
       bBtn.setAttribute("aria-expanded", "true");
-      bPanel.focus({ preventScroll: true });
+      if (!inseiGreeted) {
+        inseiGreeted = true;
+        inseiGreet();
+      } else {
+        updateWakeWord();
+      }
+      const inp = document.getElementById("insei-input");
+      if (inp) inp.focus({ preventScroll: true });
+      if (inseiWakeTimer) window.clearInterval(inseiWakeTimer);
+      inseiWakeTimer = window.setInterval(updateWakeWord, 2000);
       document.addEventListener("pointerdown", outsideBeacon, { capture: true });
     }
 
@@ -433,6 +579,10 @@ import Container from "@components/Container.astro";
       if (!bBtn || !bPanel || bPanel.hidden) return;
       bPanel.hidden = true;
       bcnOpen = false;
+      if (inseiWakeTimer) {
+        window.clearInterval(inseiWakeTimer);
+        inseiWakeTimer = 0;
+      }
       if (bScrim && !bScrim.hidden) {
         bScrim.classList.remove("visible");
         window.setTimeout(() => { if (bPanel.hidden) bScrim.hidden = true; }, 250);
@@ -530,7 +680,7 @@ import Container from "@components/Container.astro";
       #beacon-scrim { transition: none; }
     }
 
-    /* NOW panel — velkaa Shizuku restraint: monochrome glass, one color moment (the dot).
+    /* Insei window — velkaa Shizuku restraint: monochrome glass, one color moment (her eye).
        Centered like PageFind, quiet like the terminal. */
     #beacon-panel {
       --bcn-bg: rgba(10, 10, 10, 0.65);
@@ -641,87 +791,127 @@ import Container from "@components/Container.astro";
       margin: 0 1px;
       line-height: 1;
     }
-    .bcn-status {
-      margin: 0 0 2px;
-      font-size: 1rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      color: var(--bcn-text);
-    }
-    .bcn-sub {
-      margin: 0;
-      font-size: 0.78rem;
+    /* keeper window — her presence, transcript, paths, and voice */
+    .bcn-wake {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0.04em;
       color: var(--bcn-dim);
     }
-    .bcn-rule {
-      border: none;
-      border-top: 1px solid color-mix(in oklch, var(--bcn-text) 15%, transparent);
-      margin: 0.9rem 0;
-    }
-    /* chamfered tag button — velkaa play-button logic: monochrome, inverts on hover */
-    .bcn-book {
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+    #insei-pulse {
+      display: block;
       width: 100%;
-      margin: 0 0 0.7rem;
-      padding: 0.55rem 0.85rem;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      text-decoration: none;
-      color: var(--bcn-text);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      background: transparent;
-      clip-path: polygon(
-        9px 0, 100% 0,
-        100% calc(100% - 9px), calc(100% - 9px) 100%,
-        0 100%, 0 9px
-      );
-      transition: border-color 160ms ease, transform 160ms ease, background 160ms ease, color 160ms ease;
-    }
-    .bcn-book:hover {
-      background: #f8f8ff;
-      color: #0b0e1a;
-      border-color: #f8f8ff;
-      transform: translateY(-1px);
-    }
-    html.light .bcn-book { border-color: rgba(0, 0, 0, 0.25); }
-    html.light .bcn-book:hover {
-      background: #0b0e1a;
-      color: #f8f8ff;
-      border-color: #0b0e1a;
-    }
-    .bcn-book:focus-visible { outline: 2px solid var(--bcn-text); outline-offset: 2px; }
-    /* the heartbeat lives inside the button, behind the label */
-    #bcn-spark {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      height: 26px;
+      margin: 0 0 0.6rem;
       opacity: 0.9;
       pointer-events: none;
     }
-    .bcn-book-label {
-      position: relative;
-      z-index: 1;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .bcn-links {
+    #insei-transcript {
       display: flex;
-      gap: 14px;
-      justify-content: center;
+      flex-direction: column;
+      gap: 0.55rem;
+      max-height: 38vh;
+      overflow-y: auto;
+      padding-right: 2px;
+      margin-bottom: 0.6rem;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+    #insei-transcript p { margin: 0; }
+    .insei-her { color: var(--bcn-text); }
+    .insei-her[data-whisper="1"] { color: var(--bcn-dim); font-style: italic; }
+    .insei-you {
+      align-self: flex-end;
+      max-width: 88%;
+      padding: 0.3rem 0.65rem;
+      border: 1px solid color-mix(in oklch, var(--bcn-text) 30%, transparent);
+      color: var(--bcn-text);
+    }
+    .insei-facts {
+      margin: 0.4rem 0 0;
+      padding-left: 1.1rem;
       font-size: 0.75rem;
       color: var(--bcn-dim);
     }
-    .bcn-links a { color: inherit; text-decoration: none; }
-    .bcn-links a:hover { color: var(--bcn-text); text-decoration: underline; }
+    .insei-facts li { margin-bottom: 0.25rem; }
+    .insei-facts a { color: var(--bcn-text); }
+    #insei-routes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 0.65rem;
+    }
+    #insei-routes:empty { display: none; }
+    .insei-route {
+      font: inherit;
+      font-size: 0.66rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--bcn-text);
+      background: transparent;
+      border: 1px solid color-mix(in oklch, var(--bcn-text) 25%, transparent);
+      padding: 0.32rem 0.6rem;
+      cursor: pointer;
+      clip-path: polygon(
+        7px 0, 100% 0,
+        100% calc(100% - 7px), calc(100% - 7px) 100%,
+        0 100%, 0 7px
+      );
+      transition: background 140ms ease, color 140ms ease;
+    }
+    .insei-route:hover,
+    .insei-route:focus-visible {
+      background: var(--bcn-text);
+      color: var(--bcn-bg);
+    }
+    .insei-route:focus-visible { outline: 2px solid var(--bcn-text); outline-offset: 2px; }
+    #insei-form {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid color-mix(in oklch, var(--bcn-text) 15%, transparent);
+      padding-top: 0.65rem;
+    }
+    #insei-input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid color-mix(in oklch, var(--bcn-text) 25%, transparent);
+      color: var(--bcn-text);
+      font: inherit;
+      font-size: 0.82rem;
+      padding: 0.3rem 0;
+      outline: none;
+      border-radius: 0;
+    }
+    #insei-input:focus { border-bottom-color: var(--bcn-text); }
+    #insei-input::placeholder { color: var(--bcn-dim); }
+    #insei-send {
+      flex: none;
+      width: 2.1rem;
+      font: inherit;
+      color: var(--bcn-text);
+      background: transparent;
+      border: 1px solid color-mix(in oklch, var(--bcn-text) 25%, transparent);
+      cursor: pointer;
+      clip-path: polygon(
+        6px 0, 100% 0,
+        100% calc(100% - 6px), calc(100% - 6px) 100%,
+        0 100%, 0 6px
+      );
+      transition: background 140ms ease, color 140ms ease;
+    }
+    #insei-send:hover,
+    #insei-send:focus-visible {
+      background: var(--bcn-text);
+      color: var(--bcn-bg);
+    }
+    /* idle nudge: her eye brightens once, never a popup */
+    #bcn-dot[data-nudge="1"] {
+      box-shadow:
+        0 0 12px color-mix(in oklch, var(--sw2) 95%, transparent),
+        0 0 3px rgba(255, 255, 255, 0.9);
+    }
 
     @media (prefers-reduced-motion: reduce) {
       .beacon-dot.lab, .beacon-dot.rest { animation: none; }
