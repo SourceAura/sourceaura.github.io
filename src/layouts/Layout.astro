@@ -81,6 +81,50 @@ const { title, description, image, prev, next } = Astro.props
       });
     </script>
 
+    <script>
+      // Petal accent: the current petal's hero image lends its dominant hue
+      // to PageFind + the Beacon sparkline via --petal-accent.
+      // Cleared on every non-petal page — the site tokens are the fallback.
+      if (!window.__petalAccent) {
+        window.__petalAccent = true;
+        const applyPetalAccent = () => {
+          const root = document.documentElement;
+          const img = document.querySelector("[data-petal-accent-src]");
+          if (!img) { root.style.removeProperty("--petal-accent"); return; }
+          const set = () => {
+            try {
+              const c = document.createElement("canvas");
+              c.width = c.height = 24;
+              const x = c.getContext("2d", { willReadFrequently: true });
+              x.drawImage(img, 0, 0, 24, 24);
+              const d = x.getImageData(0, 0, 24, 24).data;
+              let r = 0, g = 0, b = 0, tw = 0;
+              for (let i = 0; i < d.length; i += 4) {
+                const R = d[i], G = d[i + 1], B = d[i + 2];
+                const mx = Math.max(R, G, B), mn = Math.min(R, G, B);
+                const sat = mx ? (mx - mn) / mx : 0;
+                const lum = (mx + mn) / 510;
+                if (lum < 0.08 || lum > 0.92) continue; // skip near-black/white
+                const w = sat * sat + 0.06;
+                r += R * w; g += G * w; b += B * w; tw += w;
+              }
+              if (tw) root.style.setProperty("--petal-accent",
+                `rgb(${Math.round(r / tw)},${Math.round(g / tw)},${Math.round(b / tw)})`);
+              else root.style.removeProperty("--petal-accent");
+            } catch (err) { root.style.removeProperty("--petal-accent"); }
+          };
+          if (img.complete && img.naturalWidth) set();
+          else {
+            img.addEventListener("load", set, { once: true });
+            img.addEventListener("error",
+              () => root.style.removeProperty("--petal-accent"), { once: true });
+          }
+        };
+        applyPetalAccent();
+        document.addEventListener("astro:page-load", applyPetalAccent);
+      }
+    </script>
+
   </body>
 </html>
 
