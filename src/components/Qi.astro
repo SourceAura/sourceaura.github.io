@@ -57,6 +57,8 @@
 </style>
 
 <script>
+if (!window.__qiInit) {
+  window.__qiInit = true;
   const qiRoot = document.getElementById("qi-root");
   const qiCoreHit = document.getElementById("qi-core-hit");
   const canvas = document.getElementById("qi-vis");
@@ -528,14 +530,15 @@
     "visibilitychange",
     () => {
       if (document.hidden) stop();
-      else start();
+      else if (!prefersReduced) start();
     },
     { passive: true },
   );
 
   if (prefersReduced) {
-    // keep your reduced-motion behavior (static-ish)
-    start();
+    // reduced motion: one static frame, no loop
+    resize(true);
+    draw(performance.now());
   } else {
     start();
   }
@@ -556,4 +559,5 @@
   addEventListener("resize", updateQiCenter);
   addEventListener("orientationchange", updateQiCenter);
   document.addEventListener("astro:after-swap", updateQiCenter);
+}
 </script>
