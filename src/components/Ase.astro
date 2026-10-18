@@ -12,7 +12,7 @@ import { SITE } from "@consts";
   aria-label="Home & Search"
   data-role="search-pill"
   class="group relative flex items-center
-    overflow-hidden rounded-full
+    overflow-hidden
     border border-black/15
     px-3 py-1.5
     text-xs font-semibold
@@ -22,7 +22,7 @@ import { SITE } from "@consts";
     dark:border-white/20
     dark:hover:bg-white/5
     dark:focus-visible:bg-white/5"
-  style="background-color: transparent; text-decoration: none;"
+  style="background-color: transparent; text-decoration: none; border-radius: 0; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);"
   onclick="
     const onHome = location.pathname === '/';
 
