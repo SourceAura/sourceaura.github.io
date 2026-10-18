@@ -36,6 +36,7 @@ import Container from "@components/Container.astro";
   </button>
 
   <!-- BEACON NOW PANEL -->
+  <div id="beacon-scrim" aria-hidden="true" hidden></div>
   <div id="beacon-panel" role="dialog" aria-label="Now" tabindex="-1" hidden>
     <span class="bcn-corner tl" aria-hidden="true"></span>
     <span class="bcn-corner tr" aria-hidden="true"></span>
@@ -300,6 +301,7 @@ import Container from "@components/Container.astro";
 
     const bBtn = document.getElementById("beacon-btn");
     const bPanel = document.getElementById("beacon-panel");
+    const bScrim = document.getElementById("beacon-scrim");
     const bDot = document.getElementById("beacon-dot");
 
     function renderBeacon() {
@@ -333,6 +335,10 @@ import Container from "@components/Container.astro";
       if (!bBtn || !bPanel || !bPanel.hidden) return;
       renderBeacon();
       bPanel.hidden = false;
+      if (bScrim) {
+        bScrim.hidden = false;
+        requestAnimationFrame(() => requestAnimationFrame(() => bScrim.classList.add("visible")));
+      }
       placeBeacon();
       bBtn.setAttribute("aria-expanded", "true");
       bPanel.focus({ preventScroll: true });
@@ -344,6 +350,10 @@ import Container from "@components/Container.astro";
     function closeBeacon() {
       if (!bBtn || !bPanel || bPanel.hidden) return;
       bPanel.hidden = true;
+      if (bScrim && !bScrim.hidden) {
+        bScrim.classList.remove("visible");
+        window.setTimeout(() => { if (bPanel.hidden) bScrim.hidden = true; }, 250);
+      }
       bBtn.setAttribute("aria-expanded", "false");
       document.removeEventListener("pointerdown", outsideBeacon, { capture: true });
       window.removeEventListener("resize", closeBeacon);
@@ -356,6 +366,8 @@ import Container from "@components/Container.astro";
         closeBeacon();
       }
     }
+
+    if (bScrim) bScrim.addEventListener("click", () => closeBeacon());
 
     if (bBtn && bPanel) {
       renderBeacon();
@@ -393,6 +405,27 @@ import Container from "@components/Container.astro";
     @keyframes beacon-pulse {
       0%, 100% { transform: scale(1); opacity: 0.72; }
       50% { transform: scale(1.3); opacity: 1; }
+    }
+
+    /* scrim — PageFind's exact recipe */
+    #beacon-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 55;
+      background: transparent;
+      transition: background 240ms ease;
+    }
+    #beacon-scrim.visible {
+      background: color-mix(in oklch, black 22%, transparent);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+    }
+    html.light #beacon-scrim.visible {
+      background: color-mix(in oklch, white 28%, transparent);
+    }
+    #beacon-scrim[hidden] { display: none; }
+    @media (prefers-reduced-motion: reduce) {
+      #beacon-scrim { transition: none; }
     }
 
     /* NOW panel — PageFind instrument DNA: tokens, accent border+glow, dot grid, brackets */
@@ -504,7 +537,7 @@ import Container from "@components/Container.astro";
       font-size: 0.95rem;
       font-weight: 800;
       letter-spacing: 0.04em;
-      background: linear-gradient(90deg, var(--sw1), var(--sw2) 55%, var(--sw3));
+      background: var(--sw-grad);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
