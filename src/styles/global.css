@@ -145,6 +145,14 @@ html.light body {
     ),
     #f7f3e8;
 }
+/* header text — ghostwhite, like the footer */
+header[data-role="app-header"] {
+  color: #f8f8ff;
+}
+html.light header[data-role="app-header"] {
+  color: #161616;
+}
+
 /* peripheral fade — breaks the rigid rectangle, velkaa-style */
 body::after {
   content: "";
