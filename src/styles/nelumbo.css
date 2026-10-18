@@ -1242,7 +1242,7 @@ html.light .hud-comments-section {
   pointer-events: none;
 }
 
-/* shooting star — the nagerboshi tracing the edge */
+/* shooting star — the nagareboshi tracing the edge */
 @property --sa {
   syntax: "<angle>";
   initial-value: 0deg;
