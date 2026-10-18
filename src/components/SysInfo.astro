@@ -141,9 +141,20 @@ import Container from "@components/Container.astro";
         : "20,20,20";
     }
 
-    function getQiPhase() {
+    // Live CSS vars, cached: getComputedStyle forces a style recalc, so
+    // per-frame reads are replaced with a 1s TTL cache.
+    const __live = { t: 0, phase: 0, wake: 0.5 };
+    function readLiveStyles() {
+      const now = performance.now();
+      if (now - __live.t < 1000) return __live;
       const styles = getComputedStyle(document.documentElement);
-      return parseFloat(styles.getPropertyValue("--pulse-phase")) || 0;
+      __live.t = now;
+      __live.phase = parseFloat(styles.getPropertyValue("--pulse-phase")) || 0;
+      __live.wake = parseFloat(styles.getPropertyValue("--ase-wake")) || 0.5;
+      return __live;
+    }
+    function getQiPhase() {
+      return readLiveStyles().phase;
     }
 
     /* ===============================
@@ -201,7 +212,7 @@ import Container from "@components/Container.astro";
       // Sync with Ase neural network mood
       let aseWake = 0.5;
       if (typeof window !== "undefined" && window.__ase) {
-        aseWake = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ase-wake")) || 0.5;
+        aseWake = readLiveStyles().wake;
       }
       
       const moodInfluence = aseWake * 0.4;
