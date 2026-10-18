@@ -5,7 +5,7 @@ BackToTop: displays a back-to-top arrow.
 const SHOW_AFTER = 240;
 ---
 
-<div id="back-to-top" aria-hidden="true" class="back-to-top-indicator">
+<div id="back-to-top" role="button" tabindex="0" aria-label="Back to top" data-tip="Back to top" class="back-to-top-indicator">
   <svg
     viewBox="0 0 24 24"
     width="18"
@@ -36,6 +36,9 @@ const SHOW_AFTER = 240;
 
     el.classList.toggle("active", active);
     root.toggleAttribute("data-backtotop", active);
+    // keep it out of the tab order and SR tree while invisible
+    el.tabIndex = active ? 0 : -1;
+    el.setAttribute("aria-hidden", String(!active));
   }
 
   // Always attach listeners once
@@ -45,8 +48,15 @@ const SHOW_AFTER = 240;
 
   updateBackToTop();
 
-  el.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const goTop = () => {
+    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
+  el.addEventListener("click", goTop);
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goTop();
+    }
   });
 </script>
 
@@ -65,6 +75,12 @@ const SHOW_AFTER = 240;
   .back-to-top-indicator.active {
     opacity: 1;
     pointer-events: auto;
+    cursor: pointer;
+  }
+  .back-to-top-indicator:focus-visible {
+    outline: 2px solid var(--pc-accent, #8b5cf6);
+    outline-offset: 3px;
+    border-radius: 6px;
   }
 
   @media (prefers-reduced-motion: reduce) {
