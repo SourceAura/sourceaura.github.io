@@ -53,6 +53,11 @@ const { title, description, image, prev, next } = Astro.props
       import "../lib/motion";
     </script>
 
+    <!-- Insei keeper — production-safe: local sensing + corpus mind, no network. -->
+    <script>
+      import "../lib/insei";
+    </script>
+
     <!-- Existing gesture script (unchanged) -->
     <script is:inline type="module">
       import {
