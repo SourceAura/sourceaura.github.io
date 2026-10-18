@@ -538,6 +538,10 @@ import ColorSwatch from "./ColorSwatch.astro";
     color: var(--ase-fg);
     background: var(--ase-surface);
     backdrop-filter: blur(14px) saturate(140%);
+    @media (pointer: coarse) {
+      /* touch GPUs: saturate() compounds the offscreen-surface cost */
+      backdrop-filter: blur(8px);
+    }
     border: 1px solid var(--ase-line);
     border-radius: 12px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
