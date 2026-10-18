@@ -360,11 +360,6 @@ const nextPost =
      The card opened up into a full room. Same DNA, expanded.
      ══════════════════════════════════════════════════════════════ */
 
-  /* ---------- Accent fallbacks (overridden by JS per-post) ---------- */
-  :root {
-    --pc-accent: #7df9ff;
-    --pc-accent2: #b48cff;
-  }
 
   /* ---------- Ghost typography ---------- */
   .ghost-title {
@@ -409,6 +404,12 @@ const nextPost =
     min-height: 280px;
     display: block;
     object-fit: cover;
+  }
+  /* Light mode: guarantee a dark scrim so the white title always reads */
+  html.light .hero-frame::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5,7,15,0.55), rgba(5,7,15,0.78));
+    pointer-events: none;
   }
 
   .hero-fallback {
