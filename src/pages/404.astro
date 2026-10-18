@@ -7,7 +7,7 @@ import Container from "@components/Container.astro";
 <Layout title="404" description={SITE.SEO_DESCRIPTION}>
   <div class="void-scene">
     <canvas class="starfield" aria-hidden="true"></canvas>
-    <div class="ghost-404" aria-hidden="true">404</div>
+    <div class="ghost-404 ghost-drift-center" aria-hidden="true">404</div>
     <div class="void-vignette" aria-hidden="true"></div>
     <div class="void-dotgrid" aria-hidden="true"></div>
     <div class="corner-brackets" aria-hidden="true">
@@ -311,7 +311,7 @@ import Container from "@components/Container.astro";
     font-size: clamp(8rem, 30vw, 24rem);
     font-weight: 900;
     letter-spacing: -0.04em;
-    color: #7df9ff;
+    color: var(--pc-accent);
     opacity: 0.05;
     pointer-events: none;
     z-index: 0;
@@ -347,7 +347,7 @@ import Container from "@components/Container.astro";
     position: absolute;
     width: 24px;
     height: 24px;
-    border-color: #7df9ff;
+    border-color: var(--pc-accent);
     border-style: solid;
     opacity: 0.5;
   }
@@ -359,7 +359,7 @@ import Container from "@components/Container.astro";
   .flash {
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle, rgba(125,249,255,0.3), transparent 70%);
+    background: radial-gradient(circle, color-mix(in oklch, var(--pc-accent) 30%, transparent), transparent 70%);
     pointer-events: none;
     z-index: 20;
     opacity: 0;
@@ -374,7 +374,7 @@ import Container from "@components/Container.astro";
     width: 0;
     height: 0;
     border-radius: 50%;
-    border: 2px solid #7df9ff;
+    border: 2px solid var(--pc-accent);
     pointer-events: none;
     z-index: 20;
     opacity: 0;
@@ -413,7 +413,7 @@ import Container from "@components/Container.astro";
     font-weight: 800;
     letter-spacing: -0.02em;
     color: white;
-    text-shadow: 0 0 40px rgba(125,249,255,0.3);
+    text-shadow: 0 0 40px color-mix(in oklch, var(--pc-accent) 30%, transparent);
     margin: 0;
   }
 
@@ -430,13 +430,13 @@ import Container from "@components/Container.astro";
     padding: 0;
     transition: width 0.3s ease, height 0.3s ease;
   }
-  .seed:focus-visible { outline: 2px solid #7df9ff; outline-offset: 4px; }
+  .seed:focus-visible { outline: 2px solid var(--pc-accent); outline-offset: 4px; }
 
   .seed-core {
     position: absolute;
     inset: 20%;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #7df9ff, #b48cff);
+    background: radial-gradient(circle at 30% 30%, var(--pc-accent), var(--pc-accent2));
     opacity: var(--seed-brightness, 0.3);
     transition: opacity 0.3s ease;
   }
@@ -445,7 +445,7 @@ import Container from "@components/Container.astro";
     position: absolute;
     inset: -20%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(125,249,255, calc(var(--seed-glow, 0) * 0.4)), transparent 70%);
+    background: radial-gradient(circle, color-mix(in oklch, var(--pc-accent) calc(var(--seed-glow, 0) * 40%), transparent), transparent 70%);
     opacity: var(--seed-glow, 0);
     transition: opacity 0.3s ease;
     pointer-events: none;
@@ -455,7 +455,7 @@ import Container from "@components/Container.astro";
     position: absolute;
     inset: -8px;
     border-radius: 50%;
-    background: conic-gradient(#7df9ff calc(var(--charge, 0) * 360deg), transparent 0);
+    background: conic-gradient(var(--pc-accent) calc(var(--charge, 0) * 360deg), transparent 0);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
@@ -483,7 +483,7 @@ import Container from "@components/Container.astro";
     font-family: "Geist Mono", monospace;
     font-size: 1rem;
     font-weight: 700;
-    color: #7df9ff;
+    color: var(--pc-accent);
     font-variant-numeric: tabular-nums;
   }
 
@@ -496,9 +496,9 @@ import Container from "@components/Container.astro";
     margin-top: 0.25rem;
     transition: color 0.3s ease;
   }
-  .starlight-counter[data-phase="AWAKEN"] .phase-label { color: rgba(125,249,255,0.4); }
-  .starlight-counter[data-phase="GROW"] .phase-label { color: rgba(125,249,255,0.6); }
-  .starlight-counter[data-phase="IGNITE"] .phase-label { color: rgba(125,249,255,0.9); }
+  .starlight-counter[data-phase="AWAKEN"] .phase-label { color: color-mix(in oklch, var(--pc-accent) 40%, transparent); }
+  .starlight-counter[data-phase="GROW"] .phase-label { color: color-mix(in oklch, var(--pc-accent) 60%, transparent); }
+  .starlight-counter[data-phase="IGNITE"] .phase-label { color: color-mix(in oklch, var(--pc-accent) 90%, transparent); }
 
   .portal {
     display: flex;
@@ -514,20 +514,26 @@ import Container from "@components/Container.astro";
     display: inline-flex;
     align-items: center;
     padding: 0.75rem 1.5rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #7df9ff, #b48cff);
-    color: #05070f;
+    border-radius: 0;
+    border: 1px solid color-mix(in oklch, var(--pc-accent) 35%, transparent);
+    background: color-mix(in oklch, var(--pc-accent) 8%, transparent);
+    clip-path: polygon(
+          9px 0, 100% 0,
+          100% calc(100% - 9px), calc(100% - 9px) 100%,
+          0 100%, 0 9px
+        );
+    color: var(--pc-accent);
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     text-decoration: none;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 0 30px rgba(125,249,255,0.3);
+    box-shadow: 0 0 30px color-mix(in oklch, var(--pc-accent) 30%, transparent);
   }
   .portal-pill:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 0 50px rgba(125,249,255,0.5);
+    box-shadow: 0 0 50px color-mix(in oklch, var(--pc-accent) 50%, transparent);
   }
 
   .euthymia-teaser {
@@ -536,12 +542,12 @@ import Container from "@components/Container.astro";
     margin: 0;
   }
   .euthymia-teaser a {
-    color: #7df9ff;
+    color: var(--pc-accent);
     text-decoration: none;
-    border-bottom: 1px solid rgba(125,249,255,0.3);
+    border-bottom: 1px solid color-mix(in oklch, var(--pc-accent) 30%, transparent);
     transition: color 0.2s ease, border-color 0.2s ease;
   }
-  .euthymia-teaser a:hover { color: #b48cff; border-color: #b48cff; }
+  .euthymia-teaser a:hover { color: var(--pc-accent2); border-color: var(--pc-accent2); }
 
   .back-to-petals {
     position: fixed;
@@ -557,14 +563,14 @@ import Container from "@components/Container.astro";
     z-index: 4;
     transition: color 0.2s ease;
   }
-  .back-to-petals:hover { color: #7df9ff; }
+  .back-to-petals:hover { color: var(--pc-accent); }
 
   .spark {
     position: fixed;
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: #7df9ff;
+    background: var(--pc-accent);
     pointer-events: none;
     z-index: 10;
     animation: sparkFly 0.6s ease-out forwards;
@@ -579,7 +585,7 @@ import Container from "@components/Container.astro";
     top: -100px;
     width: 2px;
     height: 80px;
-    background: linear-gradient(to bottom, transparent, #7df9ff, transparent);
+    background: linear-gradient(to bottom, transparent, var(--pc-accent), transparent);
     pointer-events: none;
     z-index: 10;
     animation: streakFall 1.5s ease-in forwards;
