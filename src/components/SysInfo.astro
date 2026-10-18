@@ -37,6 +37,10 @@ import Container from "@components/Container.astro";
 
   <!-- BEACON NOW PANEL -->
   <div id="beacon-panel" role="dialog" aria-label="Now" tabindex="-1" hidden>
+    <span class="bcn-corner tl" aria-hidden="true"></span>
+    <span class="bcn-corner tr" aria-hidden="true"></span>
+    <span class="bcn-corner bl" aria-hidden="true"></span>
+    <span class="bcn-corner br" aria-hidden="true"></span>
     <div class="bcn-head">
       <span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span>
       <span class="bcn-title">NOW</span>
@@ -260,10 +264,25 @@ import Container from "@components/Container.astro";
     const BOOKING_URL = "mailto:sourceaura@proton.me?subject=Computer%20repair%20booking";
 
     const BEACON_STATES = {
-      lab:      { label: "IN THE LAB",     sub: "the small hours are his hours", dot: "lab" },
-      bookings: { label: "TAKING BOOKINGS", sub: "computer repair — Nashville", dot: "lab" },
-      rest:     { label: "RECHARGING",      sub: "back in the small hours",      dot: "rest" },
+      lab:      { key: "lab",      label: "IN THE LAB",     sub: "the small hours are his hours", dot: "lab" },
+      bookings: { key: "bookings", label: "TAKING BOOKINGS", sub: "computer repair — Nashville", dot: "lab" },
+      rest:     { key: "rest",     label: "RECHARGING",      sub: "back in the small hours",      dot: "rest" },
     };
+
+    function chicagoNow() {
+      return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    }
+
+    function labCountdown() {
+      const c = chicagoNow();
+      const target = new Date(c);
+      target.setHours(20, 0, 0, 0);
+      let ms = target - c;
+      if (ms < 0) ms = 0;
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      return h > 0 ? `back in the lab in ${h}h ${m}m` : `back in the lab in ${m}m`;
+    }
 
     function beaconState() {
       if (BEACON_STATUS !== "auto") return BEACON_STATES[BEACON_STATUS] || BEACON_STATES.rest;
@@ -295,7 +314,7 @@ import Container from "@components/Container.astro";
       const s1 = document.getElementById("bcn-status");
       const s2 = document.getElementById("bcn-sub");
       if (s1) s1.textContent = st.label;
-      if (s2) s2.textContent = st.sub;
+      if (s2) s2.textContent = st.key === "rest" ? labCountdown() : st.sub;
       const bk = document.getElementById("bcn-book");
       if (bk) bk.href = BOOKING_URL;
     }
@@ -337,8 +356,8 @@ import Container from "@components/Container.astro";
 
     if (bBtn && bPanel) {
       renderBeacon();
-      // refresh the dot's read on the hour, in case the page sits open
-      setInterval(renderBeacon, 15 * 60 * 1000);
+      // refresh the dot's read + countdown, in case the page sits open
+      setInterval(renderBeacon, 60 * 1000);
       bBtn.addEventListener("click", () => (bPanel.hidden ? openBeacon() : closeBeacon()));
       bPanel.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeBeacon();
@@ -373,28 +392,51 @@ import Container from "@components/Container.astro";
       50% { transform: scale(1.3); opacity: 1; }
     }
 
-    /* NOW panel */
+    /* NOW panel — PageFind language: transparent, brackets, breathing */
     #beacon-panel {
       position: fixed;
       z-index: 60;
       width: 248px;
-      padding: 14px 14px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(8, 10, 18, 0.86);
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+      padding: 16px 16px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(8, 10, 18, 0.55);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
       color: #fff;
       outline: none;
+      animation: beacon-breathe 5.5s ease-in-out infinite;
+      transform-origin: top right;
     }
     html.light #beacon-panel {
-      background: rgba(250, 250, 252, 0.92);
+      background: rgba(250, 250, 252, 0.62);
       border-color: rgba(0, 0, 0, 0.1);
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
       color: #111;
     }
     #beacon-panel[hidden] { display: none; }
+    @keyframes beacon-breathe {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 0 rgba(185, 103, 255, 0);
+      }
+      50% {
+        transform: scale(1.018);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5), 0 0 26px rgba(185, 103, 255, 0.28);
+      }
+    }
+    .bcn-corner {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 1px solid rgba(255, 113, 206, 0.65);
+      pointer-events: none;
+    }
+    .bcn-corner.tl { top: 7px; left: 7px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
+    .bcn-corner.tr { top: 7px; right: 7px; border-left: none; border-bottom: none; border-top-right-radius: 6px; }
+    .bcn-corner.bl { bottom: 7px; left: 7px; border-right: none; border-top: none; border-bottom-left-radius: 6px; }
+    .bcn-corner.br { bottom: 7px; right: 7px; border-left: none; border-top: none; border-bottom-right-radius: 6px; }
     .bcn-head {
       display: flex;
       align-items: center;
@@ -430,16 +472,22 @@ import Container from "@components/Container.astro";
       width: 100%;
       padding: 9px 12px;
       margin-bottom: 10px;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       text-decoration: none;
-      color: #0a0a12;
-      background: linear-gradient(90deg, #ff71ce, #b967ff 55%, #ff9e00);
+      color: inherit;
+      background: transparent;
+      border: 1px solid rgba(255, 113, 206, 0.55);
       clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
     }
-    .bcn-book:hover { filter: brightness(1.1); }
+    .bcn-book:hover {
+      border-color: rgba(255, 113, 206, 0.95);
+      background: linear-gradient(90deg, rgba(255,113,206,0.14), rgba(185,103,255,0.14), rgba(255,158,0,0.14));
+      box-shadow: 0 0 18px rgba(185, 103, 255, 0.25);
+    }
     .bcn-book:focus-visible { outline: 2px solid #ff71ce; outline-offset: 2px; }
     .bcn-links {
       display: flex;
@@ -452,7 +500,7 @@ import Container from "@components/Container.astro";
     .bcn-links a:hover { opacity: 1; text-decoration: underline; }
 
     @media (prefers-reduced-motion: reduce) {
-      .beacon-dot.lab, .beacon-dot.rest { animation: none; }
+      .beacon-dot.lab, .beacon-dot.rest, #beacon-panel { animation: none; }
     }
 
     #heartbeat {
