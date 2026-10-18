@@ -7,7 +7,7 @@ import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
 ---
 
-<Layout title="Resume" description="Marvin L. Hall Jr. — Junior Web Developer, Entry-Level Cybersecurity">
+<Layout title="Resume" description="M. Hall — Web Developer, Entry-Level Cybersecurity">
   <Container>
     <!-- Ghost typography looming behind everything -->
     <div class="ghost-title" aria-hidden="true">RÉSUMÉ</div>
@@ -24,47 +24,35 @@ import Container from "@components/Container.astro";
         <div class="hero-vignette" aria-hidden="true"></div>
         <div class="hero-dotgrid" aria-hidden="true"></div>
       </div>
-      <h1 class="hero-title" data-decrypt>Marvin L. Hall Jr.</h1>
-      <p class="hero-sub" data-decrypt>0xSrcAura — Junior Web Developer · Entry-Level Cybersecurity</p>
+      <h1 class="hero-title" data-decrypt>M. Hall</h1>
+      <p class="hero-sub" data-decrypt>0xSrcAura — Web Developer · Entry-Level Cybersecurity</p>
     </section>
 
     <!-- ══════════════════════════════════════════
-         TELEMETRY STRIP
+         COMMAND DECK
          ══════════════════════════════════════════ -->
-    <div class="telemetry" data-reveal>
-      <span class="chip"><span class="chip-label">Base</span><span class="chip-value">Nashville, TN</span></span>
-      <span class="chip"><span class="chip-label">Mode</span><span class="chip-value">Open to Remote</span></span>
-      <span class="chip"><span class="chip-label">Typing</span><span class="chip-value">71 GWAM</span></span>
-      <a class="chip chip-link" href="https://github.com/SourceAura" target="_blank" rel="noopener">
-        <span class="chip-label">Code</span><span class="chip-value">&#8599; GitHub</span>
-      </a>
-      <a class="chip chip-link" href="mailto:sourceaura.dev@gmail.com">
-        <span class="chip-label">Mail</span><span class="chip-value">&#8599; Contact</span>
-      </a>
-    </div>
-
     <!-- ══════════════════════════════════════════
          ACTIONS — the interactive layer
          ══════════════════════════════════════════ -->
     <div class="resume-actions" data-reveal>
-      <button class="action-btn sw-btn" id="term-toggle" aria-pressed="false" aria-controls="resume-term">
-        <span aria-hidden="true">&gt;_</span> Terminal
-      </button>
-      <button class="action-btn" id="print-btn">
-        <span aria-hidden="true">&#9113;</span> Print / PDF
-      </button>
-      <button class="action-btn" id="copy-email">
-        <span aria-hidden="true">&#128279;</span> <span id="copy-label">Copy email</span>
+      <button class="action-btn sw-btn" id="term-toggle" aria-pressed="true" aria-controls="resume-term">
+        <span aria-hidden="true">&#128196;</span> <span id="term-toggle-label">Document</span>
       </button>
     </div>
 
     <!-- ══════════════════════════════════════════
          TERMINAL VIEW (hidden until summoned)
          ══════════════════════════════════════════ -->
-    <div class="article-card term-card" id="resume-term" hidden>
-      <div class="term-chrome" aria-hidden="true">
+    <div class="article-card term-card" id="resume-term">
+      <div class="term-chrome">
         <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
         <span class="term-title">src@euthymia — resume.sh</span>
+        <span class="term-tools">
+          <a class="term-tool" href="https://github.com/SourceAura" target="_blank" rel="noopener" aria-label="GitHub">gh &#8599;</a>
+          <a class="term-tool" href="mailto:sourceaura.dev@gmail.com" aria-label="Email">mail</a>
+          <button class="term-tool" id="copy-email" aria-label="Copy email address"><span id="copy-label">copy</span></button>
+          <button class="term-tool" id="print-btn" aria-label="Print or save as PDF">print</button>
+        </span>
       </div>
       <div class="term-body" id="term-output" role="log" aria-label="Terminal output"></div>
       <div class="term-input-row">
@@ -83,7 +71,7 @@ import Container from "@components/Container.astro";
     <!-- ══════════════════════════════════════════
          ARTICLE — THE READING CHAMBER
          ══════════════════════════════════════════ -->
-    <article class="article-card" id="resume-doc" data-pagefind-body data-reveal>
+    <article class="article-card" id="resume-doc" data-pagefind-body data-reveal hidden>
       <div class="corner-brackets" aria-hidden="true">
         <span class="bracket tl"></span><span class="bracket tr"></span>
         <span class="bracket bl"></span><span class="bracket br"></span>
@@ -145,6 +133,7 @@ import Container from "@components/Container.astro";
     window.__resumeInit = true;
 
     const toggle = document.getElementById("term-toggle");
+    const toggleLabel = document.getElementById("term-toggle-label");
     const doc = document.getElementById("resume-doc");
     const term = document.getElementById("resume-term");
     const out = document.getElementById("term-output");
@@ -153,8 +142,8 @@ import Container from "@components/Container.astro";
 
     const DATA = {
       whoami: [
-        "Marvin L. Hall Jr. — 0xSrcAura",
-        "Junior Web Developer · Entry-Level Cybersecurity",
+        "M. Hall — 0xSrcAura",
+        "Web Developer · Entry-Level Cybersecurity",
         "Base: Nashville, TN — open to remote · typing 71 GWAM",
       ],
       experience: [
@@ -185,6 +174,15 @@ import Container from "@components/Container.astro";
         "Portfolio first, applications daily.",
         "The work is public and playable. If you want the formal document,",
         "write to sourceaura.dev@gmail.com — it's yours.",
+      ],
+      petals: [
+        "recent petals \u2014",
+        "  13 \u00b7 i am that is, that is i am",
+        "  12 \u00b7 Meet Me",
+        "  11 \u00b7 The Small Hours",
+        "  10 \u00b7 Euthymia: Soul Alterz",
+        "  09 \u00b7 Valence: Ghost in the Shell",
+        "read them at /petals",
       ],
     };
 
@@ -259,11 +257,12 @@ import Container from "@components/Container.astro";
     }
 
     let booted = false;
-    function setTerm(open) {
+    function setTerm(open, scroll = true) {
       term.hidden = !open;
       doc.hidden = open;
       toggle.setAttribute("aria-pressed", String(open));
       toggle.classList.toggle("is-on", open);
+      if (toggleLabel) toggleLabel.textContent = open ? "Document" : "Terminal";
       if (open) {
         if (!booted) {
           booted = true;
@@ -272,7 +271,7 @@ import Container from "@components/Container.astro";
         } else {
           input.focus({ preventScroll: true });
         }
-        term.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+        if (scroll) term.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
       }
     }
 
@@ -303,7 +302,13 @@ import Container from "@components/Container.astro";
       if (cmd === "clear") {
         out.innerHTML = "";
       } else if (cmd === "help") {
-        print(["commands: whoami · experience · arsenal · education · contact · hire · clear"]);
+        print(["whoami","experience","arsenal","education","contact","petals","play","hire","doc","clear"].join(" \u00b7 "));
+      } else if (cmd === "doc" || cmd === "gui" || cmd === "document") {
+        print(["switching to the formal document…"]);
+        setTimeout(() => setTerm(false), 350);
+      } else if (cmd === "play") {
+        print(["loading euthymia…"]);
+        setTimeout(() => (window.location.href = "/euthymia"), 450);
       } else if (cmd === "sudo hire me") {
         print(["nice try. write to sourceaura.dev@gmail.com — that's the real sudo."]);
       } else if (DATA[cmd]) {
@@ -314,7 +319,9 @@ import Container from "@components/Container.astro";
       out.scrollTop = out.scrollHeight;
     });
 
-    document.getElementById("print-btn").addEventListener("click", () => window.print());
+    setTerm(true, false); // terminal-first: the shell is the front door
+
+document.getElementById("print-btn").addEventListener("click", () => window.print());
 
     const copyBtn = document.getElementById("copy-email");
     const copyLabel = document.getElementById("copy-label");
@@ -477,6 +484,19 @@ import Container from "@components/Container.astro";
   .term-dot:first-child { background: var(--sw1); }
   .term-dot:nth-child(2) { background: var(--sw2); }
   .term-dot:nth-child(3) { background: var(--sw3); }
+  .term-tools { margin-left: auto; display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+  .term-tool {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ui-text); opacity: 0.75; text-decoration: none;
+    background: transparent;
+    border: 1px solid color-mix(in oklch, var(--ui-text) 20%, transparent);
+    padding: 0.28rem 0.55rem; cursor: pointer;
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+    transition: opacity 160ms ease, border-color 160ms ease;
+  }
+  .term-tool:hover { opacity: 1; border-color: color-mix(in oklch, var(--sw2) 60%, transparent); }
+  .term-tool:focus-visible { outline: 2px solid var(--sw2); outline-offset: 2px; }
   .term-title {
     margin-left: 0.5rem; font-size: 0.68rem; letter-spacing: 0.12em;
     text-transform: uppercase; opacity: 0.55; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
