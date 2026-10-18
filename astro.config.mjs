@@ -48,11 +48,13 @@ const i18nConfig = {
   }
 };
 
+const isPages = process.env.GITHUB_PAGES === "true";
+
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
- adapter: vercel(),
- site: "https://sourceaura.vercel.app",
+ adapter: isPages ? undefined : vercel(),
+ site: isPages ? "https://sourceaura.github.io" : "https://sourceaura.vercel.app",
  devToolbar: {
      enabled: false,
   },
