@@ -73,42 +73,22 @@ const { title, description, image = "/og.png" } = Astro.props;
     addCopyCodeButtons();
     setGiscusTheme();
 
-    const backToTop = document.getElementById("back-to-top");
-    backToTop?.addEventListener("click", (event) => scrollToTop(event));
+    // (back-to-top click lives in BackToTop.astro; the legacy theme/
+    // back-to-prev buttons below no longer exist — removed.)
 
-    const backToPrev = document.getElementById("back-to-prev");
-    backToPrev?.addEventListener("click", () => window.history.back());
+    // Global listeners bind once: init() re-runs on every view transition.
+    if (!window.__headGlobal) {
+      window.__headGlobal = true;
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (event) => {
+          if (localStorage.theme === "system") {
+            toggleTheme(event.matches);
+          }
+        });
 
-    const lightThemeButton = document.getElementById("light-theme-button");
-    lightThemeButton?.addEventListener("click", () => {
-      localStorage.setItem("theme", "light");
-      toggleTheme(false);
-      updateThemeButtons();
-    });
-
-    const darkThemeButton = document.getElementById("dark-theme-button");
-    darkThemeButton?.addEventListener("click", () => {
-      localStorage.setItem("theme", "dark");
-      toggleTheme(true);
-      updateThemeButtons();
-    });
-
-    const systemThemeButton = document.getElementById("system-theme-button");
-    systemThemeButton?.addEventListener("click", () => {
-      localStorage.setItem("theme", "system");
-      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
-      updateThemeButtons();
-    });
-
-    window
-      .matchMedia("(prefers-color-scheme: dark)")
-      .addEventListener("change", (event) => {
-        if (localStorage.theme === "system") {
-          toggleTheme(event.matches);
-        }
-      });
-
-    document.addEventListener("scroll", onScroll);
+      document.addEventListener("scroll", onScroll);
+    }
   }
 
   function updateThemeButtons() {
@@ -156,15 +136,6 @@ const { title, description, image = "/og.png" } = Astro.props;
     } else {
       document.documentElement.classList.remove("scrolled");
     }
-  }
-
-  function scrollToTop(event) {
-    event.preventDefault();
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({
-      top: 0,
-      behavior: reduce ? "auto" : "smooth",
-    });
   }
 
   function toggleTheme(dark) {
