@@ -123,7 +123,7 @@ footer {
    ARTICLE / PROSE
 ====================================================== */
 article {
-  @apply prose prose-neutral prose-invert max-w-full;
+  @apply prose prose-neutral dark:prose-invert max-w-full;
   @apply prose-img:mx-auto prose-img:my-auto;
   @apply prose-headings:font-semibold;
 }
