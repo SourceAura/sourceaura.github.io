@@ -171,7 +171,10 @@
   cursor: grab;
   -webkit-user-select: none;
   user-select: none;
-  touch-action: manipulation;
+  /* pan-y: vertical swipes still scroll the page, horizontal drags rotate
+     the carousel. `manipulation` let the browser steal ALL drags as scroll,
+     which killed rotation on touch devices. */
+  touch-action: pan-y;
 
   /* keep orb round */
   /* Billboard: cancel the parent chain's rotation exactly. The ring now carries
