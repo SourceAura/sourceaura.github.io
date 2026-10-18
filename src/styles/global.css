@@ -46,9 +46,16 @@
     --ui-text: hsl(var(--foreground));
     --ui-muted: hsl(var(--muted-foreground));
     --ui-border: hsl(var(--border));
+
+    /* ---- SITE ACCENTS (neon in dark) ---- */
+    --pc-accent: #7df9ff;
+    --pc-accent2: #b48cff;
   }
 
   .light {
+    --pc-accent: #0e7490;
+    --pc-accent2: #6d28d9;
+
     --background: 0 0% 98%;
     --foreground: 0 0% 0%;
 
