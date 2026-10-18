@@ -68,7 +68,10 @@ import Search from "astro-pagefind/components/Search";
     countEl = document.getElementById("pf-count");
   }
 
-  let isOpen = false;
+  // shared across script re-executions: Astro view transitions re-run this
+  // script, while the one-time document bindings below keep the FIRST run's
+  // scope. A module-level `let pf.open` goes stale after any navigation.
+  const pf = (window.__pf ??= { open: false });
   let scrollMemory = 0;
   let activeIdx = -1;
   let openerEl = null;
@@ -160,7 +163,7 @@ import Search from "astro-pagefind/components/Search";
     query();
     if (!backdrop || !container) return;
     openerEl = document.activeElement;
-    isOpen = true;
+    pf.open = true;
     backdrop.classList.remove("invisible", "pointer-events-none");
     backdrop.classList.add("visible");
     target = 0;
@@ -176,8 +179,8 @@ import Search from "astro-pagefind/components/Search";
 
   function closePagefind() {
     query();
-    if (!isOpen) return;
-    isOpen = false;
+    if (!pf.open) return;
+    pf.open = false;
     if (container) scrollMemory = container.scrollTop;
     target = -14;
     startSpring();
@@ -193,7 +196,7 @@ import Search from "astro-pagefind/components/Search";
     openerEl = null;
   }
 
-  window.togglePagefind = () => (isOpen ? closePagefind() : openPagefind());
+  window.togglePagefind = () => (pf.open ? closePagefind() : openPagefind());
 
   /* ── one-time document bindings (survive view transitions) ── */
 
@@ -219,7 +222,7 @@ import Search from "astro-pagefind/components/Search";
         window.togglePagefind();
         return;
       }
-      if (!isOpen) return;
+      if (!pf.open) return;
 
       if (e.key === "Escape") {
         closePagefind();
@@ -259,7 +262,7 @@ import Search from "astro-pagefind/components/Search";
     document.addEventListener("click", (e) => {
       // backdrop click closes
       const bd = document.getElementById("backdrop");
-      if (isOpen && bd && e.target === bd) closePagefind();
+      if (pf.open && bd && e.target === bd) closePagefind();
 
       // thumbnail click navigates
       const thumb = e.target.closest(".pagefind-ui__result-thumb");
@@ -280,7 +283,7 @@ import Search from "astro-pagefind/components/Search";
 
     // typing toggles the empty state live
     document.addEventListener("input", (e) => {
-      if (e.target?.closest?.("#search") && isOpen) refreshResults();
+      if (e.target?.closest?.("#search") && pf.open) refreshResults();
     });
   }
 
