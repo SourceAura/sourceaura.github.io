@@ -11,7 +11,7 @@ import Search from "astro-pagefind/components/Search";
   id="backdrop"
   class="pointer-events-none invisible fixed inset-0 z-40"
 >
-  <div id="pagefind-shell" class="flex justify-center">
+  <div id="pagefind-shell" class="flex items-center justify-center">
     <div id="pagefind-container" class="relative flex max-h-[70vh] w-full max-w-screen-sm flex-col overflow-hidden" role="dialog" aria-modal="true" aria-label="Search the site">
       <!-- corner brackets -->
       <span class="pf-bracket pf-tl" aria-hidden="true"></span>
@@ -285,8 +285,6 @@ import Search from "astro-pagefind/components/Search";
   }
 
   query();
-  const sh = document.getElementById("pagefind-shell");
-  if (sh) sh.style.marginTop = "calc(var(--header-height, 72px) + 12px)";
   applySpringStyles();
 </script>
 
@@ -297,13 +295,15 @@ import Search from "astro-pagefind/components/Search";
      ════════════════════════════════════════════════════════════ */
 
   #pagefind-shell {
-    --pf-bg: rgba(8, 10, 18, 0.8);
+    min-height: 100dvh;
+    padding: 1rem;
+    --pf-bg: rgba(8, 10, 18, 0.55);
     --pf-text: #e8ecf4;
     --pf-dim: rgba(232, 236, 244, 0.6);
     --pf-line: color-mix(in oklch, var(--pf-text) 14%, transparent);
   }
   html.light #pagefind-shell {
-    --pf-bg: rgba(250, 250, 252, 0.86);
+    --pf-bg: rgba(250, 250, 252, 0.62);
     --pf-text: #0b0e1a;
     --pf-dim: rgba(11, 14, 26, 0.6);
   }
@@ -328,8 +328,8 @@ import Search from "astro-pagefind/components/Search";
     border: 1px solid color-mix(in oklch, var(--pc-accent) 25%, transparent);
     border-radius: 18px;
     color: var(--pf-text);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow:
       0 12px 44px rgba(0, 0, 0, 0.35),
       0 0 40px color-mix(in oklch, var(--pc-accent) 8%, transparent);
