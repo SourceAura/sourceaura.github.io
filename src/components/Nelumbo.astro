@@ -345,12 +345,33 @@ import {
     s.setAttribute("data-reactions-enabled", "1");
     s.setAttribute("data-emit-metadata", "1");
     s.setAttribute("data-input-position", "bottom");
-    s.setAttribute("data-theme", "/giscus/nelumbo-hud.css");
+    s.setAttribute("data-theme", hudGiscusThemeUrl());
     s.setAttribute("data-lang", "en");
 
     hudGiscusWrapper.appendChild(s);
     hudGiscusBooted = true;
   }
+
+  function hudGiscusThemeUrl() {
+    return document.documentElement.classList.contains("light")
+      ? "/giscus/nelumbo-hud-light.css"
+      : "/giscus/nelumbo-hud.css";
+  }
+
+  // Keep the comments iframe on the page's theme: the cards are daylight
+  // glass in light mode, dark glass in dark mode — the thread must match.
+  new MutationObserver(() => {
+    if (!hudGiscusBooted) return;
+    const frame = hudGiscusWrapper?.querySelector("iframe.giscus-frame");
+    if (!frame || !frame.contentWindow) return;
+    frame.contentWindow.postMessage(
+      { giscus: { setConfig: { theme: hudGiscusThemeUrl() } } },
+      "https://giscus.app",
+    );
+  }).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
 
   function setHudGiscusTerm(term) {
     activeGiscusTerm = term;
@@ -536,15 +557,14 @@ import {
 
     // The comments card is a sibling, not a descendant, so it does not
     // inherit the accent vars. Mirror them so both cards share one mood.
+    // getComputedStyle resolves the full cascade: per-post inline override,
+    // else the page theme's global tokens (neon in dark, deep cyan in light).
     if (hudCommentsFrame) {
-      hudCommentsFrame.style.setProperty(
-        "--pc-accent",
-        hud.style.getPropertyValue("--pc-accent") || "#7df9ff",
-      );
-      hudCommentsFrame.style.setProperty(
-        "--pc-accent2",
-        hud.style.getPropertyValue("--pc-accent2") || "#b48cff",
-      );
+      const cs = getComputedStyle(hud);
+      const acc = cs.getPropertyValue("--pc-accent").trim();
+      const acc2 = cs.getPropertyValue("--pc-accent2").trim();
+      if (acc) hudCommentsFrame.style.setProperty("--pc-accent", acc);
+      if (acc2) hudCommentsFrame.style.setProperty("--pc-accent2", acc2);
     }
 
     if (!hud) return;
