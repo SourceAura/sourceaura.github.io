@@ -189,7 +189,7 @@ const posts = (await getCollection("petals"))
   /* ───────── SPINAL IGNITION — synthwave '84 timeline ───────── */
 
   .chronicle {
-    --sw-grad: linear-gradient(180deg, var(--sw1), var(--sw2) 48%, var(--sw3));
+
     position: relative;
     padding-left: 3rem;
   }
@@ -270,10 +270,13 @@ const posts = (await getCollection("petals"))
     border-color: color-mix(in oklch, var(--sw2) 45%, transparent);
   }
 
-  /* timestamps glow neon on the wire */
+  /* timestamps wear the terminal's gradient */
   .chron-date {
-    color: var(--sw1);
-    text-shadow: 0 0 14px color-mix(in oklch, var(--sw1) 55%, transparent);
+    background: var(--sw-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 10px color-mix(in oklch, var(--sw2) 40%, transparent));
   }
 
   @media (prefers-reduced-motion: reduce) {
