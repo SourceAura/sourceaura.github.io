@@ -56,7 +56,7 @@ const nextPost =
 <Layout title={post.data.title} description={post.data.description}>
   <Container>
     <!-- Ghost typography looming behind everything -->
-    <div class="ghost-title" aria-hidden="true">
+    <div class="ghost-title ghost-drift-center" aria-hidden="true">
       {post.data.title}
     </div>
 
@@ -106,7 +106,7 @@ const nextPost =
     <!-- ══════════════════════════════════════════
          ARTICLE — THE READING CHAMBER
          ══════════════════════════════════════════ -->
-    <article class="article-card" data-pagefind-body data-reveal>
+    <article class="article-card scan-sweep" data-pagefind-body data-reveal>
       <!-- HUD corner brackets -->
       <div class="corner-brackets" aria-hidden="true">
         <span class="bracket tl" />
@@ -489,7 +489,12 @@ const nextPost =
     align-items: center;
     gap: 0.4rem;
     padding: 0.4rem 0.8rem;
-    border-radius: 999px;
+    border-radius: 0;
+    clip-path: polygon(
+          9px 0, 100% 0,
+          100% calc(100% - 9px), calc(100% - 9px) 100%,
+          0 100%, 0 9px
+        );
     border: 1px solid color-mix(in oklch, var(--pc-accent) 30%, transparent);
     background: color-mix(in oklch, var(--pc-accent) 8%, transparent);
     font-size: 0.7rem;
