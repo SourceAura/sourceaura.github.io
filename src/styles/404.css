@@ -242,7 +242,17 @@
 .action-pill:hover {
   transform: translateY(-2px);
   border-color: #7df9ff;
-  box-shadow: 0 4px 16px rgba(125, 249, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(125, 249, 255, 0.2);}
+
+/* Light mode: dark-cyan pills stay readable on the light page */
+html.light .action-pill {
+  color: #0e7490;
+  border-color: rgba(14, 116, 144, 0.45);
+  background: linear-gradient(135deg, rgba(14,116,144,0.10), rgba(109,40,217,0.08));
+}
+html.light .action-pill:hover {
+  border-color: #0e7490;
+  box-shadow: 0 4px 16px rgba(14, 116, 144, 0.2);
 }
 
 .action-pill:active { transform: translateY(0); }
