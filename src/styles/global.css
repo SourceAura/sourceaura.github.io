@@ -151,3 +151,55 @@ pre {
   --astro-code-color-text: hsl(var(--foreground));
   --astro-code-color-background: hsl(var(--background));
 }
+
+/* ─────────────────────────────────────────────
+   Universal tooltips — any element with data-tip
+   ───────────────────────────────────────────── */
+[data-tip] {
+  position: relative;
+}
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translate(-50%, 4px);
+  padding: 0.32rem 0.62rem;
+  border-radius: 6px;
+  background: rgba(10, 12, 20, 0.94);
+  border: 1px solid color-mix(in oklch, var(--pc-accent, #8b5cf6) 35%, transparent);
+  color: #e8ecf4;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease, transform 160ms ease;
+  z-index: 200;
+}
+html.light [data-tip]::after {
+  background: rgba(250, 250, 252, 0.96);
+  color: #0b0e1a;
+}
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+/* below-variant: for buttons under a top bar (terminal chrome) */
+[data-tip-pos="below"]::after {
+  bottom: auto;
+  top: calc(100% + 9px);
+  transform: translate(-50%, -4px);
+}
+[data-tip-pos="below"]:hover::after,
+[data-tip-pos="below"]:focus-visible::after {
+  transform: translate(-50%, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-tip]::after {
+    transition: none;
+  }
+}
