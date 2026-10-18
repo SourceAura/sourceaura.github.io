@@ -13,25 +13,6 @@ import Container from "@components/Container.astro";
     <div class="ghost-title" aria-hidden="true">RÉSUMÉ</div>
 
     <!-- ══════════════════════════════════════════
-         CINEMATIC HERO — synthwave sun
-         ══════════════════════════════════════════ -->
-    <section class="hero" data-hero>
-      <div class="hero-frame">
-        <div class="hero-fallback" aria-hidden="true"></div>
-        <div class="sw-sun" aria-hidden="true"></div>
-        <div class="sw-grid" aria-hidden="true"></div>
-        <div class="hero-scanline" aria-hidden="true"></div>
-        <div class="hero-vignette" aria-hidden="true"></div>
-        <div class="hero-dotgrid" aria-hidden="true"></div>
-      </div>
-      <h1 class="hero-title" data-decrypt>0xSrcAura</h1>
-      <p class="hero-sub" data-decrypt>0xSrcAura — Web Developer · Entry-Level Cybersecurity</p>
-    </section>
-
-    <!-- ══════════════════════════════════════════
-         COMMAND DECK
-         ══════════════════════════════════════════ -->
-    <!-- ══════════════════════════════════════════
          TERMINAL VIEW (hidden until summoned)
          ══════════════════════════════════════════ -->
     <div class="article-card term-card" id="resume-term">
@@ -363,80 +344,6 @@ import Container from "@components/Container.astro";
     margin: 2rem 0 -1rem;
     text-align: center;
   }
-  .hero { position: relative; margin-bottom: 1.5rem; }
-  .hero-frame {
-    position: relative;
-    border-radius: 14px;
-    overflow: hidden;
-    min-height: 220px;
-    border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
-    background: color-mix(in oklch, currentColor 3%, transparent);
-  }
-  .hero-fallback {
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 50% 110%, color-mix(in oklch, var(--pc-accent, #8b5cf6) 22%, transparent), transparent),
-      radial-gradient(ellipse 40% 35% at 50% 40%, color-mix(in oklch, var(--pc-accent2, #22d3ee) 14%, transparent), transparent);
-  }
-  /* synthwave sun rising behind the name */
-  .sw-sun {
-    position: absolute;
-    left: 50%;
-    bottom: -38px;
-    width: 300px;
-    height: 300px;
-    transform: translateX(-50%);
-    border-radius: 50%;
-    background: linear-gradient(180deg, var(--sw1), var(--sw2) 55%, var(--sw3));
-    opacity: 0.5;
-    -webkit-mask-image: repeating-linear-gradient(180deg, black 0 14px, transparent 14px 20px);
-    mask-image: repeating-linear-gradient(180deg, black 0 14px, transparent 14px 20px);
-    filter: blur(1px) saturate(1.2);
-    pointer-events: none;
-  }
-  .sw-grid {
-    position: absolute; inset: auto 0 0 0; height: 90px; pointer-events: none;
-    background-image:
-      linear-gradient(color-mix(in oklch, var(--sw2) 35%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklch, var(--sw2) 35%, transparent) 1px, transparent 1px);
-    background-size: 34px 22px;
-    transform: perspective(220px) rotateX(48deg);
-    transform-origin: bottom;
-    opacity: 0.35;
-    -webkit-mask-image: linear-gradient(180deg, transparent, black 70%);
-    mask-image: linear-gradient(180deg, transparent, black 70%);
-  }
-  .hero-scanline {
-    position: absolute; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,0.12) 3px 4px);
-  }
-  .hero-vignette {
-    position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
-  }
-  html.light .hero-vignette {
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.14) 100%);
-  }
-  .hero-dotgrid {
-    position: absolute; inset: 0; pointer-events: none;
-    background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-  html.light .hero-frame::after {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(5,7,15,0.55), rgba(5,7,15,0.78));
-    pointer-events: none;
-  }
-  .hero-title {
-    position: absolute; bottom: 3.2rem; left: 1.5rem; right: 1.5rem;
-    font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin: 0; line-height: 1.15;
-    color: white; text-shadow: 0 0 20px rgba(0,0,0,0.8), 2px 2px 0 var(--pc-accent);
-  }
-  .hero-sub {
-    position: absolute; bottom: 1.4rem; left: 1.5rem; right: 1.5rem; margin: 0;
-    font-size: 0.95rem; opacity: 0.85; color: white; text-shadow: 0 1px 8px rgba(0,0,0,0.8);
-  }
-  .telemetry { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
   .chip {
     display: inline-flex; align-items: center; gap: 0.4rem;
     padding: 0.4rem 0.8rem; border-radius: 999px;
