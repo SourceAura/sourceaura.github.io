@@ -378,9 +378,9 @@ import Container from "@components/Container.astro";
       flex: none;
     }
     .beacon-dot.lab {
-      background: linear-gradient(135deg, #ff71ce 0%, #b967ff 52%, #ff9e00 100%);
+      background: linear-gradient(135deg, var(--sw1) 0%, var(--sw2) 52%, var(--sw3) 100%);
       box-shadow:
-        0 0 8px rgba(255, 113, 206, 0.85),
+        0 0 8px color-mix(in oklch, var(--sw2) 85%, transparent),
         0 0 2px rgba(255, 255, 255, 0.9);
       animation: beacon-pulse 2.2s ease-in-out infinite;
     }
@@ -504,7 +504,7 @@ import Container from "@components/Container.astro";
       font-size: 0.95rem;
       font-weight: 800;
       letter-spacing: 0.04em;
-      background: linear-gradient(90deg, #ff71ce, #b967ff 55%, #ff9e00);
+      background: linear-gradient(90deg, var(--sw1), var(--sw2) 55%, var(--sw3));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
