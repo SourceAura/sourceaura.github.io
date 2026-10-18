@@ -409,11 +409,11 @@ Quasar: a component that displays a StarField background.
       // meteors: rare visitors, never more than two
       if (
         !this._reduceMotion &&
-        this.meteors.length < 2 &&
+        this.meteors.length < 7 &&
         t >= this._nextMeteor
       ) {
         this.meteors.push(new Meteor(cx, cy, spread));
-        this._nextMeteor = t + 4500 + Math.random() * 5000;
+        this._nextMeteor = t + 2500 + Math.random() * 3500;
       }
       for (let i = this.meteors.length - 1; i >= 0; i--) {
         if (!this.meteors[i].update(dtSec, cx, cy, spread)) this.meteors.splice(i, 1);
