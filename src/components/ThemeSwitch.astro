@@ -128,12 +128,16 @@ ThemeSwitch: a Theme Switcher. Light/Dark
   // Initialize immediately (works on home + first load)
   initTheme();
 
-  // One global click handler (survives Astro transitions)
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-theme-toggle]");
-    if (!btn) return;
+  // One global click handler — guarded: this script re-runs on every
+  // view transition, and an unguarded binding flips the theme N times.
+  if (!window.__themeSwitch) {
+    window.__themeSwitch = true;
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-theme-toggle]");
+      if (!btn) return;
 
-    const next = html.classList.contains("dark") ? "light" : "dark";
-    applyTheme(next);
-  });
+      const next = html.classList.contains("dark") ? "light" : "dark";
+      applyTheme(next);
+    });
+  }
 </script>
