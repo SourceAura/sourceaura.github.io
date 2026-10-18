@@ -113,7 +113,13 @@ import Container from "@components/Container.astro";
       initStars();
       drawStars();
     }
-    window.addEventListener("resize", resize);
+    // This classic script re-runs per visit: one resize binding, and the
+    // starfield loop dies on swap instead of haunting a detached canvas.
+    if (!window.__voidResize) {
+      window.__voidResize = true;
+      window.addEventListener("resize", resize);
+    }
+    document.addEventListener("astro:before-swap", () => cancelAnimationFrame(raf), { once: true });
     resize();
 
     /* ── Decrypt headline ───────────────────── */
