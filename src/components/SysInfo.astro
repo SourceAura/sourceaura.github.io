@@ -305,6 +305,14 @@ import Container from "@components/Container.astro";
     const bScrim = document.getElementById("beacon-scrim");
     const bDot = document.getElementById("beacon-dot");
 
+    // The header carries a transform (PageFind lift), which would hijack
+    // position:fixed on descendants — the panel would center on the header
+    // bar and the scrim would shrink to a strip. They live on <body> instead.
+    if (bScrim && bScrim.parentElement !== document.body)
+      document.body.appendChild(bScrim);
+    if (bPanel && bPanel.parentElement !== document.body)
+      document.body.appendChild(bPanel);
+
     function renderBeacon() {
       const st = beaconState();
       if (bDot) {
@@ -357,6 +365,26 @@ import Container from "@components/Container.astro";
     }
 
     if (bScrim) bScrim.addEventListener("click", () => closeBeacon());
+
+    if (!window.__beaconKeys) {
+      window.__beaconKeys = true;
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const p = document.getElementById("beacon-panel");
+          if (p && !p.hidden) {
+            const btn = document.getElementById("beacon-btn");
+            p.hidden = true;
+            btn?.setAttribute("aria-expanded", "false");
+            const sc = document.getElementById("beacon-scrim");
+            if (sc && !sc.hidden) {
+              sc.classList.remove("visible");
+              window.setTimeout(() => { if (p.hidden) sc.hidden = true; }, 250);
+            }
+            btn?.focus({ preventScroll: true });
+          }
+        }
+      });
+    }
 
     if (bBtn && bPanel) {
       renderBeacon();
