@@ -205,6 +205,14 @@ const nextPost =
        Sample the hero image's dominant colour and tint the whole page. */
     const heroImg = document.querySelector("[data-hero-img]");
     const root = document.documentElement;
+    // Per-visit listeners die on swap; the petal's accent tint must not leak
+    // onto the next page (Layout's --petal-accent is already self-clearing).
+    const __cleanups = [];
+    document.addEventListener("astro:before-swap", () => {
+      root.style.removeProperty("--pc-accent");
+      root.style.removeProperty("--pc-accent2");
+      __cleanups.forEach((fn) => { try { fn(); } catch (_) {} });
+    }, { once: true });
 
     function rgbToHsl(r, g, b) {
       r /= 255; g /= 255; b /= 255;
@@ -278,12 +286,14 @@ const nextPost =
         progress.style.width = pct + "%";
         ticking = false;
       };
-      window.addEventListener("scroll", () => {
+      const onScroll = () => {
         if (!ticking) {
           requestAnimationFrame(update);
           ticking = true;
         }
-      }, { passive: true });
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      __cleanups.push(() => window.removeEventListener("scroll", onScroll));
       update();
     }
 
@@ -307,7 +317,7 @@ const nextPost =
     }
 
     /* ── Giscus message listener (counts) ────── */
-    window.addEventListener("message", (event) => {
+    const onGiscusMessage = (event) => {
       if (event.origin !== "https://giscus.app") return;
       const g = event.data?.giscus;
       if (!g || !g.discussion) return;
@@ -339,7 +349,9 @@ const nextPost =
           })
           .catch(console.error);
       }
-    });
+    };
+    window.addEventListener("message", onGiscusMessage);
+    __cleanups.push(() => window.removeEventListener("message", onGiscusMessage));
 
     /* ── Giscus toggle ───────────────────────── */
     const toggle = document.querySelector("[data-toggle-giscus]");
