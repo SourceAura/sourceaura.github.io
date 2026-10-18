@@ -3,11 +3,15 @@ import Container from "@components/Container.astro";
 ---
 
 <Container style="width: 260px; overflow: hidden; padding: 0 10px;">
-  <a
-    href="/euthymia"
-    aria-label="System information"
+  <button
+    id="beacon-btn"
+    type="button"
+    aria-expanded="false"
+    aria-haspopup="dialog"
+    aria-controls="beacon-panel"
+    aria-label="0xSrcAura's status — open now panel"
     class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
-    style="background-color: transparent; text-decoration: none;"
+    style="background-color: transparent; cursor: pointer;"
   >
     <canvas
       id="heartbeat"
@@ -25,10 +29,28 @@ import Container from "@components/Container.astro";
       <span aria-hidden="true" class="block" style="width: 80px;"></span>
 
       <span
-        class="glow-ring ml-auto h-1.5 w-1.5 rounded-full"
-        title="System vitals"></span>
+        id="beacon-dot"
+        class="beacon-dot ml-auto"
+        title="status"></span>
     </div>
-  </a>
+  </button>
+
+  <!-- BEACON NOW PANEL -->
+  <div id="beacon-panel" role="dialog" aria-label="Now" tabindex="-1" hidden>
+    <div class="bcn-head">
+      <span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span>
+      <span class="bcn-title">NOW</span>
+    </div>
+    <p id="bcn-status" class="bcn-status"></p>
+    <p id="bcn-sub" class="bcn-sub"></p>
+    <a id="bcn-book" class="bcn-book" href="mailto:sourceaura@proton.me?subject=Computer%20repair%20booking">
+      <span aria-hidden="true">⌁</span> Book a repair
+    </a>
+    <div class="bcn-links">
+      <a href="https://github.com/SourceAura" target="_blank" rel="noopener" data-tip="GitHub">gh ↗</a>
+      <a href="mailto:sourceaura@proton.me" data-tip="Email">mail</a>
+    </div>
+  </div>
 
   <script type="module">
     /* ===============================
@@ -227,33 +249,210 @@ import Container from "@components/Container.astro";
 
     if (reduceMotion) drawStatic();
     else frame();
+
+    /* ===============================
+       BEACON — status dot + NOW panel
+       =============================== */
+    // Flip BEACON_STATUS by hand when you want to override the clock:
+    // "auto" | "lab" | "bookings" | "rest"
+    const BEACON_STATUS = "auto";
+    // Swap for the real scheduling link when the Nashville ad goes live.
+    const BOOKING_URL = "mailto:sourceaura@proton.me?subject=Computer%20repair%20booking";
+
+    const BEACON_STATES = {
+      lab:      { label: "IN THE LAB",     sub: "the small hours are his hours", dot: "lab" },
+      bookings: { label: "TAKING BOOKINGS", sub: "computer repair — Nashville", dot: "lab" },
+      rest:     { label: "RECHARGING",      sub: "back in the small hours",      dot: "rest" },
+    };
+
+    function beaconState() {
+      if (BEACON_STATUS !== "auto") return BEACON_STATES[BEACON_STATUS] || BEACON_STATES.rest;
+      // his time, his rhythm: the lab runs 20:00–06:00 America/Chicago
+      const hour = Number(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/Chicago", hour: "numeric", hour12: false,
+        }).format(new Date())
+      );
+      return hour >= 20 || hour < 6 ? BEACON_STATES.lab : BEACON_STATES.rest;
+    }
+
+    const bBtn = document.getElementById("beacon-btn");
+    const bPanel = document.getElementById("beacon-panel");
+    const bDot = document.getElementById("beacon-dot");
+
+    function renderBeacon() {
+      const st = beaconState();
+      if (bDot) {
+        bDot.classList.toggle("lab", st.dot === "lab");
+        bDot.classList.toggle("rest", st.dot === "rest");
+        bDot.title = st.label.toLowerCase();
+      }
+      const pd = document.getElementById("bcn-dot");
+      if (pd) {
+        pd.classList.toggle("lab", st.dot === "lab");
+        pd.classList.toggle("rest", st.dot === "rest");
+      }
+      const s1 = document.getElementById("bcn-status");
+      const s2 = document.getElementById("bcn-sub");
+      if (s1) s1.textContent = st.label;
+      if (s2) s2.textContent = st.sub;
+      const bk = document.getElementById("bcn-book");
+      if (bk) bk.href = BOOKING_URL;
+    }
+
+    function placeBeacon() {
+      if (!bBtn || !bPanel) return;
+      const r = bBtn.getBoundingClientRect();
+      bPanel.style.top = Math.round(r.bottom + 10) + "px";
+      bPanel.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + "px";
+    }
+
+    function openBeacon() {
+      if (!bBtn || !bPanel || !bPanel.hidden) return;
+      renderBeacon();
+      bPanel.hidden = false;
+      placeBeacon();
+      bBtn.setAttribute("aria-expanded", "true");
+      bPanel.focus({ preventScroll: true });
+      document.addEventListener("pointerdown", outsideBeacon, { capture: true });
+      window.addEventListener("resize", closeBeacon);
+      window.addEventListener("scroll", closeBeacon, { capture: true });
+    }
+
+    function closeBeacon() {
+      if (!bBtn || !bPanel || bPanel.hidden) return;
+      bPanel.hidden = true;
+      bBtn.setAttribute("aria-expanded", "false");
+      document.removeEventListener("pointerdown", outsideBeacon, { capture: true });
+      window.removeEventListener("resize", closeBeacon);
+      window.removeEventListener("scroll", closeBeacon, { capture: true });
+      bBtn.focus({ preventScroll: true });
+    }
+
+    function outsideBeacon(e) {
+      if (bPanel && !bPanel.hidden && !bPanel.contains(e.target) && !bBtn.contains(e.target)) {
+        closeBeacon();
+      }
+    }
+
+    if (bBtn && bPanel) {
+      renderBeacon();
+      // refresh the dot's read on the hour, in case the page sits open
+      setInterval(renderBeacon, 15 * 60 * 1000);
+      bBtn.addEventListener("click", () => (bPanel.hidden ? openBeacon() : closeBeacon()));
+      bPanel.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeBeacon();
+      });
+    }
   </script>
 
   <style>
-    .glow-ring {
-      animation: pulse 3s infinite;
-      background-color: currentColor;
-      box-shadow: 0 0 6px currentColor;
+    /* beacon dot — synthwave gradient when live, dim when resting */
+    .beacon-dot {
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      flex: none;
+    }
+    .beacon-dot.lab {
+      background: linear-gradient(135deg, #ff71ce 0%, #b967ff 52%, #ff9e00 100%);
+      box-shadow:
+        0 0 8px rgba(255, 113, 206, 0.85),
+        0 0 2px rgba(255, 255, 255, 0.9);
+      animation: beacon-pulse 2.2s ease-in-out infinite;
+    }
+    .beacon-dot.rest {
+      background: color-mix(in oklch, currentColor 35%, transparent);
+      box-shadow: none;
+      opacity: 0.55;
+      animation: beacon-pulse 6s ease-in-out infinite;
+    }
+    @keyframes beacon-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.72; }
+      50% { transform: scale(1.3); opacity: 1; }
     }
 
-    .dark .glow-ring {
-      color: white;
+    /* NOW panel */
+    #beacon-panel {
+      position: fixed;
+      z-index: 60;
+      width: 248px;
+      padding: 14px 14px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(8, 10, 18, 0.86);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+      color: #fff;
+      outline: none;
     }
-
-    :root:not(.dark) .glow-ring {
+    html.light #beacon-panel {
+      background: rgba(250, 250, 252, 0.92);
+      border-color: rgba(0, 0, 0, 0.1);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
       color: #111;
     }
+    #beacon-panel[hidden] { display: none; }
+    .bcn-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .bcn-title {
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      opacity: 0.6;
+      font-weight: 700;
+    }
+    .bcn-status {
+      margin: 0 0 2px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: linear-gradient(90deg, #ff71ce, #b967ff 55%, #ff9e00);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .bcn-sub {
+      margin: 0 0 12px;
+      font-size: 0.78rem;
+      opacity: 0.62;
+    }
+    .bcn-book {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 12px;
+      margin-bottom: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #0a0a12;
+      background: linear-gradient(90deg, #ff71ce, #b967ff 55%, #ff9e00);
+      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    }
+    .bcn-book:hover { filter: brightness(1.1); }
+    .bcn-book:focus-visible { outline: 2px solid #ff71ce; outline-offset: 2px; }
+    .bcn-links {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+    .bcn-links a { color: inherit; text-decoration: none; }
+    .bcn-links a:hover { opacity: 1; text-decoration: underline; }
 
-    @keyframes pulse {
-      0% {
-        opacity: 0.6;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0.6;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      .beacon-dot.lab, .beacon-dot.rest { animation: none; }
     }
 
     #heartbeat {
