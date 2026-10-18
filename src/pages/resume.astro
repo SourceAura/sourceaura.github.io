@@ -99,6 +99,11 @@ import Container from "@components/Container.astro";
   </Container>
 
   <style>
+    /* Resume page scopes the site's accent tokens (same values as the petal page) */
+    :root {
+      --pc-accent: #7df9ff;
+      --pc-accent2: #b48cff;
+    }
     .ghost-title {
       position: relative;
       font-size: clamp(4rem, 14vw, 11rem);
@@ -141,7 +146,7 @@ import Container from "@components/Container.astro";
     .hero-title {
       position: absolute; bottom: 3.2rem; left: 1.5rem; right: 1.5rem;
       font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin: 0; line-height: 1.15;
-      color: white; text-shadow: 0 0 20px rgba(0,0,0,0.8), 2px 2px 0 var(--pc-accent, #8b5cf6);
+      color: white; text-shadow: 0 0 20px rgba(0,0,0,0.8), 2px 2px 0 var(--pc-accent);
     }
     .hero-sub {
       position: absolute; bottom: 1.4rem; left: 1.5rem; right: 1.5rem; margin: 0;
@@ -165,11 +170,11 @@ import Container from "@components/Container.astro";
       background: color-mix(in oklch, currentColor 3%, transparent);
       margin-bottom: 2rem;
     }
-    .article-content { padding: 2rem clamp(1.25rem, 4vw, 3rem); position: relative; z-index: 1; }
+    .article-content { padding: 2rem clamp(1.25rem, 4vw, 3rem); position: relative; z-index: 1; color: var(--ui-text); }
     .lede { font-size: 1.15rem; line-height: 1.7; opacity: 0.92; margin-bottom: 2rem; }
     .article h2 { margin-top: 2.25rem; }
     .article h3 { margin-top: 1.5rem; }
-    .dim { opacity: 0.55; font-weight: 400; }
+    .dim { opacity: 0.78; font-weight: 400; }
     .article-vignette, .article-dotgrid { position: absolute; inset: 0; pointer-events: none; }
     .article-vignette { background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%); }
     .article-dotgrid {
