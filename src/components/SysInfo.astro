@@ -48,6 +48,7 @@ import Container from "@components/Container.astro";
       <span class="bcn-now"><span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span> now</span>
       <span class="bcn-hint"><kbd>esc</kbd> close</span>
     </div>
+    <canvas id="bcn-spark" width="360" height="44" aria-hidden="true"></canvas>
     <p id="bcn-status" class="bcn-status"></p>
     <p id="bcn-sub" class="bcn-sub"></p>
     <hr class="bcn-rule" aria-hidden="true" />
@@ -102,10 +103,19 @@ import Container from "@components/Container.astro";
     const H = canvas.height;
     const MID = H / 2;
 
+    // panel sparkline — the pill's heartbeat unfolded
+    const spark = document.getElementById("bcn-spark");
+    const sctx = spark ? spark.getContext("2d") : null;
+    const SW = spark ? spark.width : 0;
+    const SH = spark ? spark.height : 0;
+    const SMID = SH / 2;
+    let sx = 0;
+
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let x = 0;
     let t = 0;
+    let bcnOpen = false; // NOW panel expanded — sparkline runs only then
 
     /* ===============================
        PAGEFIND COMPRESSION
@@ -238,6 +248,38 @@ import Container from "@components/Container.astro";
       ctx.stroke();
       ctx.shadowBlur = 0;
 
+      // the unfolded heartbeat — same wave, wider canvas, only while open
+      if (sctx && bcnOpen) {
+        sctx.globalCompositeOperation = "destination-out";
+        sctx.fillStyle = "rgba(0,0,0,0.08)";
+        sctx.fillRect(0, 0, SW, SH);
+        sctx.globalCompositeOperation = "source-over";
+
+        sctx.strokeStyle = `rgba(${rgb},0.85)`;
+        sctx.lineWidth = 1.2;
+        sctx.shadowColor = `rgba(${rgb},0.5)`;
+        sctx.shadowBlur = 5 + flare * 5;
+
+        sctx.beginPath();
+        for (let i = 0; i < 3; i++) {
+          const nx = sx / SW;
+          let wave =
+            Math.sin(nx * Math.PI * 4 + t) * baseAmplitude +
+            Math.sin(nx * Math.PI * 12 - t * 1.3) * (1.2 + moodInfluence);
+          if (flare > 0) {
+            wave += Math.sin(nx * Math.PI * 24 + t * 2) * flare * 2;
+          }
+          wave *= compression;
+          const sy = SMID + wave;
+          sctx.moveTo(sx, sy);
+          sctx.lineTo(sx + 1, sy);
+          sx += 1;
+          if (sx >= SW) sx = 0;
+        }
+        sctx.stroke();
+        sctx.shadowBlur = 0;
+      }
+
       drawParticles(rgb, lastWaveY, phase);
 
       flare *= 0.9;
@@ -256,7 +298,17 @@ import Container from "@components/Container.astro";
       ctx.stroke();
     }
 
-    if (reduceMotion) drawStatic();
+    function drawSparkStatic() {
+      if (!sctx) return;
+      sctx.clearRect(0, 0, SW, SH);
+      sctx.beginPath();
+      sctx.moveTo(0, SMID);
+      sctx.lineTo(SW, SMID);
+      sctx.strokeStyle = `rgba(${getRGB()},0.6)`;
+      sctx.stroke();
+    }
+
+    if (reduceMotion) { drawStatic(); drawSparkStatic(); }
     else frame();
 
     /* ===============================
@@ -337,6 +389,7 @@ import Container from "@components/Container.astro";
       if (!bBtn || !bPanel || !bPanel.hidden) return;
       renderBeacon();
       bPanel.hidden = false;
+      bcnOpen = true;
       if (bScrim) {
         bScrim.hidden = false;
         requestAnimationFrame(() => requestAnimationFrame(() => bScrim.classList.add("visible")));
@@ -349,6 +402,7 @@ import Container from "@components/Container.astro";
     function closeBeacon() {
       if (!bBtn || !bPanel || bPanel.hidden) return;
       bPanel.hidden = true;
+      bcnOpen = false;
       if (bScrim && !bScrim.hidden) {
         bScrim.classList.remove("visible");
         window.setTimeout(() => { if (bPanel.hidden) bScrim.hidden = true; }, 250);
@@ -374,6 +428,7 @@ import Container from "@components/Container.astro";
           if (p && !p.hidden) {
             const btn = document.getElementById("beacon-btn");
             p.hidden = true;
+            bcnOpen = false;
             btn?.setAttribute("aria-expanded", "false");
             const sc = document.getElementById("beacon-scrim");
             if (sc && !sc.hidden) {
@@ -534,6 +589,13 @@ import Container from "@components/Container.astro";
       padding: 1px 5px;
       margin: 0 1px;
       line-height: 1;
+    }
+    #bcn-spark {
+      display: block;
+      width: 100%;
+      height: 44px;
+      margin: 0.15rem 0 0.75rem;
+      opacity: 0.9;
     }
     .bcn-status {
       margin: 0 0 2px;
