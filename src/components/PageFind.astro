@@ -307,6 +307,7 @@ import Search from "astro-pagefind/components/Search";
     --pf-bg: rgba(8, 10, 18, 0.55);
     --pf-text: #fbf1c7;
     --pf-dim: rgba(251, 241, 199, 0.6);
+    --pf-accent: var(--petal-accent, var(--pf-accent));
     --pf-line: color-mix(in oklch, var(--pf-text) 14%, transparent);
   }
   html.light #pagefind-shell {
@@ -332,19 +333,19 @@ import Search from "astro-pagefind/components/Search";
   /* ── the panel ── */
   #pagefind-container {
     background: var(--pf-bg);
-    border: 1px solid color-mix(in oklch, var(--pc-accent) 25%, transparent);
+    border: 1px solid color-mix(in oklch, var(--pf-accent) 25%, transparent);
     border-radius: 18px;
     color: var(--pf-text);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow:
       0 12px 44px rgba(0, 0, 0, 0.35),
-      0 0 40px color-mix(in oklch, var(--pc-accent) 8%, transparent);
+      0 0 40px color-mix(in oklch, var(--pf-accent) 8%, transparent);
   }
   html.light #pagefind-container {
     box-shadow:
       0 12px 40px rgba(11, 14, 26, 0.14),
-      0 0 40px color-mix(in oklch, var(--pc-accent) 10%, transparent);
+      0 0 40px color-mix(in oklch, var(--pf-accent) 10%, transparent);
   }
 
   .pf-dots {
@@ -364,7 +365,7 @@ import Search from "astro-pagefind/components/Search";
     position: absolute;
     width: 16px;
     height: 16px;
-    border: 2px solid color-mix(in oklch, var(--pc-accent) 45%, transparent);
+    border: 2px solid color-mix(in oklch, var(--pf-accent) 45%, transparent);
     pointer-events: none;
     z-index: 3;
   }
@@ -395,7 +396,7 @@ import Search from "astro-pagefind/components/Search";
     background: color-mix(in oklch, var(--pf-text) 6%, transparent);
     border: 1px solid color-mix(in oklch, var(--pf-text) 16%, transparent);
     color: var(--pf-text);
-    caret-color: var(--pc-accent);
+    caret-color: var(--pf-accent);
     outline: none;
     box-shadow: none;
     font-size: 1rem;
@@ -405,17 +406,17 @@ import Search from "astro-pagefind/components/Search";
     color: var(--pf-dim);
   }
   #pagefind-container .pagefind-ui__search-input input:focus {
-    border-color: color-mix(in oklch, var(--pc-accent) 60%, transparent);
+    border-color: color-mix(in oklch, var(--pf-accent) 60%, transparent);
   }
   .mouse-focus #pagefind-container .pagefind-ui__search-input input:focus {
     box-shadow: 0 0 calc(12px + 18px * var(--qi, 0))
-      color-mix(in oklch, var(--pc-accent) 30%, transparent);
+      color-mix(in oklch, var(--pf-accent) 30%, transparent);
   }
   .keyboard-focus #pagefind-container .pagefind-ui__search-input input:focus {
     box-shadow:
-      0 0 0 1px color-mix(in oklch, var(--pc-accent) 70%, transparent),
+      0 0 0 1px color-mix(in oklch, var(--pf-accent) 70%, transparent),
       0 0 calc(16px + 22px * var(--qi, 0))
-        color-mix(in oklch, var(--pc-accent) 45%, transparent);
+        color-mix(in oklch, var(--pf-accent) 45%, transparent);
   }
 
   /* clear button: quiet */
@@ -450,8 +451,8 @@ import Search from "astro-pagefind/components/Search";
   }
   #pagefind-container .pagefind-ui__result:hover,
   #pagefind-container .pagefind-ui__result.pf-active {
-    border-color: color-mix(in oklch, var(--pc-accent) 45%, transparent);
-    background: color-mix(in oklch, var(--pc-accent) 9%, transparent);
+    border-color: color-mix(in oklch, var(--pf-accent) 45%, transparent);
+    background: color-mix(in oklch, var(--pf-accent) 9%, transparent);
   }
   #pagefind-container .pagefind-ui__result.pf-active {
     transform: translateX(3px);
@@ -472,7 +473,7 @@ import Search from "astro-pagefind/components/Search";
     text-decoration: none;
   }
   #pagefind-container .pagefind-ui__result-title a:hover {
-    color: var(--pc-accent);
+    color: var(--pf-accent);
   }
   #pagefind-container .pagefind-ui__result-excerpt {
     margin: 0;
@@ -483,7 +484,7 @@ import Search from "astro-pagefind/components/Search";
 
   /* matched terms: accent-lit, not invisible */
   #pagefind-container .pagefind-ui mark {
-    background: color-mix(in oklch, var(--pc-accent) 32%, transparent);
+    background: color-mix(in oklch, var(--pf-accent) 32%, transparent);
     color: inherit;
     border-radius: 4px;
     padding: 0 2px;
@@ -519,8 +520,8 @@ import Search from "astro-pagefind/components/Search";
     text-decoration: none;
     padding: 0.4rem 0.85rem;
     border-radius: 0;
-    border: 1px solid color-mix(in oklch, var(--pc-accent) 35%, transparent);
-    background: color-mix(in oklch, var(--pc-accent) 8%, transparent);
+    border: 1px solid color-mix(in oklch, var(--pf-accent) 35%, transparent);
+    background: color-mix(in oklch, var(--pf-accent) 8%, transparent);
     /* chamfered tag corners — edgy, no pills */
     clip-path: polygon(
       9px 0, 100% 0,
@@ -530,8 +531,8 @@ import Search from "astro-pagefind/components/Search";
     transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
   }
   .pf-qlink:hover {
-    border-color: color-mix(in oklch, var(--pc-accent) 70%, transparent);
-    background: color-mix(in oklch, var(--pc-accent) 16%, transparent);
+    border-color: color-mix(in oklch, var(--pf-accent) 70%, transparent);
+    background: color-mix(in oklch, var(--pf-accent) 16%, transparent);
     transform: translateY(-1px);
   }
 
@@ -548,7 +549,7 @@ import Search from "astro-pagefind/components/Search";
   }
   #pf-count {
     font-weight: 700;
-    color: var(--pc-accent);
+    color: var(--pf-accent);
   }
   #pf-count:empty {
     display: none;
@@ -583,7 +584,7 @@ import Search from "astro-pagefind/components/Search";
   }
 
   #pagefind-container .pagefind-ui ::selection {
-    background: color-mix(in oklch, var(--pc-accent) 35%, transparent);
+    background: color-mix(in oklch, var(--pf-accent) 35%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {
