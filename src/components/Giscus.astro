@@ -54,6 +54,20 @@ Giscus — chat-like styling via iframe-safe variables
     --color-social-reaction-border: color-mix(in oklch, white 20%, transparent);
   }
 
+  /* Light mode: same structure, dark-based */
+  html.light .giscus {
+    --color-bg-secondary: color-mix(in oklch, black 4%, transparent);
+    --color-border-primary: color-mix(in oklch, black 18%, transparent);
+    --color-border-secondary: color-mix(in oklch, black 12%, transparent);
+    --color-fg-default: #0b0e1a;
+    --color-fg-muted: rgba(0, 0, 0, 0.55);
+    --color-accent-fg: #0b0e1a;
+    --color-accent-emphasis: color-mix(in oklch, black 85%, transparent);
+    --color-input-bg: color-mix(in oklch, black 6%, transparent);
+    --color-input-border: color-mix(in oklch, black 20%, transparent);
+    --color-social-reaction-border: color-mix(in oklch, black 20%, transparent);
+  }
+
   /* soften iframe edges */
   .giscus-frame {
     background: transparent !important;
