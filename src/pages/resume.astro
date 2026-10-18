@@ -10,7 +10,7 @@ import Container from "@components/Container.astro";
 <Layout title="Resume" description="0xSrcAura — Web Developer, Entry-Level Cybersecurity">
   <Container>
     <!-- Ghost typography looming behind everything -->
-    <div class="ghost-title" aria-hidden="true">RÉSUMÉ</div>
+    <div class="ghost-title ghost-drift-x" aria-hidden="true">RÉSUMÉ</div>
 
     <!-- ══════════════════════════════════════════
          TERMINAL VIEW (hidden until summoned)
@@ -43,7 +43,7 @@ import Container from "@components/Container.astro";
     <!-- ══════════════════════════════════════════
          ARTICLE — THE READING CHAMBER
          ══════════════════════════════════════════ -->
-    <article class="article-card" id="resume-doc" data-pagefind-body data-reveal hidden>
+    <article class="article-card scan-sweep" id="resume-doc" data-pagefind-body data-reveal hidden>
       <div class="corner-brackets" aria-hidden="true">
         <span class="bracket tl"></span><span class="bracket tr"></span>
         <span class="bracket bl"></span><span class="bracket br"></span>
@@ -326,15 +326,10 @@ import Container from "@components/Container.astro";
 <style>
   /* synthwave '84 tokens, scoped to the resume */
   :root {
-    --sw1: #ff71ce;
-    --sw2: #b967ff;
-    --sw3: #ff9e00;
     --sw-grad: linear-gradient(100deg, var(--sw1), var(--sw2) 50%, var(--sw3));
   }
   html.light {
-    --sw1: #d12d7f;
-    --sw2: #7c3aed;
-    --sw3: #c26a00;
+
   }
 
   .ghost-title {
@@ -348,17 +343,6 @@ import Container from "@components/Container.astro";
     margin: 2rem 0 -1rem;
     text-align: center;
   }
-  .chip {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    padding: 0.4rem 0.8rem; border-radius: 999px;
-    border: 1px solid color-mix(in oklch, var(--pc-accent, #8b5cf6) 30%, transparent);
-    background: color-mix(in oklch, var(--pc-accent, #8b5cf6) 8%, transparent);
-    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--pc-accent, #b7a6f5);
-  }
-  .chip-label { opacity: 0.6; }
-  .chip-link { text-decoration: none; cursor: pointer; transition: border-color 0.25s ease, transform 0.25s ease; }
-  .chip-link:hover { border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 60%, transparent); transform: translateY(-1px); }
 
   /* ── terminal ── */
   .term-card { margin-bottom: 2rem; overflow: hidden; }
@@ -448,7 +432,7 @@ import Container from "@components/Container.astro";
   .back-to-orbit:hover { opacity: 1; }
 
   @media (prefers-reduced-motion: reduce) {
-    .action-btn, .chip-link { transition: none; }
+    .action-btn { transition: none; }
   }
 </style>
 
