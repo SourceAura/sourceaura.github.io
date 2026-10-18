@@ -22,10 +22,13 @@ const SHOW_AFTER = 240;
 </div>
 
 <script define:vars={{ SHOW_AFTER }}>
-  const el = document.getElementById("back-to-top");
   const root = document.documentElement;
 
   function updateBackToTop() {
+    // Fresh query: the footer re-renders on every view transition, so a
+    // cached element would go stale after the first navigation.
+    const el = document.getElementById("back-to-top");
+    if (!el) return;
     const y =
       window.scrollY ||
       document.documentElement.scrollTop ||
@@ -41,18 +44,23 @@ const SHOW_AFTER = 240;
     el.setAttribute("aria-hidden", String(!active));
   }
 
-  // Always attach listeners once
-  window.addEventListener("scroll", updateBackToTop, { passive: true });
-  document.addEventListener("astro:page-load", updateBackToTop);
-  document.addEventListener("astro:after-swap", updateBackToTop);
+  // Attach once: this script re-runs on every view transition.
+  if (!window.__btt) {
+    window.__btt = true;
+    window.addEventListener("scroll", updateBackToTop, { passive: true });
+    document.addEventListener("astro:page-load", updateBackToTop);
+    document.addEventListener("astro:after-swap", updateBackToTop);
+  }
 
   updateBackToTop();
 
   const goTop = () => {
     window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   };
-  el.addEventListener("click", goTop);
-  el.addEventListener("keydown", (e) => {
+  // Per-visit element bindings: the button is fresh each transition.
+  const bttEl = document.getElementById("back-to-top");
+  bttEl?.addEventListener("click", goTop);
+  bttEl?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       goTop();
