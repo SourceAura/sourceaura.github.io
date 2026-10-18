@@ -1037,7 +1037,7 @@
   height: 100%;
   border-radius: 12px;
   overflow: hidden;
-  background: color-mix(in oklch, black 88%, transparent);
+  background: var(--hud-bg);
   border: 1px solid color-mix(in oklch, currentColor 20%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1049,7 +1049,7 @@
 .hud-comments-section .hud-frame {
   height: 100%;
   overflow: hidden;
-  background: color-mix(in oklch, black 88%, transparent);
+  background: var(--hud-bg);
   border: 1px solid color-mix(in oklch, currentColor 20%, transparent);
   border-radius: 12px;
   backdrop-filter: blur(12px);
@@ -1146,18 +1146,22 @@
    Inspiration: velkaa "Kinetic Interface v4", Blog Card Slider
    ════════════════════════════════════════════════════════════════ */
 
-/* palette: near-black glass, cyan-teal + violet, prism star.
+/* palette: glass instruments, cyan-teal + violet, prism star.
    Shared by the HUD card AND the comments card — one instrument, two modes.
-   (Neon accents are scoped here on purpose: on dark glass they stay neon
-   in both page themes, matching the card's dedicated dark giscus theme.) */
+   Accents flow from the global theme tokens (neon in dark, deep cyan/violet
+   in light); per-post JS may still override them inline on .hud. */
 .hud,
 .hud-comments-section {
   --hud-bg: rgba(8, 10, 18, 0.86);
   --hud-text: #e8ecf4;
   --hud-dim: rgba(232, 236, 244, 0.62);
-  --pc-accent: #7df9ff;
-  --pc-accent2: #b48cff;
   transition: --pc-accent 0.4s ease, --pc-accent2 0.4s ease;
+}
+html.light .hud,
+html.light .hud-comments-section {
+  --hud-bg: rgba(250, 250, 252, 0.92);
+  --hud-text: #0b0e1a;
+  --hud-dim: rgba(11, 14, 26, 0.62);
 }
 
 /* the shell condenses out of the particle field; close stays a quick fade */
@@ -1243,7 +1247,7 @@
     from var(--sa),
     transparent 0deg,
     transparent 300deg,
-    #fff 330deg,
+    var(--hud-text) 330deg,
     var(--pc-accent) 345deg,
     var(--pc-accent2) 355deg,
     transparent 360deg
@@ -1315,6 +1319,38 @@
   user-select: none;
   font-family: ui-monospace, monospace;
   z-index: 0;
+}
+
+/* ── light-mode chrome: same instrument, daylight glass ── */
+html.light .hud-chrome {
+  border-color: rgba(11, 14, 26, 0.1);
+  box-shadow:
+    inset 0 0 80px rgba(11, 14, 26, 0.06),
+    0 0 60px color-mix(in oklch, var(--pc-accent) 14%, transparent);
+}
+html.light .hud-vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 52%,
+    rgba(11, 14, 26, 0.16) 100%
+  );
+}
+html.light .hud-dots {
+  background-image: radial-gradient(
+    rgba(11, 14, 26, 0.08) 1px,
+    transparent 1.6px
+  );
+}
+html.light .hud-spot {
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in oklch, var(--pc-accent) 16%, transparent),
+    color-mix(in oklch, var(--pc-accent2) 8%, transparent) 45%,
+    transparent 70%
+  );
+}
+html.light .hud-ghost {
+  color: rgba(11, 14, 26, 0.055);
 }
 
 /* ── content floats above the chrome ── */
@@ -1585,11 +1621,8 @@
    chrome, same accent vars. Only the content differs. */
 .hud-comments-section .hud-frame {
   padding: 0;
-  border: none;
-  background: transparent;
   border-radius: 18px;
   overflow: hidden;
-  box-shadow: none;
 }
 
 /* ── reduced motion: calm fade, nothing else ── */
