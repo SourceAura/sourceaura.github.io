@@ -291,7 +291,7 @@ import {
   window.__nelumboCleanup = (() => {
   const __cleanups = [];
   const __track = (t, ev, fn, opt) => { t.addEventListener(ev, fn, opt); __cleanups.push(() => t.removeEventListener(ev, fn, opt)); };
-  const __interval = (fn, ms) => { const id = __interval(fn, ms); __cleanups.push(() => clearInterval(id)); return id; };
+  const __interval = (fn, ms) => { const id = setInterval(fn, ms); __cleanups.push(() => clearInterval(id)); return id; };
   const __observer = (o) => { __cleanups.push(() => o.disconnect()); return o; };
   const shell = document.getElementById("petal-shell");
   const ring = document.getElementById("petal-ring");
