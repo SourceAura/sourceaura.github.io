@@ -20,6 +20,7 @@ import Search from "astro-pagefind/components/Search";
       <span class="pf-bracket pf-br" aria-hidden="true"></span>
       <!-- dot grid -->
       <div class="pf-dots" aria-hidden="true"></div>
+      <span class="pf-star" aria-hidden="true"></span>
 
       <div class="pf-body">
         <Search
@@ -346,6 +347,26 @@ import Search from "astro-pagefind/components/Search";
     box-shadow:
       0 12px 40px rgba(11, 14, 26, 0.14),
       0 0 40px color-mix(in oklch, var(--pf-accent) 10%, transparent);
+  }
+
+  .pf-star {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--sa),
+      transparent 0deg,
+      transparent 300deg,
+      color-mix(in oklch, var(--pf-accent) 55%, transparent) 330deg,
+      var(--pf-accent) 350deg,
+      transparent 360deg
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: starOrbit 5s linear infinite;
+    pointer-events: none;
   }
 
   .pf-dots {
