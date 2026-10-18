@@ -36,8 +36,8 @@ import Container from "@components/Container.astro";
   </button>
 
   <!-- BEACON NOW PANEL -->
-  <div id="beacon-scrim" aria-hidden="true" hidden></div>
-  <div id="beacon-panel" role="dialog" aria-label="Now" tabindex="-1" hidden>
+  <div id="beacon-scrim" aria-hidden="true" hidden transition:persist></div>
+  <div id="beacon-panel" role="dialog" aria-label="Now" tabindex="-1" hidden transition:persist>
     <span class="bcn-corner tl" aria-hidden="true"></span>
     <span class="bcn-corner tr" aria-hidden="true"></span>
     <span class="bcn-corner bl" aria-hidden="true"></span>
@@ -48,12 +48,12 @@ import Container from "@components/Container.astro";
       <span class="bcn-now"><span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span> now</span>
       <span class="bcn-hint"><kbd>esc</kbd> close</span>
     </div>
-    <canvas id="bcn-spark" width="360" height="44" aria-hidden="true"></canvas>
     <p id="bcn-status" class="bcn-status"></p>
     <p id="bcn-sub" class="bcn-sub"></p>
     <hr class="bcn-rule" aria-hidden="true" />
     <a id="bcn-book" class="bcn-book" href="mailto:sourceaura@proton.me?subject=Computer%20repair%20booking">
-      <span aria-hidden="true">⌁</span> Book a repair
+      <canvas id="bcn-spark" aria-hidden="true"></canvas>
+      <span class="bcn-book-label"><span aria-hidden="true">⌁</span> Book a repair</span>
     </a>
     <div class="bcn-links">
       <a href="https://github.com/SourceAura" target="_blank" rel="noopener" data-tip="GitHub">gh ↗</a>
@@ -106,10 +106,12 @@ import Container from "@components/Container.astro";
     // panel sparkline — the pill's heartbeat unfolded
     const spark = document.getElementById("bcn-spark");
     const sctx = spark ? spark.getContext("2d") : null;
-    const SW = spark ? spark.width : 0;
-    const SH = spark ? spark.height : 0;
-    const SMID = SH / 2;
+    let SW = 0, SH = 0, SMID = 0;
     let sx = 0;
+    let sparkAccent = null; // rgb triplet from --petal-accent, read on open
+    function sparkStroke() {
+      return sparkAccent || getRGB();
+    }
 
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -255,9 +257,10 @@ import Container from "@components/Container.astro";
         sctx.fillRect(0, 0, SW, SH);
         sctx.globalCompositeOperation = "source-over";
 
-        sctx.strokeStyle = `rgba(${rgb},0.85)`;
+        const srgb = sparkStroke();
+        sctx.strokeStyle = `rgba(${srgb},0.85)`;
         sctx.lineWidth = 1.2;
-        sctx.shadowColor = `rgba(${rgb},0.5)`;
+        sctx.shadowColor = `rgba(${srgb},0.5)`;
         sctx.shadowBlur = 5 + flare * 5;
 
         sctx.beginPath();
@@ -304,7 +307,7 @@ import Container from "@components/Container.astro";
       sctx.beginPath();
       sctx.moveTo(0, SMID);
       sctx.lineTo(SW, SMID);
-      sctx.strokeStyle = `rgba(${getRGB()},0.6)`;
+      sctx.strokeStyle = `rgba(${sparkStroke()},0.6)`;
       sctx.stroke();
     }
 
@@ -390,6 +393,21 @@ import Container from "@components/Container.astro";
       renderBeacon();
       bPanel.hidden = false;
       bcnOpen = true;
+      // the sparkline lives in the button now: size to it, wear the petal accent
+      const bk = document.getElementById("bcn-book");
+      if (bk && spark && sctx) {
+        const r = bk.getBoundingClientRect();
+        SW = Math.max(1, Math.round(r.width));
+        SH = Math.max(1, Math.round(r.height));
+        SMID = SH / 2;
+        spark.width = SW;
+        spark.height = SH;
+        if (sx >= SW) sx = 0;
+        const av = getComputedStyle(document.documentElement)
+          .getPropertyValue("--petal-accent").trim();
+        const m = av.match(/(\d+)\D+(\d+)\D+(\d+)/);
+        sparkAccent = m ? `${m[1]},${m[2]},${m[3]}` : null;
+      }
       if (bScrim) {
         bScrim.hidden = false;
         requestAnimationFrame(() => requestAnimationFrame(() => bScrim.classList.add("visible")));
@@ -590,13 +608,6 @@ import Container from "@components/Container.astro";
       margin: 0 1px;
       line-height: 1;
     }
-    #bcn-spark {
-      display: block;
-      width: 100%;
-      height: 44px;
-      margin: 0.15rem 0 0.75rem;
-      opacity: 0.9;
-    }
     .bcn-status {
       margin: 0 0 2px;
       font-size: 1rem;
@@ -616,6 +627,8 @@ import Container from "@components/Container.astro";
     }
     /* chamfered tag button — velkaa play-button logic: monochrome, inverts on hover */
     .bcn-book {
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -651,6 +664,22 @@ import Container from "@components/Container.astro";
       border-color: #0b0e1a;
     }
     .bcn-book:focus-visible { outline: 2px solid var(--bcn-text); outline-offset: 2px; }
+    /* the heartbeat lives inside the button, behind the label */
+    #bcn-spark {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+    .bcn-book-label {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
     .bcn-links {
       display: flex;
       gap: 14px;
