@@ -93,6 +93,14 @@ const nextPost =
         <span class="chip-label">Read</span>
         <span class="chip-value">{rt}</span>
       </span>
+      <a class="chip chip-link" href={post.data.demoURL} target="_blank" rel="noopener">
+        <span class="chip-label">Demo</span>
+        <span class="chip-value">&#8599; Live</span>
+      </a>
+      <a class="chip chip-link" href={post.data.repoURL} target="_blank" rel="noopener">
+        <span class="chip-label">Code</span>
+        <span class="chip-value">&#8599; GitHub</span>
+      </a>
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -497,6 +505,18 @@ const nextPost =
 
   .chip-value {
     font-variant-numeric: tabular-nums;
+  }
+
+  .chip-link {
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.25s ease, transform 0.25s ease;
+    animation: none;
+  }
+
+  .chip-link:hover {
+    border-color: color-mix(in oklch, var(--pc-accent) 60%, transparent);
+    transform: translateY(-1px);
   }
 
   @keyframes chipPulse {
