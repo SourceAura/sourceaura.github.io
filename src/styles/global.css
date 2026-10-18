@@ -1,7 +1,6 @@
 @import "@fontsource-variable/geist/wght.css";
 @import "@fontsource-variable/geist-mono/wght.css";
 
-@import "./Calyx.css";
 @import "./motion.css";
 
 @tailwind base;
@@ -15,7 +14,7 @@
   :root {
     /* ---- Tailwind / shadcn system ---- */
     --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
+    --foreground: 48 86% 88%; /* oasis cream #fbf1c7 */
 
     --card: 0 0% 3%;
     --card-foreground: 0 0% 98%;
@@ -47,14 +46,21 @@
     --ui-muted: hsl(var(--muted-foreground));
     --ui-border: hsl(var(--border));
 
-    /* ---- SITE ACCENTS (neon in dark) ---- */
-    --pc-accent: #7df9ff;
-    --pc-accent2: #b48cff;
+    /* ---- SITE ACCENTS — Oasis '83 (teal/gold in dark) ---- */
+    --pc-accent: #43aa88;
+    --pc-accent2: #f6c309;
+    /* ---- OASIS GRADIENT STOPS — desert dusk (single source of truth) ---- */
+    --sw1: #a20042;
+    --sw2: #f6c309;
+    --sw3: #f19f20;
   }
 
   .light {
-    --pc-accent: #0e7490;
-    --pc-accent2: #6d28d9;
+    --pc-accent: #1e6f5c;
+    --pc-accent2: #8a6d00;
+    --sw1: #7d0033;
+    --sw2: #8a6d00;
+    --sw3: #b25f00;
 
     --background: 0 0% 98%;
     --foreground: 0 0% 0%;
@@ -105,6 +111,105 @@
 html,
 body {
   @apply size-full;
+}
+
+/* ════════════════════════════════════════════════════════════
+   OASIS ATMOSPHERE — velkaa depth in Oasis '83 light.
+   The whole viewport floats on teal/gold dusk over near-black.
+   ════════════════════════════════════════════════════════════ */
+body {
+  background:
+    radial-gradient(
+      ellipse 90% 60% at 50% -10%,
+      color-mix(in oklch, var(--pc-accent) 9%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at 50% 112%,
+      color-mix(in oklch, var(--sw2) 7%, transparent),
+      transparent 70%
+    ),
+    #070608;
+}
+html.light body {
+  background:
+    radial-gradient(
+      ellipse 90% 60% at 50% -10%,
+      color-mix(in oklch, var(--pc-accent) 10%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 70% 55% at 50% 112%,
+      color-mix(in oklch, var(--sw2) 8%, transparent),
+      transparent 70%
+    ),
+    #f7f3e8;
+}
+/* peripheral fade — breaks the rigid rectangle, velkaa-style */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(0, 0, 0, 0.34) 100%);
+}
+html.light body::after {
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(60, 45, 20, 0.12) 100%);
+}
+
+/* ════════════════════════════════════════════════════════════
+   GHOST DRIFT — velkaa's NIHILITY, set in motion.
+   Fixed-centered ghosts and in-flow ghosts each keep
+   their centering transform inside the keyframe.
+   ════════════════════════════════════════════════════════════ */
+@keyframes ghost-drift-center {
+  0%, 100% { transform: translate(-50%, -50%) translateX(-2.5%); }
+  50% { transform: translate(-50%, -50%) translateX(2.5%); }
+}
+@keyframes ghost-drift-x {
+  0%, 100% { transform: translateX(-2%); }
+  50% { transform: translateX(2%); }
+}
+@keyframes ghost-drift-y {
+  0%, 100% { transform: translateY(-50%) translateX(-2%); }
+  50% { transform: translateY(-50%) translateX(2%); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ghost-drift-center { animation: ghost-drift-center 42s ease-in-out infinite; }
+  .ghost-drift-x { animation: ghost-drift-x 38s ease-in-out infinite; }
+  .ghost-drift-y { animation: ghost-drift-y 46s ease-in-out infinite; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   SCAN SWEEP — velkaa's laser line, drawn across any surface
+   wearing .scan-sweep. Gated on reduced-motion.
+   ════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+  .scan-sweep { position: relative; overflow: hidden; }
+  .scan-sweep::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    top: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--pc-accent) 35%, transparent),
+      color-mix(in oklch, var(--sw2) 50%, transparent),
+      color-mix(in oklch, var(--pc-accent) 35%, transparent)
+    );
+    animation: scan-sweep-move 9s linear infinite;
+    pointer-events: none;
+    z-index: 5;
+  }
+  @keyframes scan-sweep-move {
+    0% { top: 0%; opacity: 0; }
+    6%, 94% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
 }
 
 body {
