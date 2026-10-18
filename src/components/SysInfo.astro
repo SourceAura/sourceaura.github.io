@@ -43,6 +43,7 @@ import Container from "@components/Container.astro";
     <span class="bcn-corner bl" aria-hidden="true"></span>
     <span class="bcn-corner br" aria-hidden="true"></span>
     <div class="bcn-dots" aria-hidden="true"></div>
+    <span class="bcn-star" aria-hidden="true"></span>
     <div class="bcn-body">
     <div class="bcn-strip">
       <span class="bcn-now"><span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span> now</span>
@@ -524,6 +525,7 @@ import Container from "@components/Container.astro";
       --bcn-bg: rgba(10, 10, 10, 0.65);
       --bcn-text: #f8f8ff;
       --bcn-dim: rgba(248, 248, 255, 0.55);
+      --bcn-accent: var(--petal-accent, var(--pc-accent));
       position: fixed;
       top: 50%;
       left: 50%;
@@ -573,6 +575,26 @@ import Container from "@components/Container.astro";
     .bcn-corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; border-top-right-radius: 5px; }
     .bcn-corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; border-bottom-left-radius: 5px; }
     .bcn-corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; border-bottom-right-radius: 5px; }
+    .bcn-star {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.5px;
+      background: conic-gradient(
+        from var(--sa),
+        transparent 0deg,
+        transparent 300deg,
+        color-mix(in oklch, var(--bcn-accent) 55%, transparent) 330deg,
+        var(--bcn-accent) 350deg,
+        transparent 360deg
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      animation: starOrbit 5s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
     .bcn-body {
       position: relative;
       z-index: 1;
