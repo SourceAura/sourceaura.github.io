@@ -178,6 +178,19 @@ body:has(#home-telemetry) #qi-root {
   .pf-star, .bcn-star { animation: none !important; }
 }
 
+/* touch: footer control cluster meets the 44px minimum on coarse pointers */
+@media (pointer: coarse) {
+  .footer-controls button,
+  .footer-controls a,
+  #language-toggle,
+  #back-to-top,
+  .connect-trigger,
+  [data-theme-toggle] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 /* peripheral fade — breaks the rigid rectangle, velkaa-style */
 body::after {
   content: "";
