@@ -160,7 +160,9 @@ import "../styles/404.css";
 
     <!-- GAME SCRIPT (UNCHANGED) -->
     <script is:inline>
-      document.addEventListener("DOMContentLoaded", function () {
+      // init runs immediately: DOMContentLoaded never fires after view
+      // transitions, and this classic script re-executes on every visit.
+      function initEuthymiaGame() {
         let qi = 100;
         let focus = 100;
         let experience = 0;
@@ -458,7 +460,8 @@ import "../styles/404.css";
         };
 
         updateHUD();
-      });
+      }
+      initEuthymiaGame();
     </script>
 
     <!-- VISUAL EFFECTS SCRIPT (does not touch game logic) -->
@@ -466,24 +469,28 @@ import "../styles/404.css";
       (() => {
         const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
         const pointerFine = matchMedia("(pointer: fine)").matches;
+        // intervals cleared when leaving the page — this script re-runs per visit
+        const fxTimers = [];
+        document.addEventListener("astro:before-swap",
+          () => fxTimers.forEach(clearInterval), { once: true });
 
         /* ── Ascension progress bar ───────────── */
         const ascensionFill = document.getElementById("ascensionFill");
         if (ascensionFill) {
-          setInterval(() => {
+          fxTimers.push(setInterval(() => {
             const xp = parseInt(document.getElementById("experience")?.textContent) || 0;
             const level = parseInt(document.getElementById("euthymiaLevel")?.textContent) || 1;
             const requiredXP = (level + 1) * 100;
             const pct = Math.min((xp / requiredXP) * 100, 100);
             ascensionFill.style.width = pct + "%";
-          }, 500);
+          }, 500));
         }
 
         /* ── Level-up flare ────────────────────── */
         let lastLevel = 1;
         const flare = document.querySelector(".level-flare");
         if (flare) {
-          setInterval(() => {
+          fxTimers.push(setInterval(() => {
             const level = parseInt(document.getElementById("euthymiaLevel")?.textContent) || 1;
             if (level > lastLevel) {
               lastLevel = level;
@@ -492,7 +499,7 @@ import "../styles/404.css";
                 setTimeout(() => flare.classList.remove("is-active"), 1000);
               }
             }
-          }, 500);
+          }, 500));
         }
 
         /* ── Action pill spark bursts ──────────── */
