@@ -1,0 +1,37 @@
+---
+title: "Valence: Ghost in the Shell"
+description: "A voice-driven XR shell for Linux — rituals, not gestures. Local-first, nothing leaves the machine."
+date: "2026-10-18"
+demoURL: "https://github.com/SourceAura/Valence"
+repoURL: "https://github.com/SourceAura/Valence"
+image:
+  src: "/images/valence.png"
+  alt: "Valence: Ghost in the Shell"
+draft: false
+---
+
+> Every other XR shell tries to be a better desktop. Valence is a better mind.
+
+**Valence** is a voice-driven shell for Linux — the first layer of an XR operating environment I'm building toward. You speak; the machine listens, understands, and acts. A quiet familiar named **Luci** lives in it.
+
+## The pillars
+
+1. **Rituals, not gestures** — voice commands as deliberate spoken rituals, not memorized hand waves.
+2. **The shell is alive** — Luci, a quiet familiar, is the presence you talk to.
+3. **Time as a place** — the interface treats time spatially.
+4. **The room breathes with you** — focus-state input (Muse headband) shapes the environment.
+5. **Breach vision** — a bug-bounty security layer woven into the shell itself.
+6. **Poetry in the walls** — the interface speaks back in language worth reading.
+
+## The engineering (Phase 1, verified)
+
+- **Full voice loop, live on Linux** — a Whisper `tiny.en` pipeline with a vocabulary-biased prompt hears the wake word ("Luci", also heard as "Lucy"), dispatches the command, and the niri compositor backend switches the live workspace. Verified end-to-end: spoken "luci, zen" → `valence mode zen` → the room changes.
+- **Real audio engineering** — device selection via `VALENCE_MIC_DEVICE`, S16/S24/S32 format fallback for finicky USB mics, peak-normalization to 0.95 so quiet mics still hear.
+- **20/20 test suite green** before every commit. One commit per phase, roadmap-driven.
+- **Local-first by doctrine** — nothing leaves the machine. No cloud, no accounts, no telemetry.
+
+## What it proves
+
+Voice pipelines, on-device ML integration, Linux compositor IPC, hardware-adjacent audio work, and the discipline to spec → build → verify in order. This is the project that becomes the XR cockpit's mind.
+
+*Status: Phase 1 complete. Phase 2 next.*
