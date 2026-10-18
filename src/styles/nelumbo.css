@@ -1007,6 +1007,7 @@
 
 /* Comments Section (mirror reflection of HUD) */
 .hud-comments-section {
+  color: var(--hud-text);
   position: fixed;
   left: var(--hud-x, 50%);
   top: calc(
@@ -1145,8 +1146,12 @@
    Inspiration: velkaa "Kinetic Interface v4", Blog Card Slider
    ════════════════════════════════════════════════════════════════ */
 
-/* palette: near-black glass, cyan-teal + violet, prism star */
-.hud {
+/* palette: near-black glass, cyan-teal + violet, prism star.
+   Shared by the HUD card AND the comments card — one instrument, two modes.
+   (Neon accents are scoped here on purpose: on dark glass they stay neon
+   in both page themes, matching the card's dedicated dark giscus theme.) */
+.hud,
+.hud-comments-section {
   --hud-bg: rgba(8, 10, 18, 0.86);
   --hud-text: #e8ecf4;
   --hud-dim: rgba(232, 236, 244, 0.62);
