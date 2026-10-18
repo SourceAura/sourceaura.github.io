@@ -72,26 +72,26 @@ const posts = (await getCollection("petals"))
   }
   {
     const entry = document.querySelector("#intro-log .log-entry");
-    if (!entry) return;
+    if (entry) {
+      const secondary = entry.querySelector(".log-line-secondary");
+      const primary = entry.querySelector(".log-line-primary");
 
-    const secondary = entry.querySelector(".log-line-secondary");
-    const primary = entry.querySelector(".log-line-primary");
+      // Bottom line fades first (definition releases)
+      setTimeout(() => {
+        secondary?.classList.add("fade-out");
+      }, 2200);
 
-    // Bottom line fades first (definition releases)
-    setTimeout(() => {
-      secondary?.classList.add("fade-out");
-    }, 2200);
+      // Top line fades later (description lingers)
+      setTimeout(() => {
+        primary?.classList.add("fade-out");
+      }, 3600);
 
-    // Top line fades later (description lingers)
-    setTimeout(() => {
-      primary?.classList.add("fade-out");
-    }, 3600);
-
-    // Remove only after both have fully dissolved — then light the telemetry
-    setTimeout(() => {
-      entry.remove();
-      document.getElementById("home-telemetry")?.classList.add("lit");
-    }, 8200);
+      // Remove only after both have fully dissolved — then light the telemetry
+      setTimeout(() => {
+        entry.remove();
+        document.getElementById("home-telemetry")?.classList.add("lit");
+      }, 8200);
+    }
   }
 </script>
 
