@@ -285,6 +285,14 @@ import {
 </div>
 
 <script is:inline>
+  // This classic script re-runs on every view transition: tear down the
+  // previous visit's globals first, then re-init and register new cleanup.
+  window.__nelumboCleanup?.();
+  window.__nelumboCleanup = (() => {
+  const __cleanups = [];
+  const __track = (t, ev, fn, opt) => { t.addEventListener(ev, fn, opt); __cleanups.push(() => t.removeEventListener(ev, fn, opt)); };
+  const __interval = (fn, ms) => { const id = __interval(fn, ms); __cleanups.push(() => clearInterval(id)); return id; };
+  const __observer = (o) => { __cleanups.push(() => o.disconnect()); return o; };
   const shell = document.getElementById("petal-shell");
   const ring = document.getElementById("petal-ring");
   const items = ring ? [...ring.querySelectorAll(".carousel-item")] : [];
@@ -360,7 +368,7 @@ import {
 
   // Keep the comments iframe on the page's theme: the cards are daylight
   // glass in light mode, dark glass in dark mode — the thread must match.
-  new MutationObserver(() => {
+  __observer(new MutationObserver(() => {
     if (!hudGiscusBooted) return;
     const frame = hudGiscusWrapper?.querySelector("iframe.giscus-frame");
     if (!frame || !frame.contentWindow) return;
@@ -368,7 +376,7 @@ import {
       { giscus: { setConfig: { theme: hudGiscusThemeUrl() } } },
       "https://giscus.app",
     );
-  }).observe(document.documentElement, {
+  })).observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["class"],
   });
@@ -415,7 +423,7 @@ import {
     mountGiscusProbe(term);
   }
 
-  window.addEventListener("message", (event) => {
+  __track(window, "message", (event) => {
     if (event.origin !== "https://giscus.app") return;
 
     const g = event.data?.giscus;
@@ -626,7 +634,7 @@ import {
   });
 
   // Use capture phase to ensure this runs before any other handlers
-  document.addEventListener("click", (e) => {
+  __track(document, "click", (e) => {
     if (e.target === hudCommentsClose || hudCommentsClose?.contains(e.target)) {
       e.preventDefault();
       e.stopPropagation();
@@ -640,7 +648,7 @@ import {
     }
   }, true); // Use capture phase
 
-  window.addEventListener("keydown", (e) => {
+  __track(window, "keydown", (e) => {
     if (e.key !== "Escape") return;
     if (hudOpen) closeHud();
   });
@@ -665,7 +673,7 @@ import {
   // path. Inverting petalsOpen here and then calling closePetals() would make
   // it early-return on its own `if (!petalsOpen) return` guard, leaving the
   // shell stuck with data-petals-open set - the close direction never worked.
-  window.addEventListener("qi:toggle-petals", () => {
+  __track(window, "qi:toggle-petals", () => {
     if (petalsOpen) {
       closePetals();
       return;
@@ -696,7 +704,7 @@ import {
   );
 
   // Esc closes carousel when HUD isn't open
-  window.addEventListener("keydown", (e) => {
+  __track(window, "keydown", (e) => {
     if (e.key !== "Escape") return;
     if (hudOpen) return;
     closePetals();
@@ -741,7 +749,7 @@ import {
     omPulse = Number.isFinite(p) ? p : 0.5;
   };
   sampleOmPulse();
-  const omPulseTimer = setInterval(sampleOmPulse, 120);
+  const omPulseTimer = __interval(sampleOmPulse, 120);
 
   function getOmPulse() {
     return omPulse;
@@ -753,7 +761,7 @@ import {
   function updateRadius() {
     radius = mq.matches ? 220 : 300;
   }
-  mq.addEventListener("change", updateRadius);
+  __track(mq, "change", updateRadius);
   updateRadius();
 
   // ---------- Orbit: pointer parallax ----------
@@ -785,7 +793,7 @@ import {
     panRaf = settled ? 0 : requestAnimationFrame(panTick);
   }
 
-  window.addEventListener(
+  __track(window, 
     "pointermove",
     (e) => {
       panTargetX = (e.clientX / window.innerWidth - 0.5) * 2 * PARALLAX_X;
@@ -1168,8 +1176,8 @@ import {
     hud.style.setProperty("--seg-article-y", `${(imgY * 0.25).toFixed(2)}px`);
   }
 
-  window.addEventListener("resize", () => snapHudToDock(true));
-  window.addEventListener("scroll", () => snapHudToDock(true), {
+  __track(window, "resize", () => snapHudToDock(true));
+  __track(window, "scroll", () => snapHudToDock(true), {
     passive: true,
   });
 
@@ -1508,8 +1516,8 @@ import {
     rafId = requestAnimationFrame(tick);
   }
 
-  window.addEventListener("resize", updateTether, { passive: true });
-  document.addEventListener("astro:page-load", () => updateTether());
+  __track(window, "resize", updateTether, { passive: true });
+  __track(document, "astro:page-load", () => updateTether());
 
   function stop() {
     running = false;
@@ -1554,7 +1562,7 @@ import {
   stop();
   setRingTilt(false);
 
-  window.addEventListener(
+  __track(window, 
     "astro:before-swap",
     () => {
       clearInterval(omPulseTimer);
@@ -1615,7 +1623,7 @@ import {
   }
 
   // Keyboard: j/k or arrows scroll the article; Esc closes
-  document.addEventListener("keydown", (e) => {
+  __track(document, "keydown", (e) => {
     if (!hudOpen) return;
     if (e.key === "Escape") return; // handled above
     const ab = hud.querySelector(".hud-article-body");
@@ -1672,7 +1680,7 @@ import {
     const sync = () => {
       ghost.textContent = titleEl.textContent;
     };
-    new MutationObserver(sync).observe(titleEl, {
+    __observer(new MutationObserver(sync)).observe(titleEl, {
       childList: true,
       characterData: true,
       subtree: true,
@@ -1703,5 +1711,11 @@ import {
   }
 
 
+  })();
+
+  // rAF loops: pan physics + tether tick
+  __cleanups.push(() => { if (panRaf) cancelAnimationFrame(panRaf); });
+  __cleanups.push(() => { try { stop(); } catch (_) {} });
+  return () => { __cleanups.forEach((fn) => { try { fn(); } catch (_) {} }); };
   })();
 </script>
