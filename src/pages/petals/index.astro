@@ -24,6 +24,9 @@ const posts = (await getCollection("petals"))
   <Container>
     <!-- ───────────────── CHRONICLE DECK ───────────────── -->
     <section class="chronicle space-y-12 py-24" data-pagefind-body>
+      <div class="spine" aria-hidden="true">
+        <div class="spine-fill"></div>
+      </div>
       {
         posts.map((post, i) => {
           const d = new Date(post.data.date);
@@ -41,6 +44,7 @@ const posts = (await getCollection("petals"))
               data-reveal
               style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}
             >
+              <span class="node" aria-hidden="true"></span>
               <header class="chron-rail">
                 <span class="chron-idx">{String(i + 1).padStart(2, "0")}</span>
                 <span class="chron-date">
@@ -184,6 +188,113 @@ const posts = (await getCollection("petals"))
     font-size: 0.88rem;
   }
 
+  /* ───────── SPINAL IGNITION — synthwave '84 timeline ───────── */
+
+  .chronicle {
+    --sw1: #ff71ce;
+    --sw2: #b967ff;
+    --sw3: #ff9e00;
+    --sw-grad: linear-gradient(180deg, var(--sw1), var(--sw2) 48%, var(--sw3));
+    position: relative;
+    padding-left: 3rem;
+  }
+  html.light .chronicle {
+    --sw1: #d12d7f;
+    --sw2: #7c3aed;
+    --sw3: #c26a00;
+  }
+
+  .spine {
+    position: absolute;
+    left: 1rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 2px;
+    border-radius: 2px;
+    background: color-mix(in oklch, var(--sw2) 16%, transparent);
+  }
+  .spine-fill {
+    width: 100%;
+    height: calc(var(--spine-p, 0) * 100%);
+    border-radius: inherit;
+    background: var(--sw-grad);
+    box-shadow:
+      0 0 12px color-mix(in oklch, var(--sw1) 70%, transparent),
+      0 0 30px color-mix(in oklch, var(--sw2) 45%, transparent);
+  }
+
+  .chronicle-card {
+    position: relative;
+  }
+  .node {
+    position: absolute;
+    left: -2rem;
+    top: 1.15rem;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: color-mix(in oklch, var(--sw2) 30%, transparent);
+    border: 1px solid color-mix(in oklch, var(--sw2) 55%, transparent);
+    transition:
+      background 0.4s ease,
+      box-shadow 0.4s ease,
+      border-color 0.4s ease;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .chronicle-card.ignited .node {
+    background: var(--sw-grad);
+    border-color: transparent;
+    box-shadow:
+      0 0 10px var(--sw1),
+      0 0 24px color-mix(in oklch, var(--sw2) 80%, transparent);
+  }
+  .chronicle-card.ignited .node::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid var(--sw1);
+    animation: nodePing 0.9s ease-out 1;
+    pointer-events: none;
+  }
+  @keyframes nodePing {
+    from {
+      transform: scale(0.5);
+      opacity: 0.9;
+    }
+    to {
+      transform: scale(1.7);
+      opacity: 0;
+    }
+  }
+
+  /* ignited card carries a breath of the gradient on its border */
+  .chronicle-card.ignited {
+    border-color: color-mix(in oklch, var(--sw2) 45%, transparent);
+  }
+
+  /* timestamps glow neon on the wire */
+  .chron-date {
+    color: var(--sw1);
+    text-shadow: 0 0 14px color-mix(in oklch, var(--sw1) 55%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spine-fill {
+      transition: none;
+    }
+    .chronicle-card.ignited .node::after {
+      animation: none;
+      display: none;
+    }
+    .node,
+    .chronicle-card.ignited {
+      transition: none;
+    }
+  }
+
   /* ───────── RESPONSIVE ───────── */
 
   @media (max-width: 640px) {
@@ -194,5 +305,58 @@ const posts = (await getCollection("petals"))
     .chron-thumb {
       aspect-ratio: 16 / 9;
     }
+
+    .chronicle {
+      padding-left: 2.25rem;
+    }
+    .spine {
+      left: 0.65rem;
+    }
+    .node {
+      left: -1.6rem;
+    }
   }
 </style>
+
+<script is:inline>
+  // Spinal ignition: scroll-driven synthwave spine + node ignition.
+  // Re-runs cleanly across Astro view transitions (tears down the prior run).
+  (() => {
+    const section = document.querySelector(".chronicle");
+    if (!section) return;
+
+    if (window.__spineIO) window.__spineIO.disconnect();
+    if (window.__spineScroll)
+      window.removeEventListener("scroll", window.__spineScroll);
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const cards = [...section.querySelectorAll(".chronicle-card")];
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) {
+            en.target.classList.add("ignited");
+            io.unobserve(en.target);
+          }
+        });
+      },
+      { threshold: 0.35 },
+    );
+    cards.forEach((c) => io.observe(c));
+    window.__spineIO = io;
+
+    const onScroll = () => {
+      const r = section.getBoundingClientRect();
+      const span = Math.max(1, r.height - window.innerHeight * 0.4);
+      const done = Math.min(
+        1,
+        Math.max(0, (-r.top + window.innerHeight * 0.35) / span),
+      );
+      section.style.setProperty("--spine-p", reduce ? 1 : done.toFixed(3));
+    };
+    window.__spineScroll = onScroll;
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
