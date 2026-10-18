@@ -8,6 +8,8 @@ import Container from "@components/Container.astro";
 import BackToTop from "@components/BackToTop.astro";
 import ThemeSwitch from "@components/ThemeSwitch.astro";
 import LanguageSwitcher from "@components/LanguageSwitcher.astro";
+
+const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
 ---
 
 <footer class="app-footer">
@@ -18,7 +20,26 @@ import LanguageSwitcher from "@components/LanguageSwitcher.astro";
 
       <!-- Right -->
       <div class="footer-controls">
-        <!-- <div class="language-switcher-wrapper"><LanguageSwitcher /></div> -->
+        <div class="language-switcher-wrapper"><LanguageSwitcher /></div>
+        {isResume && (
+          <button
+            id="resume-view-toggle"
+            class="resume-view-toggle"
+            type="button"
+            aria-pressed="true"
+            aria-label="Switch to document view"
+            data-tip="Document view"
+          >
+            <span class="rvt-term" aria-hidden="true" hidden>&gt;_</span>
+            <span class="rvt-doc" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2h8l4 4v16H6z" />
+                <path d="M14 2v4h4" />
+                <path d="M9 12h6M9 16h6" />
+              </svg>
+            </span>
+          </button>
+        )}
         <div class="theme-switch"><ThemeSwitch /></div>
         <div class="back-to-top"><BackToTop /></div>
       </div>
@@ -133,43 +154,61 @@ import LanguageSwitcher from "@components/LanguageSwitcher.astro";
       }
     }
 
+    /* dynamic accessibility cluster: language · view · theme · top */
     .footer-controls {
-      position: relative;
-      width: 96px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       height: 32px;
     }
 
     .language-switcher-wrapper {
-      position: absolute;
-      right: 32px;
-      top: 50%;
-      transform: translateY(-50%);
+      position: relative;
       z-index: 3;
     }
 
-    .theme-switch {
-      position: absolute;
-      right: 0;
-      z-index: 2;
+    /* the language menu opens upward from the fixed footer */
+    .footer-controls .language-dropdown {
+      top: auto;
+      bottom: calc(100% + 8px);
+    }
+
+    .resume-view-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+    .resume-view-toggle:hover {
+      border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 40%, transparent);
+      background: color-mix(in oklch, var(--pc-accent, #8b5cf6) 10%, transparent);
+    }
+    .resume-view-toggle:focus-visible {
+      outline: 2px solid var(--pc-accent, #8b5cf6);
+      outline-offset: 2px;
+    }
+    .rvt-term {
+      line-height: 1;
+    }
+    .rvt-doc {
+      display: flex;
     }
 
     .back-to-top {
-      position: absolute;
-      right: 0;
-      z-index: 1;
-      pointer-events: none;
+      display: none;
     }
-
-    html[data-backtotop] .theme-switch {
-      transform: translateX(-28px);
-    }
-
-    html[data-backtotop] .language-switcher-wrapper {
-      transform: translateY(-50%) translateX(-28px);
-    }
-
     html[data-backtotop] .back-to-top {
-      pointer-events: auto;
+      display: block;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -178,4 +217,35 @@ import LanguageSwitcher from "@components/LanguageSwitcher.astro";
       }
     }
   </style>
+
+<script is:inline>
+  // Resume view toggle: terminal <->
+  // The resume page owns the state; this button mirrors it via events.
+  (() => {
+    const sync = (terminal) => {
+      const b = document.getElementById("resume-view-toggle");
+      if (!b) return;
+      b.setAttribute("aria-pressed", String(terminal));
+      b.setAttribute("aria-label", terminal ? "Switch to document view" : "Switch to terminal view");
+      b.setAttribute("data-tip", terminal ? "Document view" : "Terminal view");
+      const t = b.querySelector(".rvt-term");
+      const d = b.querySelector(".rvt-doc");
+      if (t) t.hidden = terminal;
+      if (d) d.hidden = !terminal;
+    };
+    window.__syncResumeToggle = sync;
+
+    const btn = document.getElementById("resume-view-toggle");
+    if (btn) {
+      btn.addEventListener("click", () => window.dispatchEvent(new Event("resume:toggle-view")));
+      sync(true); // terminal-first default
+    }
+    if (!window.__rvtSync) {
+      window.__rvtSync = true;
+      window.addEventListener("resume:view", (e) => {
+        sync(!!(e.detail && e.detail.terminal));
+      });
+    }
+  })();
+</script>
 </footer>
