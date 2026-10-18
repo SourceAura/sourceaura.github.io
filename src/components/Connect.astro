@@ -21,7 +21,7 @@ import { HERO, SITE } from "@consts";
     <ul>
       <li class="connect-row">
         {HERO.GITHUB && (
-          <Link href={`https://${HERO.GITHUB}`} aria-label="GitHub">
+          <Link href={`https://${HERO.GITHUB}`} aria-label="GitHub" data-tip="GitHub">
             <!-- GitHub (original animated) -->
             <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
               <mask id="lineMdGithubLoop0">
@@ -57,7 +57,7 @@ import { HERO, SITE } from "@consts";
         )}
 
         {HERO.MASTODON && (
-          <Link href={`https://${HERO.MASTODON}`} aria-label="Mastodon">
+          <Link href={`https://${HERO.MASTODON}`} aria-label="Mastodon" data-tip="Mastodon">
             <!-- Mastodon (original animated) -->
             <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
               <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -79,7 +79,7 @@ import { HERO, SITE } from "@consts";
         )}
 
         {HERO.TWITTER && (
-          <Link href={`https://${HERO.TWITTER}`} aria-label="Twitter">
+          <Link href={`https://${HERO.TWITTER}`} aria-label="Twitter" data-tip="Twitter">
             <!-- Twitter / X (original animated) -->
             <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
               <g fill="currentColor">
@@ -117,7 +117,7 @@ import { HERO, SITE } from "@consts";
           </Link>
         )}
 
-        <Link href={`mailto:${SITE.EMAIL}`} aria-label="Email">
+        <Link href={`mailto:${SITE.EMAIL}`} aria-label="Email" data-tip="Email">
           <!-- Email (original animated) -->
           <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
             <mask id="lineMdEmailArrowRight0">
@@ -135,7 +135,7 @@ import { HERO, SITE } from "@consts";
         </Link>
 
 
-        <Link href="/petals" aria-label="Petals">
+        <Link href="/petals" aria-label="Petals" data-tip="Petals">
           <!-- Petals (original animated) -->
           <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
             <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -155,7 +155,7 @@ import { HERO, SITE } from "@consts";
           </svg>
         </Link>
 
-        <Link href="/resume" aria-label="Resume">
+        <Link href="/resume" aria-label="Resume" data-tip="Resume">
           <!-- Resume (original animated) -->
           <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
             <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
