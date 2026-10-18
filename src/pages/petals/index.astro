@@ -99,17 +99,15 @@ const posts = (await getCollection("petals"))
     text-decoration: none;
     color: inherit;
     background: color-mix(in oklch, currentColor 3%, transparent);
-    border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
+    border: none;
     transition:
       transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-      background 0.35s ease,
-      border-color 0.35s ease;
+      background 0.35s ease;
   }
 
   .chronicle-card:hover {
     transform: translateY(-3px);
     background: color-mix(in oklch, currentColor 6%, transparent);
-    border-color: color-mix(in oklch, currentColor 22%, transparent);
   }
 
   /* ───────── RAILS: index/date above, read time + CTA below ───────── */
