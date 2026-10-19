@@ -1,15 +1,14 @@
 ---
 /*
-Ase: Home anchor + Pagefind toggle
+Ase: Home anchor ("Back to orbit")
 - Navigates Home only if not already there
-- Pagefind persists independently of routing
 */
 import { SITE } from "@consts";
 ---
 
 <a
   href="/"
-  aria-label="Home & Search"
+  aria-label="Back to orbit"
   data-role="search-pill"
   class="group relative flex items-center
     overflow-hidden
@@ -30,15 +29,6 @@ import { SITE } from "@consts";
     if (onHome) {
       event.preventDefault();
     }
-
-    // Pagefind toggles independently of navigation
-    if (window.togglePagefind) {
-      window.togglePagefind();
-    } else if (window.openPagefind) {
-      window.openPagefind();
-    } else {
-      window.dispatchEvent(new Event('open-pagefind'));
-    }
   "
   onkeydown="
     if (event.key === 'Enter' || event.key === ' ') {
@@ -46,14 +36,6 @@ import { SITE } from "@consts";
 
       if (onHome) {
         event.preventDefault();
-      }
-
-      if (window.togglePagefind) {
-        window.togglePagefind();
-      } else if (window.openPagefind) {
-        window.openPagefind();
-      } else {
-        window.dispatchEvent(new Event('open-pagefind'));
       }
     }
   "
