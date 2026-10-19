@@ -4,6 +4,7 @@ PageFind: the search instrument.
 A command-palette in the site's own design language — glass panel, corner
 brackets, accent glow, telemetry — fully token-driven for both themes.
 Now unified with Insei: her voice on top, Pagefind results beneath.
+Command verbs (/book, /tour, /home) bypass full-text search.
 */
 import Search from "astro-pagefind/components/Search";
 ---
@@ -188,11 +189,89 @@ import Search from "astro-pagefind/components/Search";
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  const BOOKING_MAIL = "mailto:sourceaura@proton.me?subject=Computer%20repair%20booking";
+
   function renderInseiRegion() {
     query();
     if (!inseiOracle) return;
     const q = inputEl?.value.trim() ?? "";
+    const drawer = searchEl?.querySelector(".pagefind-ui__drawer");
     const insei = window.__insei;
+
+    // DIRECTIVE 3: Command verbs starting with /
+    if (q.startsWith("/")) {
+      // Verbs never hit Pagefind and never hit the intent engine
+      if (drawer) drawer.style.display = "none";
+      if (inseiDivider) inseiDivider.style.display = "none";
+      if (countEl) countEl.textContent = "";
+      if (quicklinks) quicklinks.style.display = "none";
+      stopPlaceholderRotation();
+      if (inseiWhisper) {
+        inseiWhisper.textContent = "";
+        inseiWhisper.style.display = "none";
+      }
+
+      const verb = q.toLowerCase().split(/\s+/)[0];
+
+      if (verb === "/book") {
+        if (inseiVoice) {
+          inseiVoice.innerHTML = "<p>Sensei takes repair commissions in Nashville — the mending of machines. Directing your dispatch.</p>";
+          inseiVoice.style.display = "";
+        }
+        if (inseiRoutes) {
+          inseiRoutes.innerHTML = "";
+          const link = document.createElement("a");
+          link.className = "pf-route-btn";
+          link.href = BOOKING_MAIL;
+          link.textContent = "commission sensei →";
+          inseiRoutes.appendChild(link);
+          inseiRoutes.style.display = "flex";
+        }
+      } else if (verb === "/tour") {
+        if (inseiVoice) {
+          inseiVoice.innerHTML = "<p>The docent walk through the sanctums is being forged; soon I shall guide you step by step.</p>";
+          inseiVoice.style.display = "";
+        }
+        if (inseiRoutes) {
+          inseiRoutes.innerHTML = "";
+          inseiRoutes.style.display = "none";
+        }
+      } else if (verb === "/home") {
+        if (inseiVoice) {
+          inseiVoice.innerHTML = "<p>Returning to orbit.</p>";
+          inseiVoice.style.display = "";
+        }
+        if (inseiRoutes) {
+          inseiRoutes.innerHTML = "";
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "pf-route-btn";
+          btn.textContent = "back to orbit →";
+          btn.addEventListener("click", () => {
+            closePagefind();
+            if (window.location.pathname !== "/") {
+              window.location.href = "/";
+            }
+          });
+          inseiRoutes.appendChild(btn);
+          inseiRoutes.style.display = "flex";
+        }
+      } else {
+        // Unknown /verb
+        if (inseiVoice) {
+          inseiVoice.innerHTML = "<p>I do not know that rite yet.</p>";
+          inseiVoice.style.display = "";
+        }
+        if (inseiRoutes) {
+          inseiRoutes.innerHTML = "";
+          inseiRoutes.style.display = "none";
+        }
+      }
+      return;
+    }
+
+    // Restore drawer for non-verb queries
+    if (drawer) drawer.style.display = "";
 
     if (!q) {
       // Empty input state
@@ -216,7 +295,7 @@ import Search from "astro-pagefind/components/Search";
       return;
     }
 
-    // Visitor is typing a query
+    // Visitor is typing a question / search query
     stopPlaceholderRotation();
     if (inseiWhisper) {
       inseiWhisper.textContent = "";
@@ -294,6 +373,12 @@ import Search from "astro-pagefind/components/Search";
   }
 
   function refreshResults() {
+    const q = inputEl?.value.trim() ?? "";
+    if (q.startsWith("/")) {
+      if (countEl) countEl.textContent = "";
+      if (quicklinks) quicklinks.style.display = "none";
+      return;
+    }
     const items = resultItems();
     activeIdx = -1;
     if (countEl) {
@@ -301,7 +386,6 @@ import Search from "astro-pagefind/components/Search";
         ? `${items.length} result${items.length === 1 ? "" : "s"}`
         : "";
     }
-    const q = inputEl?.value.trim();
     if (quicklinks) quicklinks.style.display = !q && !items.length ? "" : "none";
   }
 
@@ -440,6 +524,33 @@ import Search from "astro-pagefind/components/Search";
         }
         return;
       }
+
+      // Enter key: verb execution or result opening
+      if (e.key === "Enter") {
+        const q = inputEl?.value.trim() ?? "";
+        if (q.startsWith("/")) {
+          e.preventDefault();
+          const verb = q.toLowerCase().split(/\s+/)[0];
+          if (verb === "/home") {
+            closePagefind();
+            if (window.location.pathname !== "/") {
+              window.location.href = "/";
+            }
+            return;
+          }
+          if (verb === "/book") {
+            window.location.href = BOOKING_MAIL;
+            return;
+          }
+          return;
+        }
+        if (activeIdx >= 0) {
+          e.preventDefault();
+          openResult(activeIdx);
+          return;
+        }
+      }
+
       // command-palette navigation
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -447,9 +558,6 @@ import Search from "astro-pagefind/components/Search";
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setActive(activeIdx - 1 < 0 ? 0 : activeIdx - 1);
-      } else if (e.key === "Enter" && activeIdx >= 0) {
-        e.preventDefault();
-        openResult(activeIdx);
       }
     });
 
@@ -688,6 +796,9 @@ import Search from "astro-pagefind/components/Search";
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
     color: var(--pf-text);
     background: color-mix(in oklch, var(--pf-accent) 8%, transparent);
     border: 1px solid color-mix(in oklch, var(--pf-accent) 35%, transparent);
