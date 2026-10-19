@@ -3,6 +3,7 @@
 PageFind: the search instrument.
 A command-palette in the site's own design language — glass panel, corner
 brackets, accent glow, telemetry — fully token-driven for both themes.
+Now unified with Insei: her voice on top, Pagefind results beneath.
 */
 import Search from "astro-pagefind/components/Search";
 ---
@@ -34,6 +35,16 @@ import Search from "astro-pagefind/components/Search";
           }}
         />
 
+        <!-- Insei oracle region (whisper, answer, routes, quiet divider) -->
+        <div id="insei-oracle" class="insei-oracle" aria-live="polite">
+          <div id="insei-whisper" class="insei-whisper-line" style="display: none;"></div>
+          <div id="insei-voice" class="insei-voice-box" style="display: none;"></div>
+          <div id="insei-routes-pf" class="insei-routes-pf" style="display: none;"></div>
+          <div id="insei-divider" class="insei-divider" style="display: none;" aria-hidden="true">
+            <span class="insei-divider-label">the Ark holds:</span>
+          </div>
+        </div>
+
         <!-- quick links: the empty-state -->
         <div id="pf-quicklinks" aria-label="Quick links">
           <span class="pf-qlabel">JUMP TO</span>
@@ -58,6 +69,7 @@ import Search from "astro-pagefind/components/Search";
   // the DOM (and these nodes) may be swapped between opens, so nothing here
   // holds a stale reference across navigations.
   let backdrop, shell, container, searchEl, inputEl, quicklinks, countEl;
+  let inseiOracle, inseiWhisper, inseiVoice, inseiRoutes, inseiDivider;
 
   function query() {
     backdrop = document.getElementById("backdrop");
@@ -67,6 +79,16 @@ import Search from "astro-pagefind/components/Search";
     inputEl = document.querySelector("#search input");
     quicklinks = document.getElementById("pf-quicklinks");
     countEl = document.getElementById("pf-count");
+    inseiOracle = document.getElementById("insei-oracle");
+    inseiWhisper = document.getElementById("insei-whisper");
+    inseiVoice = document.getElementById("insei-voice");
+    inseiRoutes = document.getElementById("insei-routes-pf");
+    inseiDivider = document.getElementById("insei-divider");
+
+    const form = searchEl?.querySelector(".pagefind-ui__form");
+    if (form && inseiOracle && form.nextElementSibling !== inseiOracle) {
+      form.after(inseiOracle);
+    }
   }
 
   // shared across script re-executions: Astro view transitions re-run this
@@ -112,6 +134,146 @@ import Search from "astro-pagefind/components/Search";
     rafSpring = requestAnimationFrame(tickSpring);
   }
 
+  /* ── Insei Voice & Rotating Placeholders ── */
+
+  const PLACEHOLDER_PROMPTS = [
+    "Ask about the seven…",
+    "Book a repair…",
+    "Find the axolotl post…",
+  ];
+  let placeholderTimer = 0;
+  let placeholderIdx = 0;
+
+  function stopPlaceholderRotation() {
+    if (placeholderTimer) {
+      clearInterval(placeholderTimer);
+      placeholderTimer = 0;
+    }
+  }
+
+  function startPlaceholderRotation() {
+    stopPlaceholderRotation();
+    if (!inputEl) return;
+    inputEl.placeholder = PLACEHOLDER_PROMPTS[placeholderIdx % PLACEHOLDER_PROMPTS.length];
+    placeholderTimer = window.setInterval(() => {
+      placeholderIdx++;
+      if (inputEl && !inputEl.value.trim()) {
+        inputEl.placeholder = PLACEHOLDER_PROMPTS[placeholderIdx % PLACEHOLDER_PROMPTS.length];
+      }
+    }, 3200);
+  }
+
+  function inseiStatusLine() {
+    const hour = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Chicago",
+        hour: "numeric",
+        hour12: false,
+      }).format(new Date())
+    );
+    const inLab = hour >= 20 || hour < 6;
+    return inLab
+      ? "Sensei is in the lab — the small hours are sensei's hours."
+      : "Sensei rests — back in the lab in the small hours.";
+  }
+
+  function limitSentences(text, max = 3) {
+    if (!text) return "";
+    const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g);
+    if (!sentences || sentences.length <= max) return text;
+    return sentences.slice(0, max).join("").trim();
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function renderInseiRegion() {
+    query();
+    if (!inseiOracle) return;
+    const q = inputEl?.value.trim() ?? "";
+    const insei = window.__insei;
+
+    if (!q) {
+      // Empty input state
+      if (inseiVoice) { inseiVoice.innerHTML = ""; inseiVoice.style.display = "none"; }
+      if (inseiRoutes) { inseiRoutes.innerHTML = ""; inseiRoutes.style.display = "none"; }
+      if (inseiDivider) { inseiDivider.style.display = "none"; }
+
+      const lastWhisper = insei?.lastWhisper;
+      if (lastWhisper && inseiWhisper) {
+        stopPlaceholderRotation();
+        if (inputEl) inputEl.placeholder = "Ask of the ark or search…";
+        inseiWhisper.textContent = `“${lastWhisper}”`;
+        inseiWhisper.style.display = "";
+      } else {
+        if (inseiWhisper) {
+          inseiWhisper.textContent = "";
+          inseiWhisper.style.display = "none";
+        }
+        startPlaceholderRotation();
+      }
+      return;
+    }
+
+    // Visitor is typing a query
+    stopPlaceholderRotation();
+    if (inseiWhisper) {
+      inseiWhisper.textContent = "";
+      inseiWhisper.style.display = "none";
+    }
+
+    const ans = insei?.ask ? insei.ask(q, { statusLine: inseiStatusLine }) : null;
+    const isConfident = ans && ans.entryId && ans.entryId !== "fallback";
+
+    if (isConfident) {
+      const voiceText = limitSentences(ans.text, 3);
+      if (inseiVoice) {
+        inseiVoice.innerHTML = `<p>${escHtml(voiceText)}</p>`;
+        inseiVoice.style.display = "";
+      }
+      if (inseiRoutes) {
+        const routes = (ans.routes || []).filter((r) => r !== "boundaries");
+        if (routes.length) {
+          inseiRoutes.innerHTML = "";
+          routes.forEach((rId) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "pf-route-btn";
+            btn.textContent = insei?.routeLabel ? insei.routeLabel(rId) : rId;
+            btn.addEventListener("click", () => {
+              if (!inputEl) return;
+              inputEl.value = insei?.routeLabel ? insei.routeLabel(rId) : rId;
+              inputEl.focus();
+              inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+            inseiRoutes.appendChild(btn);
+          });
+          inseiRoutes.style.display = "flex";
+        } else {
+          inseiRoutes.innerHTML = "";
+          inseiRoutes.style.display = "none";
+        }
+      }
+      if (inseiDivider) {
+        inseiDivider.style.display = "flex";
+      }
+    } else {
+      // No confident answer — ceremonial yield to results
+      if (inseiVoice) {
+        inseiVoice.innerHTML = "<p>That is beyond what sensei has entrusted to me — the Ark yields its records below.</p>";
+        inseiVoice.style.display = "";
+      }
+      if (inseiRoutes) {
+        inseiRoutes.innerHTML = "";
+        inseiRoutes.style.display = "none";
+      }
+      if (inseiDivider) {
+        inseiDivider.style.display = "flex";
+      }
+    }
+  }
+
   /* ── results: count, empty state, keyboard nav ── */
 
   function resultItems() {
@@ -148,7 +310,10 @@ import Search from "astro-pagefind/components/Search";
     pfObserver?.disconnect();
     const target = document.getElementById("search");
     if (!target) return;
-    pfObserver = new MutationObserver(refreshResults);
+    pfObserver = new MutationObserver(() => {
+      refreshResults();
+      query();
+    });
     pfObserver.observe(target, { childList: true, subtree: true });
     refreshResults();
   }
@@ -172,14 +337,17 @@ import Search from "astro-pagefind/components/Search";
     else startSpring();
     attachObserver();
     window.dispatchEvent(new Event("open-pagefind"));
+    renderInseiRegion();
     requestAnimationFrame(() => {
       container.scrollTop = scrollMemory;
       document.querySelector("#search input")?.focus({ preventScroll: true });
+      renderInseiRegion();
     });
   }
 
   function closePagefind() {
     query();
+    stopPlaceholderRotation();
     if (!pf.open) return;
     pf.open = false;
     if (container) scrollMemory = container.scrollTop;
@@ -192,11 +360,15 @@ import Search from "astro-pagefind/components/Search";
     const input = document.querySelector("#search input");
     if (input) input.value = "";
     refreshResults();
+    renderInseiRegion();
+    window.dispatchEvent(new Event("close-pagefind"));
     // return focus to whatever opened search
     if (openerEl?.focus) openerEl.focus({ preventScroll: true });
     openerEl = null;
   }
 
+  window.openPagefind = openPagefind;
+  window.closePagefind = closePagefind;
   window.togglePagefind = () => (pf.open ? closePagefind() : openPagefind());
 
   /* ── one-time document bindings (survive view transitions) ── */
@@ -215,14 +387,35 @@ import Search from "astro-pagefind/components/Search";
     });
 
     document.addEventListener("keydown", (e) => {
-      // toggle
-      if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {
-        const tag = document.activeElement?.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const active = document.activeElement;
+      const tag = active?.tagName;
+      const isInput =
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        (active && (active.isContentEditable || active.getAttribute("contenteditable") === "true"));
+
+      // toggle: Cmd+K / Ctrl+K opens globally (preventDefault)
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
         e.preventDefault();
         window.togglePagefind();
         return;
       }
+
+      // 'a' or 'A' opens unified window, never while typing in an input/textarea/select/editable
+      if (!isInput && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "a" || e.key === "A")) {
+        e.preventDefault();
+        if (!pf.open) openPagefind();
+        return;
+      }
+
+      // '/' opens search when not in editable field
+      if (!isInput && !e.metaKey && !e.ctrlKey && !e.altKey && e.key === "/") {
+        e.preventDefault();
+        window.togglePagefind();
+        return;
+      }
+
       if (!pf.open) return;
 
       if (e.key === "Escape") {
@@ -262,8 +455,6 @@ import Search from "astro-pagefind/components/Search";
 
     document.addEventListener("click", (e) => {
       // click-away closes: anything in the overlay but outside the panel.
-      // (Clicks land on #pagefind-shell, not #backdrop itself, so an
-      // e.target === backdrop check never fires.)
       const bd = document.getElementById("backdrop");
       const pc = document.getElementById("pagefind-container");
       if (pf.open && bd && pc && bd.contains(e.target) && !pc.contains(e.target))
@@ -286,9 +477,12 @@ import Search from "astro-pagefind/components/Search";
       if (e.target.closest("#pf-quicklinks a")) closePagefind();
     });
 
-    // typing toggles the empty state live
+    // typing toggles the empty state live and renders Insei voice region
     document.addEventListener("input", (e) => {
-      if (e.target?.closest?.("#search") && pf.open) refreshResults();
+      if (e.target?.closest?.("#search") && pf.open) {
+        refreshResults();
+        renderInseiRegion();
+      }
     });
   }
 
@@ -452,6 +646,84 @@ import Search from "astro-pagefind/components/Search";
     color: var(--pf-text);
   }
 
+  /* ── Insei oracle region ── */
+  #insei-oracle {
+    margin: 0.6rem 0 0.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .insei-voice-box {
+    padding: 0.7rem 0.95rem;
+    border-radius: 10px;
+    background: color-mix(in oklch, var(--pf-text) 4%, transparent);
+    border: 1px solid color-mix(in oklch, var(--pf-accent) 30%, transparent);
+    border-left: 3px solid var(--pf-accent);
+    color: var(--pf-text);
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  .insei-voice-box p {
+    margin: 0;
+  }
+  .insei-whisper-line {
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--pf-dim);
+    padding: 0.45rem 0.75rem;
+    border-left: 2px solid color-mix(in oklch, var(--pf-accent) 45%, transparent);
+    background: color-mix(in oklch, var(--pf-text) 3%, transparent);
+    border-radius: 0 8px 8px 0;
+    line-height: 1.45;
+  }
+  .insei-routes-pf {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.2rem;
+  }
+  .pf-route-btn {
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--pf-text);
+    background: color-mix(in oklch, var(--pf-accent) 8%, transparent);
+    border: 1px solid color-mix(in oklch, var(--pf-accent) 35%, transparent);
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    clip-path: polygon(
+      7px 0, 100% 0,
+      100% calc(100% - 7px), calc(100% - 7px) 100%,
+      0 100%, 0 7px
+    );
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  }
+  .pf-route-btn:hover,
+  .pf-route-btn:focus-visible {
+    border-color: color-mix(in oklch, var(--pf-accent) 70%, transparent);
+    background: color-mix(in oklch, var(--pf-accent) 18%, transparent);
+    transform: translateY(-1px);
+    outline: none;
+  }
+  .insei-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.75rem 0 0.35rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pf-dim);
+  }
+  .insei-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: color-mix(in oklch, var(--pf-text) 14%, transparent);
+  }
+
   /* ── results ── */
   #pagefind-container .pagefind-ui__results-area {
     margin-top: 0.25rem;
@@ -613,7 +885,8 @@ import Search from "astro-pagefind/components/Search";
     #backdrop,
     #pagefind-shell,
     #pagefind-container .pagefind-ui__result,
-    .pf-qlink {
+    .pf-qlink,
+    .pf-route-btn {
       transition: none;
     }
   }

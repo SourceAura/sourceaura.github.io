@@ -539,18 +539,6 @@ import Container from "@components/Container.astro";
       });
     }
 
-    if (!window.__inseiKeys) {
-      window.__inseiKeys = true;
-      document.addEventListener("keydown", function (e) {
-        const tag = (document.activeElement && document.activeElement.tagName) || "";
-        if (tag === "INPUT" || tag === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey) return;
-        if (e.key === "a" || e.key === "A") {
-          const panel = document.getElementById("beacon-panel");
-          if (panel && panel.hidden) openBeacon();
-        }
-      });
-    }
-
     function openBeacon() {
       if (!bBtn || !bPanel || !bPanel.hidden) return;
       renderBeacon();
@@ -604,7 +592,7 @@ import Container from "@components/Container.astro";
     }
 
     function closeBeacon() {
-      if (!bBtn || !bPanel || bPanel.hidden) return;
+      if (!bBtn || !bPanel || !bPanel.hidden) return;
       bPanel.hidden = true;
       bcnOpen = false;
       if (inseiWakeTimer) {
