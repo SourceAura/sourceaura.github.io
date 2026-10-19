@@ -24,12 +24,12 @@
   border: none;
 }
 
-/* Hidden by default */
+/* Hidden by default — unified into Qi 3D rendering context without isolation */
 .carousel-layer {
   position: fixed;
   inset: 0;
   z-index: 6;
-  isolation: isolate;
+  transform-style: preserve-3d;
 
   opacity: 0;
   visibility: hidden;
@@ -54,8 +54,8 @@
 .carousel-viewport {
   pointer-events: auto;
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: var(--qi-center-x, 50%);
+  top: var(--qi-center-y, 50%);
 
   /* "orbit" layout: the camera is pitched down onto the ring and leans a few
      degrees toward the pointer, so the ring reads as a volume rather than a
@@ -216,19 +216,21 @@
 
 .petal-scanners {
   position: fixed;
-  left: 50%;
-  top: 50%;
+  left: var(--qi-center-x, 50%);
+  top: var(--qi-center-y, 50%);
   width: 0;
   height: 0;
   pointer-events: none;
-  transform: translate3d(-50%, -50%, 0);
+  transform-style: preserve-3d;
 }
 
 .petal-scanners-back {
   z-index: 1;
-} /* behind carousel-layer (z=6) */
+  transform: translate3d(-50%, -50%, -350px);
+} /* behind carousel and Qi core */
 .petal-scanners-front {
   z-index: 8;
+  transform: translate3d(-50%, -50%, 350px);
 } /* in front of orbs */
 
 /* Wrapper holds the X offset permanently (never animated) */

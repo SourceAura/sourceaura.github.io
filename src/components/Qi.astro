@@ -20,6 +20,8 @@
     inset: 0;
     z-index: 1; /* behind page content — home raises it, see global.css */
     pointer-events: none;
+    perspective: 1500px;
+    transform-style: preserve-3d;
   }
 
   /* When petals are open, Qi becomes non-interactive */
@@ -32,17 +34,18 @@
     inset: 0;
     width: 100%;
     height: 100%;
+    transform: translate3d(0, 0, 0);
     pointer-events: none;
   }
 
   /* ✅ Only the core area is interactive */
   #qi-core-hit {
     position: absolute;
-    left: 50%;
-    top: 50%;
+    left: var(--qi-center-x, 50%);
+    top: var(--qi-center-y, 50%);
     width: 144px;
     height: 144px;
-    transform: translate(-50%, -50%);
+    transform: translate3d(-50%, -50%, 0);
     border-radius: 999px;
     border: none;
     background: transparent;
@@ -549,8 +552,10 @@ if (!window.__qiInit) {
     if (!qi) return;
 
     const rect = qi.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
+    document.documentElement.style.setProperty("--qi-center-x", `${centerX}px`);
     document.documentElement.style.setProperty("--qi-center-y", `${centerY}px`);
   }
 

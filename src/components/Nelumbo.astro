@@ -296,6 +296,12 @@ import {
   const shell = document.getElementById("petal-shell");
   const ring = document.getElementById("petal-ring");
   const items = ring ? [...ring.querySelectorAll(".carousel-item")] : [];
+  const qiRoot = document.getElementById("qi-root");
+
+  // Teleport shell into qi-root so it shares the unified 3D rendering context
+  if (shell && qiRoot && shell.parentElement !== qiRoot) {
+    qiRoot.appendChild(shell);
+  }
 
   // Front beams keep ids (used for particles + default pulse target)
   const scanL = document.getElementById("petal-scan-left");
@@ -472,6 +478,14 @@ import {
   const getHudDock = () =>
     document.getElementById("hud-dock") ||
     document.querySelector("[data-hud-dock]");
+
+  const prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ORBIT_DRIFT = prefersReduced ? 0 : 0.045; // calm, continuous revolution around Qi
+
+  let isSpawning = false;
+  let spawnProgress = prefersReduced ? 1 : 0;
+  let spawnStartTime = 0;
+  const SPAWN_DURATION = 680;
 
   let petalsOpen = false;
 
@@ -657,6 +671,8 @@ import {
     if (!petalsOpen) return;
 
     petalsOpen = false;
+    isSpawning = false;
+    spawnProgress = prefersReduced ? 1 : 0;
     isDragging = false;
     isPointerDown = false;
     didMove = false;
@@ -681,7 +697,15 @@ import {
 
     petalsOpen = true;
     updatePetalVisibility();
-    scheduleIdleSnap();
+    if (!prefersReduced) {
+      isSpawning = true;
+      spawnProgress = 0;
+      spawnStartTime = performance.now();
+    } else {
+      isSpawning = false;
+      spawnProgress = 1;
+    }
+    if (prefersReduced) scheduleIdleSnap();
     start();
   });
 
@@ -1198,6 +1222,8 @@ import {
     if (!petalsOpen) {
       petalsOpen = true;
       updatePetalVisibility();
+      spawnProgress = 1;
+      isSpawning = false;
       start();
     }
 
@@ -1428,24 +1454,31 @@ import {
 
       if (i === active) activeSideVis = sideVis;
 
+      const spawnScale = prefersReduced ? 1 : 0.2 + 0.8 * spawnProgress;
+      const spawnDrift = prefersReduced ? 1 : (0.12 + 0.88 * spawnProgress);
+      const spawnAlpha = prefersReduced ? 1 : Math.min(1, spawnProgress * 1.6);
+
+      const effectiveRadius = radius * stretch * spawnDrift;
+
       const depthVis = 1 - depth * 0.7;
-      const finalVis = depthVis * sideVis;
+      const finalVis = depthVis * sideVis * spawnAlpha;
       el.style.opacity = finalVis.toFixed(3);
 
-      el.style.pointerEvents = sideVis < 0.08 ? "none" : "auto";
-      el.style.visibility = sideVis < 0.02 ? "hidden" : "visible";
+      el.style.pointerEvents = (sideVis < 0.08 || spawnProgress < 0.7) ? "none" : "auto";
+      el.style.visibility = (sideVis < 0.02 || spawnAlpha < 0.02) ? "hidden" : "visible";
 
       el.style.setProperty("--item-yaw", `${yawTotal}deg`);
 
       const PERSPECTIVE = 1500;
-      const z = Math.cos((yawTotal * Math.PI) / 180) * radius;
+      const z = Math.cos((yawTotal * Math.PI) / 180) * effectiveRadius;
       const sizeFix = (PERSPECTIVE - z) / PERSPECTIVE;
 
       el.style.setProperty("--size-fix", sizeFix.toFixed(6));
 
       el.style.transform = `translate(-50%, -50%)
         rotateY(${i * step}deg)
-        translateZ(${radius * stretch}px)`;
+        translateZ(${effectiveRadius}px)
+        scale(${spawnScale.toFixed(4)})`;
     });
 
     snapHudToDock(false);
@@ -1454,6 +1487,16 @@ import {
 
   function tick() {
     if (!running) return;
+
+    if (isSpawning) {
+      const elapsed = performance.now() - spawnStartTime;
+      const t = clamp(elapsed / SPAWN_DURATION, 0, 1);
+      spawnProgress = 1 - Math.pow(1 - t, 3);
+      if (t >= 1) {
+        isSpawning = false;
+        spawnProgress = 1;
+      }
+    }
 
     const om = getOmPulse();
     const breath = (om - 0.5) * 2;
@@ -1490,18 +1533,23 @@ import {
         snapElastic = 0;
         snapTarget = null;
       }
-    }
+    } else if (!isDragging && !isPointerDown && !hudOpen) {
+      if (prefersReduced) {
+        if (Math.abs(vel) < settleThreshold) {
+          const snapped = snapAngle(angle);
+          angle += (snapped - angle) * snapStrength;
 
-    if (snapTarget === null && Math.abs(vel) < settleThreshold) {
-      const snapped = snapAngle(angle);
-      angle += (snapped - angle) * snapStrength;
-
-      if (Math.abs(snapped - angle) < 0.001) {
-        angle = snapped;
-        vel = 0;
-        running = false;
-        applyTransforms();
-        return;
+          if (Math.abs(snapped - angle) < 0.001) {
+            angle = snapped;
+            vel = 0;
+            running = false;
+            applyTransforms();
+            return;
+          }
+        }
+      } else {
+        // Continuous smooth revolution around Qi
+        angle += ORBIT_DRIFT;
       }
     }
 
@@ -1716,6 +1764,11 @@ import {
   // rAF loops: pan physics + tether tick
   __cleanups.push(() => { if (panRaf) cancelAnimationFrame(panRaf); });
   __cleanups.push(() => { try { stop(); } catch (_) {} });
-  return () => { __cleanups.forEach((fn) => { try { fn(); } catch (_) {} }); };
+  return () => {
+    if (shell && shell.parentElement === qiRoot) {
+      shell.remove();
+    }
+    __cleanups.forEach((fn) => { try { fn(); } catch (_) {} });
+  };
   })();
 </script>

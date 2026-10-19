@@ -160,7 +160,8 @@ main {
   position: relative;
   z-index: 2;
 }
-body:has(#home-telemetry) #qi-root {
+body:has(#home-telemetry) #qi-root,
+body:has(#petal-shell[data-petals-open]) #qi-root {
   z-index: 3;
 }
 
