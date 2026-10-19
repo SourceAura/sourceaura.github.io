@@ -1,0 +1,69 @@
+---
+title: "Emaki"
+description: "A Proof-of-Skill passport dApp — every claim about my work, attested on-chain and verifiable in one click. Don't trust the resume — unroll the scroll."
+date: "2026-10-18"
+demoURL: "https://github.com/SourceAura/Emaki"
+repoURL: "https://github.com/SourceAura/Emaki"
+image:
+  src: "/images/emaki.jpg"
+  alt: "Emaki — the painted handscroll"
+draft: false
+---
+
+![Emaki — the painted handscroll](/images/emaki.jpg)
+
+> Don't trust the resume. Unroll the scroll.
+
+**Emaki (絵巻)** — the painted handscroll — is a Proof-of-Skill passport dApp.
+Every claim I make about my work — shipped projects, engineering stack,
+architecture, security findings — is published on-chain as an Ethereum
+Attestation Service attestation on **Base Sepolia**, verifiable by anyone in
+one click. No trust required. That's the whole pitch: a resume asks you to
+believe me; the scroll lets you check.
+
+## The scroll
+
+A traditional emaki unrolls right to left, section by section — and so does
+this one. Each claim is a panel of the handscroll. The `/` route is the
+scroll itself, `/attest` is the sign desk where new claims are authored and
+signed with a connected wallet, and `/admin/register` is the schema registry.
+Old form, new proof.
+
+## The claims
+
+Four attestation schemas, registered once on-chain, reused for every claim:
+
+- **ProjectShipped** — shipped systems and repositories: repo, URL, role, stack, date.
+- **SkillClaim** — stack and architecture claims, each with evidence.
+- **BountyReport** — security findings and disclosures, with severity and status.
+- **EmploymentClaim** — formal tenure and roles, dated on-chain.
+
+## Verify it yourself
+
+Zero trust required. Every claim card shows a truncated attestation UID:
+
+1. Click **Verify** — it opens the attestation on EASScan.
+2. Check the **attester address** — it should be `0xSrcAura`.
+3. Check the **schema and decoded data** — signed on-chain, not revoked.
+4. Follow the **transaction hash** to BaseScan Sepolia — block, timestamp, gas.
+
+If any link in that chain breaks, the claim is worthless. That's the point —
+the verification is the product.
+
+## The engineering
+
+- **Astro + bun, TypeScript strict** — the stack doctrine, loyally.
+- **wagmi/viem** for chain logic, **EAS SDK** for attestations, **Base Sepolia**
+  (chain `84532`) and nothing else — testnet only, never mainnet gas.
+- **EAS GraphQL indexer** for real-time attestation reads; decoded schema
+  fields, time-ordered.
+- **Callsign only** — every public surface says `0xSrcAura`. No government
+  name in code, comments, docs, or metadata. Ever.
+
+## The locked rules
+
+Testnet only. Callsign only. No secrets — never ask for, print, or commit
+private keys or seed phrases. Chamfered tags, mono micro-labels, Oasis '83:
+near-black surfaces, restrained amber and sand. No purple gradients, no noise.
+
+*Status: all but complete. The scroll is unrolled — now it needs witnesses.*
