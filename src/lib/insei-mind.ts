@@ -36,7 +36,7 @@ function routeLabel(id: string): string {
   const labels: Record<string, string> = {
     identity: "who is Insei",
     sanctums: "three sanctums",
-    valence: "valence",
+    insei: "insei",
     euthymia: "euthymia",
     emaki: "emaki",
     steel: "sensei's steel",

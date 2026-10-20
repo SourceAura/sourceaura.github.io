@@ -66,10 +66,10 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "the work",
     ],
     summary:
-      "Three sanctums, each a different discipline: Valence, sensei's local-first XR shell; Euthymia, a real-time multiplayer game; and Emaki, sensei's Web3 scroll of proof. Systems, games, protocols — range, not scatter.",
+      "Three sanctums, each a different discipline: Insei, sensei's local-first ghost in the shell; Euthymia, a real-time multiplayer game; and Emaki, sensei's Web3 scroll of proof. Systems, games, protocols — range, not scatter.",
     facts: [
       {
-        text: "Valence — XR shell / voice OS, private repo. “Every other XR shell strives to be a better desktop. Valence would be a better mind.”",
+        text: "Insei — the ghost in the shell / voice familiar, private repo. “Every other XR shell strives to be a better desktop. Insei would be a better mind.”",
       },
       {
         text: "Euthymia: Soul Alterz — multiplayer client/server in TypeScript, sealed auth, QC economy.",
@@ -80,13 +80,13 @@ export const INSEI_CORPUS: InseiEntry[] = [
         text: "Emaki — 絵巻, the painted handscroll. Deeds attested on-chain; you unroll the scroll and verify. “Do not trust sensei's resume — unroll the scroll.”",
       },
     ],
-    routes: ["valence", "euthymia", "emaki"],
+    routes: ["insei", "euthymia", "emaki"],
   },
   {
-    id: "valence",
-    topics: ["valence", "xr"],
+    id: "insei",
+    topics: ["insei", "xr"],
     triggers: [
-      "valence",
+      "insei",
       "ghost in the shell",
       "xr shell",
       "voice os",
@@ -94,7 +94,7 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "xr headset",
     ],
     summary:
-      "Valence is sensei's XR shell — a local-first voice OS with a quiet familiar attending it. Its creed: every other XR shell strives to be a better desktop; Valence would be a better mind.",
+      "Insei is sensei's ghost in the shell — a local-first voice familiar, keeper of this ark. Her creed: every other XR shell strives to be a better desktop; Insei would be a better mind.",
     facts: [
       {
         text: "Six tenets: rituals, not gestures · the shell is alive · time as a place · the room breathes with you · breach vision · poetry in the walls.",

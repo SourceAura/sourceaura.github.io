@@ -10,14 +10,14 @@
 
 export type InseiTrigger =
   | "dwell-euthymia"
-  | "dwell-valence"
+  | "dwell-insei"
   | "petal-loop"
   | "idle-quiet"
   | "resume-focus";
 
 const TRIGGER_ENTRY: Record<InseiTrigger, string | null> = {
   "dwell-euthymia": "trial-deep",
-  "dwell-valence": "valence",
+  "dwell-insei": "insei",
   "petal-loop": "sanctums",
   "idle-quiet": null, // eye-brighten only; the window greets on open
   "resume-focus": "service",
@@ -155,8 +155,8 @@ export function initInseiSense(): void {
     if (dwell >= 12 && (path.includes("/euthymia") || slug.includes("euthymia"))) {
       fire("dwell-euthymia");
     }
-    if (dwell >= 12 && slug.includes("valence")) {
-      fire("dwell-valence");
+    if (dwell >= 12 && slug.includes("insei")) {
+      fire("dwell-insei");
     }
     if (petalSlugs.size >= 3) {
       fire("petal-loop");

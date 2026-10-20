@@ -1,0 +1,39 @@
+---
+title: "Insei: Ghost in the Shell"
+description: "A local-first voice familiar for Linux — the ghost in the coming XR shell. She answers to Insei. She runs on the IPU."
+date: "2026-10-19"
+demoURL: "https://github.com/SourceAura/Insei"
+repoURL: "https://github.com/SourceAura/Insei"
+image:
+  src: "/images/insei.png"
+  alt: "Insei: Ghost in the Shell"
+draft: false
+---
+
+![Insei: Ghost in the Shell](/images/insei.png)
+
+> Every other XR shell tries to be a better desktop. Insei is a better mind.
+
+**Insei** (隕星 — *meteorite*) is a local-first voice familiar for Linux: the ghost in the XR shell now taking shape. The portfolio is the shooting star; she is what survives the fall and lands in your hand — an ore from both outside and inside this world, stone on one side and signal on the other, the two realities interfacing through her. You speak; she listens, understands, and acts — and she addresses her builder only as *sensei*. Seeded from the Valence archive. She outgrew the name.
+
+## The pillars
+
+1. **Rituals, not gestures** — voice commands as deliberate spoken rituals, not memorized hand waves.
+2. **The shell is alive** — Insei herself is the quiet familiar, the presence you talk to.
+3. **Time as a place** — the interface treats time spatially.
+4. **The room breathes with you** — focus-state input (Muse headband) shapes the environment.
+5. **Breach vision** — a bug-bounty security layer woven into the shell itself.
+6. **Poetry in the walls** — the interface speaks back in language worth reading.
+
+## The engineering (ground zero, verified)
+
+- **Full voice loop, live on Linux** — a Whisper `tiny.en` pipeline with a vocabulary-biased prompt hears the wake word ("Insei," also heard as "in say" / "insey"), dispatches the command, and the niri compositor backend switches the live workspace. Verified end-to-end: spoken "insei, zen" → `insei mode zen` → the room changes.
+- **Real audio engineering** — device selection via `INSEI_MIC_DEVICE`, S16/S24/S32 format fallback for finicky USB mics, peak-normalization to 0.95 so quiet mics still hear.
+- **132-test suite green.** Fresh repo, one clean seed commit, roadmap-driven.
+- **Local-first by doctrine** — nothing leaves the machine. No cloud, no accounts, no telemetry.
+
+## What is next
+
+The persona layer — the familiar, not just the interface. Then her home: the jurai-shell, built as the ship she will inhabit. And the crown, when it arrives, takes the whole thing XR.
+
+*Status: ground zero. Seeded 2026-10-19.*
