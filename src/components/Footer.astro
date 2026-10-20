@@ -15,24 +15,26 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
 <footer class="app-footer">
   <Container>
     <div class="flex items-center justify-between">
-      <!-- Left: oracle, theme, language, view - then Connect, untouched -->
-      <div class="footer-left">
-        <div class="footer-controls">
-          <button
-            id="pf-toggle"
-            class="pf-toggle"
-            type="button"
-            aria-label="Toggle search - Pagefind x Insei"
-            aria-expanded="false"
-            data-tip="Pagefind x Insei"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </svg>
-          </button>
-          <div class="theme-switch"><ThemeSwitch /></div>
-          <div class="language-switcher-wrapper"><LanguageSwitcher /></div>
+      <!-- Left -->
+      <Connect />
+
+      <!-- Right: oracle, theme, language, view, top -->
+      <div class="footer-controls">
+        <button
+          id="pf-toggle"
+          class="pf-toggle"
+          type="button"
+          aria-label="Toggle search - Pagefind x Insei"
+          aria-expanded="false"
+          data-tip="Pagefind x Insei"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+        </button>
+        <div class="theme-switch"><ThemeSwitch /></div>
+        <div class="language-switcher-wrapper"><LanguageSwitcher /></div>
         {isResume && (
           <button
             id="resume-view-toggle"
@@ -52,12 +54,8 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
             </span>
           </button>
         )}
-        </div>
-        <Connect />
+        <div class="back-to-top"><BackToTop /></div>
       </div>
-
-      <!-- Right: the up arrow, appearing and reappearing on scroll -->
-      <div class="back-to-top"><BackToTop /></div>
     </div>
   </Container>
 
@@ -169,13 +167,6 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
       }
     }
 
-    /* left cluster: controls (oracle, theme, language, view) + Connect */
-    .footer-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
     .pf-toggle {
       display: flex;
       align-items: center;
@@ -198,7 +189,7 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
       outline-offset: 2px;
     }
 
-    /* dynamic accessibility cluster: oracle, theme, language, view */
+    /* dynamic accessibility cluster (right): oracle, theme, language, view, top */
     .footer-controls {
       display: flex;
       align-items: center;
