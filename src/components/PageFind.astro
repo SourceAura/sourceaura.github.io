@@ -42,7 +42,7 @@ import Search from "astro-pagefind/components/Search";
           <div id="insei-voice" class="insei-voice-box" style="display: none;"></div>
           <div id="insei-routes-pf" class="insei-routes-pf" style="display: none;"></div>
           <div id="insei-divider" class="insei-divider" style="display: none;" aria-hidden="true">
-            <span class="insei-divider-label">the Ark holds:</span>
+            <span class="insei-divider-label">the Ark yields:</span>
           </div>
         </div>
 
@@ -316,6 +316,9 @@ import Search from "astro-pagefind/components/Search";
       if (inseiVoice) {
         inseiVoice.innerHTML = `<p>${escHtml(voiceText)}</p>`;
         inseiVoice.style.display = "";
+        inseiVoice.classList.remove("insei-unroll");
+        void inseiVoice.offsetWidth;
+        inseiVoice.classList.add("insei-unroll");
       }
       if (inseiRoutes) {
         const routes = (ans.routes || []).filter((r) => r !== "boundaries");
@@ -346,6 +349,9 @@ import Search from "astro-pagefind/components/Search";
       if (inseiVoice) {
         inseiVoice.innerHTML = "<p>That is beyond what sensei has entrusted to me — the Ark yields its records below.</p>";
         inseiVoice.style.display = "";
+        inseiVoice.classList.remove("insei-unroll");
+        void inseiVoice.offsetWidth;
+        inseiVoice.classList.add("insei-unroll");
       }
       if (inseiRoutes) {
         inseiRoutes.innerHTML = "";
@@ -387,7 +393,7 @@ import Search from "astro-pagefind/components/Search";
     if (countEl) {
       countEl.textContent =
         items.length && !pf.arkConfident
-          ? `The Ark holds ${items.length} record${items.length === 1 ? "" : "s"}`
+          ? `The Ark yields ${items.length} record${items.length === 1 ? "" : "s"}`
           : "";
     }
     if (quicklinks) quicklinks.style.display = !q && !items.length ? "" : "none";
@@ -679,7 +685,12 @@ import Search from "astro-pagefind/components/Search";
   #pagefind-container {
     background: var(--pf-bg);
     border: 1px solid color-mix(in oklch, var(--pf-accent) 25%, transparent);
-    border-radius: 18px;
+    border-radius: 0;
+    clip-path: polygon(
+      8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 8px) 100%,
+      0 100%, 0 8px
+    );
     color: var(--pf-text);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -805,13 +816,29 @@ import Search from "astro-pagefind/components/Search";
   }
   .insei-voice-box {
     padding: 0.7rem 0.95rem;
-    border-radius: 10px;
+    border-radius: 0;
+    clip-path: polygon(
+      8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 8px) 100%,
+      0 100%, 0 8px
+    );
     background: color-mix(in oklch, var(--pf-text) 4%, transparent);
     border: 1px solid color-mix(in oklch, var(--pf-accent) 30%, transparent);
     border-left: 3px solid var(--pf-accent);
     color: var(--pf-text);
     font-size: 0.85rem;
     line-height: 1.55;
+  }
+  .insei-voice-box.insei-unroll {
+    animation: emaki-unroll 450ms ease-out;
+  }
+  @keyframes emaki-unroll {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
   }
   .insei-voice-box p {
     margin: 0;
@@ -823,7 +850,12 @@ import Search from "astro-pagefind/components/Search";
     padding: 0.45rem 0.75rem;
     border-left: 2px solid color-mix(in oklch, var(--pf-accent) 45%, transparent);
     background: color-mix(in oklch, var(--pf-text) 3%, transparent);
-    border-radius: 0 8px 8px 0;
+    border-radius: 0;
+    clip-path: polygon(
+      8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 8px) 100%,
+      0 100%, 0 8px
+    );
     line-height: 1.45;
   }
   .insei-routes-pf {
@@ -1041,6 +1073,10 @@ import Search from "astro-pagefind/components/Search";
     .pf-qlink,
     .pf-route-btn {
       transition: none;
+    }
+    .insei-voice-box,
+    .insei-voice-box.insei-unroll {
+      animation: none !important;
     }
   }
 </style>
