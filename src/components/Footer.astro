@@ -15,12 +15,24 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
 <footer class="app-footer">
   <Container>
     <div class="flex items-center justify-between">
-      <!-- Left -->
-      <Connect />
-
-      <!-- Right -->
-      <div class="footer-controls">
-        <div class="language-switcher-wrapper"><LanguageSwitcher /></div>
+      <!-- Left: oracle, theme, language, view - then Connect, untouched -->
+      <div class="footer-left">
+        <div class="footer-controls">
+          <button
+            id="pf-toggle"
+            class="pf-toggle"
+            type="button"
+            aria-label="Toggle search - Pagefind x Insei"
+            aria-expanded="false"
+            data-tip="Pagefind x Insei"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+          </button>
+          <div class="theme-switch"><ThemeSwitch /></div>
+          <div class="language-switcher-wrapper"><LanguageSwitcher /></div>
         {isResume && (
           <button
             id="resume-view-toggle"
@@ -40,9 +52,12 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
             </span>
           </button>
         )}
-        <div class="theme-switch"><ThemeSwitch /></div>
-        <div class="back-to-top"><BackToTop /></div>
+        </div>
+        <Connect />
       </div>
+
+      <!-- Right: the up arrow, appearing and reappearing on scroll -->
+      <div class="back-to-top"><BackToTop /></div>
     </div>
   </Container>
 
@@ -154,7 +169,36 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
       }
     }
 
-    /* dynamic accessibility cluster: language · view · theme · top */
+    /* left cluster: controls (oracle, theme, language, view) + Connect */
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pf-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+    .pf-toggle:hover {
+      border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 40%, transparent);
+      background: color-mix(in oklch, var(--pc-accent, #8b5cf6) 10%, transparent);
+    }
+    .pf-toggle:focus-visible {
+      outline: 2px solid var(--pc-accent, #8b5cf6);
+      outline-offset: 2px;
+    }
+
+    /* dynamic accessibility cluster: oracle, theme, language, view */
     .footer-controls {
       display: flex;
       align-items: center;
@@ -247,6 +291,26 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
         sync(!!(e.detail && e.detail.terminal));
       });
     }
+  })();
+</script>
+
+<script is:inline>
+  // Pagefind x Insei toggle: the footer's code icon opens/closes the oracle.
+  (() => {
+    if (window.__pfToggleBound) return;
+    window.__pfToggleBound = true;
+    const sync = () => {
+      const b = document.getElementById("pf-toggle");
+      if (b) b.setAttribute("aria-expanded", String(!!(window.__pf && window.__pf.open)));
+    };
+    document.addEventListener("click", (e) => {
+      if (e.target && e.target.closest && e.target.closest("#pf-toggle")) {
+        if (window.togglePagefind) window.togglePagefind();
+        sync();
+      }
+    });
+    window.addEventListener("open-pagefind", sync);
+    window.addEventListener("close-pagefind", sync);
   })();
 </script>
 </footer>
