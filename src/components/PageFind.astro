@@ -340,9 +340,7 @@ import Search from "astro-pagefind/components/Search";
           inseiRoutes.style.display = "none";
         }
       }
-      if (inseiDivider) {
-        inseiDivider.style.display = "flex";
-      }
+      // divider visibility is driven by refreshResults() based on Pagefind results
     } else {
       // No confident answer — ceremonial yield to results
       if (inseiVoice) {
@@ -353,9 +351,7 @@ import Search from "astro-pagefind/components/Search";
         inseiRoutes.innerHTML = "";
         inseiRoutes.style.display = "none";
       }
-      if (inseiDivider) {
-        inseiDivider.style.display = "flex";
-      }
+      // divider visibility is driven by refreshResults() based on Pagefind results
     }
   }
 
@@ -383,6 +379,7 @@ import Search from "astro-pagefind/components/Search";
     if (q.startsWith("/")) {
       if (countEl) countEl.textContent = "";
       if (quicklinks) quicklinks.style.display = "none";
+      if (inseiDivider) inseiDivider.style.display = "none";
       return;
     }
     const items = resultItems();
@@ -394,6 +391,10 @@ import Search from "astro-pagefind/components/Search";
           : "";
     }
     if (quicklinks) quicklinks.style.display = !q && !items.length ? "" : "none";
+    // Divider on empty: hide #insei-divider whenever Pagefind returns zero results
+    if (inseiDivider) {
+      inseiDivider.style.display = q && items.length > 0 ? "flex" : "none";
+    }
   }
 
   let pfObserver;
@@ -444,6 +445,8 @@ import Search from "astro-pagefind/components/Search";
       }
     } catch {}
 
+    const drawer = searchEl?.querySelector(".pagefind-ui__drawer");
+    if (!inputEl?.value.trim() && drawer) drawer.style.display = "none";
     renderInseiRegion();
     requestAnimationFrame(() => {
       container.scrollTop = scrollMemory;
@@ -465,9 +468,15 @@ import Search from "astro-pagefind/components/Search";
       backdrop.classList.remove("visible");
     }
     const input = document.querySelector("#search input");
-    if (input) input.value = "";
-    refreshResults();
+    if (input) {
+      input.value = "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    const drawer = searchEl?.querySelector(".pagefind-ui__drawer");
+    if (drawer) drawer.style.display = "none";
+    if (inseiDivider) inseiDivider.style.display = "none";
     renderInseiRegion();
+    refreshResults();
     window.dispatchEvent(new Event("close-pagefind"));
     // return focus to whatever opened search
     if (openerEl?.focus) openerEl.focus({ preventScroll: true });
@@ -621,8 +630,8 @@ import Search from "astro-pagefind/components/Search";
     // typing toggles the empty state live and renders Insei voice region
     document.addEventListener("input", (e) => {
       if (e.target?.closest?.("#search") && pf.open) {
-        refreshResults();
         renderInseiRegion();
+        refreshResults();
       }
     });
   }
