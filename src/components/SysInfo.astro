@@ -592,7 +592,7 @@ import Container from "@components/Container.astro";
     }
 
     function closeBeacon() {
-      if (!bBtn || !bPanel || !bPanel.hidden) return;
+      if (!bBtn || !bPanel || bPanel.hidden) return;
       bPanel.hidden = true;
       bcnOpen = false;
       if (inseiWakeTimer) {
