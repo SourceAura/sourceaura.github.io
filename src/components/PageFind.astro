@@ -14,7 +14,7 @@ import Search from "astro-pagefind/components/Search";
   class="pointer-events-none invisible fixed inset-0 z-40"
 >
   <div id="pagefind-shell" class="flex items-center justify-center">
-    <div id="pagefind-container" class="relative flex max-h-[70vh] w-full max-w-screen-sm flex-col overflow-hidden" role="dialog" aria-modal="true" aria-label="Search the site">
+    <div id="pagefind-container" class="relative flex max-h-[70vh] w-full max-w-screen-sm flex-col overflow-hidden" role="dialog" aria-modal="true" aria-label="Ask Insei">
       <!-- corner brackets -->
       <span class="pf-bracket pf-tl" aria-hidden="true"></span>
       <span class="pf-bracket pf-tr" aria-hidden="true"></span>
@@ -304,6 +304,7 @@ import Search from "astro-pagefind/components/Search";
 
     const ans = insei?.ask ? insei.ask(q, { statusLine: inseiStatusLine }) : null;
     const isConfident = ans && ans.entryId && ans.entryId !== "fallback";
+    pf.arkConfident = !!isConfident;
 
     if (isConfident) {
       const voiceText = limitSentences(ans.text, 3);
@@ -382,9 +383,10 @@ import Search from "astro-pagefind/components/Search";
     const items = resultItems();
     activeIdx = -1;
     if (countEl) {
-      countEl.textContent = items.length
-        ? `${items.length} result${items.length === 1 ? "" : "s"}`
-        : "";
+      countEl.textContent =
+        items.length && !pf.arkConfident
+          ? `The Ark holds ${items.length} record${items.length === 1 ? "" : "s"}`
+          : "";
     }
     if (quicklinks) quicklinks.style.display = !q && !items.length ? "" : "none";
   }
