@@ -25,13 +25,16 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
           class="pf-toggle"
           type="button"
           aria-label="Ask Insei"
+          aria-haspopup="dialog"
           aria-expanded="false"
           data-tip="Ask Insei"
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="16 18 22 12 16 6" />
-            <polyline points="8 6 2 12 8 18" />
+          <svg class="pf-insei-glyph" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="15" cy="9" r="4" />
+            <line x1="4" y1="20" x2="11" y2="13" />
+            <line x1="9" y1="21" x2="13" y2="17" />
           </svg>
+          <span class="pf-insei-label">Insei</span>
         </button>
         <div class="theme-switch"><ThemeSwitch /></div>
         <div class="language-switcher-wrapper"><LanguageSwitcher /></div>
@@ -168,17 +171,28 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
     }
 
     .pf-toggle {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 30px;
-      height: 30px;
+      gap: 6px;
+      min-height: 40px;
+      min-width: 40px;
+      padding: 0 10px;
       border-radius: 8px;
       border: 1px solid transparent;
       background: transparent;
       color: inherit;
       cursor: pointer;
+      font-size: 0.76rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
       transition: border-color 160ms ease, background 160ms ease;
+    }
+    .pf-insei-glyph {
+      flex: none;
+    }
+    .pf-insei-label {
+      line-height: 1;
     }
     .pf-toggle:hover {
       border-color: color-mix(in oklch, var(--pc-accent, #8b5cf6) 40%, transparent);
@@ -194,7 +208,7 @@ const isResume = /^\/resume\/?$/.test(Astro.url.pathname);
       display: flex;
       align-items: center;
       gap: 6px;
-      height: 32px;
+      min-height: 40px;
     }
 
     .language-switcher-wrapper {
