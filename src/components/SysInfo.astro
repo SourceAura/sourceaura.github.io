@@ -49,13 +49,9 @@ import Container from "@components/Container.astro";
       <span class="bcn-now"><span id="bcn-dot" class="beacon-dot" aria-hidden="true"></span> insei <span id="insei-wake-word" class="bcn-wake"></span></span>
       <span class="bcn-hint"><kbd>esc</kbd> close</span>
     </div>
-    <div id="insei-transcript" role="log" aria-live="polite" aria-label="Conversation with Insei"></div>
-    <div id="insei-routes" aria-label="Suggested paths"></div>
-    <form id="insei-form">
-      <canvas id="insei-pulse" aria-hidden="true"></canvas>
-      <input id="insei-input" type="text" autocomplete="off" maxlength="200" placeholder="ask of the ark&hellip;" aria-label="Ask Insei" />
-      <button id="insei-send" type="submit" aria-label="Send">&rarr;</button>
-    </form>
+    <div id="bcn-status" class="bcn-status" aria-live="polite">
+      <p id="bcn-status-line"></p>
+    </div>
     </div>
   </div>
 
@@ -100,15 +96,7 @@ import Container from "@components/Container.astro";
     const H = canvas.height;
     const MID = H / 2;
 
-    // panel sparkline — the pill's heartbeat unfolded
-    const spark = document.getElementById("insei-pulse");
-    const sctx = spark ? spark.getContext("2d") : null;
-    let SW = 0, SH = 0, SMID = 0;
-    let sx = 0;
-    let sparkAccent = null; // rgb triplet from --petal-accent, read on open
-    function sparkStroke() {
-      return sparkAccent || getRGB();
-    }
+
 
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -258,38 +246,7 @@ import Container from "@components/Container.astro";
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // the unfolded heartbeat — same wave, wider canvas, only while open
-      if (sctx && bcnOpen) {
-        sctx.globalCompositeOperation = "destination-out";
-        sctx.fillStyle = "rgba(0,0,0,0.08)";
-        sctx.fillRect(0, 0, SW, SH);
-        sctx.globalCompositeOperation = "source-over";
 
-        const srgb = sparkStroke();
-        sctx.strokeStyle = `rgba(${srgb},0.85)`;
-        sctx.lineWidth = 1.2;
-        sctx.shadowColor = `rgba(${srgb},0.5)`;
-        sctx.shadowBlur = 5 + flare * 5;
-
-        sctx.beginPath();
-        for (let i = 0; i < 3; i++) {
-          const nx = sx / SW;
-          let wave =
-            Math.sin(nx * Math.PI * 4 + t) * baseAmplitude +
-            Math.sin(nx * Math.PI * 12 - t * 1.3) * (1.2 + moodInfluence);
-          if (flare > 0) {
-            wave += Math.sin(nx * Math.PI * 24 + t * 2) * flare * 2;
-          }
-          wave *= compression;
-          const sy = SMID + wave;
-          sctx.moveTo(sx, sy);
-          sctx.lineTo(sx + 1, sy);
-          sx += 1;
-          if (sx >= SW) sx = 0;
-        }
-        sctx.stroke();
-        sctx.shadowBlur = 0;
-      }
 
       drawParticles(rgb, lastWaveY, phase);
 
@@ -309,17 +266,7 @@ import Container from "@components/Container.astro";
       ctx.stroke();
     }
 
-    function drawSparkStatic() {
-      if (!sctx) return;
-      sctx.clearRect(0, 0, SW, SH);
-      sctx.beginPath();
-      sctx.moveTo(0, SMID);
-      sctx.lineTo(SW, SMID);
-      sctx.strokeStyle = `rgba(${sparkStroke()},0.6)`;
-      sctx.stroke();
-    }
-
-    if (reduceMotion) { drawStatic(); drawSparkStatic(); }
+    if (reduceMotion) { drawStatic(); }
     else frame();
 
     /* ===============================
@@ -388,15 +335,16 @@ import Container from "@components/Container.astro";
         pd.classList.toggle("lab", st.dot === "lab");
         pd.classList.toggle("rest", st.dot === "rest");
       }
+      const sl = document.getElementById("bcn-status-line");
+      if (sl) {
+        sl.textContent = inseiStatusLine();
+      }
       updateWakeWord();
     }
 
     /* ===============================
-       INSEI — the keeper window
+       INSEI — the keeper window (presence)
        =============================== */
-    const inseiApi = () => window.__insei;
-    let inseiGreeted = false;
-    let inseiIdleNudged = false;
     let inseiWakeTimer = 0;
 
     function inseiStatusLine() {
@@ -413,129 +361,22 @@ import Container from "@components/Container.astro";
       el.textContent = w < 0.35 ? "listening" : w > 0.7 ? "dreaming" : "awake";
     }
 
-    function escHtml(str) {
-      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    function inseiAddMsg(kind, html, whisper) {
-      const t = document.getElementById("insei-transcript");
-      if (!t) return;
-      while (t.children.length >= 40) t.removeChild(t.firstChild);
-      const d = document.createElement("div");
-      d.className = kind === "you" ? "insei-you" : "insei-her";
-      if (whisper) d.setAttribute("data-whisper", "1");
-      d.innerHTML = html;
-      const nearBottom = t.scrollHeight - t.scrollTop - t.clientHeight < 60;
-      t.appendChild(d);
-      if (nearBottom) t.scrollTop = t.scrollHeight;
-    }
-
-    function inseiRenderRoutes(routes) {
-      const r = document.getElementById("insei-routes");
-      if (!r) return;
-      r.textContent = "";
-      const api = inseiApi();
-      (routes || []).forEach(function (id) {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "insei-route";
-        b.textContent = api && api.routeLabel ? api.routeLabel(id) : id;
-        b.addEventListener("click", function () { inseiSend(id, true); });
-        r.appendChild(b);
-      });
-    }
-
-    function inseiRenderAnswer(ans) {
-      let html = "<p>" + escHtml(ans.text) + "</p>";
-      if (ans.facts && ans.facts.length) {
-        html += '<ul class="insei-facts">' + ans.facts.map(function (f) {
-          let li = escHtml(f.text);
-          if (f.link) {
-            li += ' <a href="' + f.link + '"' +
-              (f.link.indexOf("http") === 0 ? ' target="_blank" rel="noopener"' : "") +
-              ">" + escHtml(f.linkLabel || "open") + "</a>";
-          }
-          return "<li>" + li + "</li>";
-        }).join("") + "</ul>";
-      }
-      inseiAddMsg("her", html, false);
-      inseiRenderRoutes(ans.routes || []);
-    }
-
-    function inseiGreet() {
-      const api = inseiApi();
-      const line = inseiIdleNudged
-        ? "Still here? Ask me anything."
-        : (api && api.greeting ? api.greeting() : "I am Insei — keeper of this ark.");
-      inseiIdleNudged = false;
-      inseiAddMsg("her", "<p>" + escHtml(line) + "</p>", false);
-      inseiRenderRoutes(["sanctums", "steel", "service", "booking"]);
-    }
-
-    function inseiSend(text, isRoute) {
-      const api = inseiApi();
-      if (!api) return;
-      const shown = isRoute && api.routeLabel ? api.routeLabel(text) : text;
-      inseiAddMsg("you", "<p>" + escHtml(shown) + "</p>", false);
-      // she takes a breath before answering — alive, not instant
-      const t = document.getElementById("insei-transcript");
-      let bubble = null;
-      if (t) {
-        bubble = document.createElement("div");
-        bubble.className = "insei-her";
-        bubble.setAttribute("aria-hidden", "true");
-        bubble.innerHTML = '<span class="insei-thinking"><i></i><i></i><i></i></span>';
-        t.appendChild(bubble);
-        t.scrollTop = t.scrollHeight;
-      }
-      const delay = 1100 + Math.random() * 900;
-      window.setTimeout(function () {
-        if (bubble && bubble.parentNode) bubble.parentNode.removeChild(bubble);
-        let ans = null;
-        try {
-          ans = isRoute ? api.whisper(text) : api.ask(text, { statusLine: inseiStatusLine });
-        } catch (e) { ans = null; }
-        if (!ans) {
-          ans = { text: "That is beyond what sensei has entrusted to me.", facts: [], routes: ["sanctums", "steel", "service"] };
-        }
-        inseiRenderAnswer(ans);
-      }, delay);
-    }
-
-    function inseiBindForm() {
-      const form = document.getElementById("insei-form");
-      if (!form || form.dataset.bound === "1") return;
-      form.dataset.bound = "1";
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const inp = document.getElementById("insei-input");
-        if (!inp) return;
-        const v = inp.value.trim();
-        if (!v) return;
-        inp.value = "";
-        inseiSend(v, false);
-      });
-    }
-
     if (!window.__inseiWhisper) {
       window.__inseiWhisper = true;
-      window.addEventListener("insei:whisper", function (e) {
-        const d = (e && e.detail) || {};
-        if (d.trigger === "idle-quiet") {
-          inseiIdleNudged = true;
-          const dot = document.getElementById("bcn-dot");
+      window.addEventListener("insei:whisper", function () {
+        // When a whisper fires while the oracle window is closed, mark the strip dot
+        if (!window.__pf || !window.__pf.open) {
+          const dot = document.getElementById("beacon-dot");
           if (dot) dot.setAttribute("data-nudge", "1");
-          return;
+          const pdot = document.getElementById("bcn-dot");
+          if (pdot) pdot.setAttribute("data-nudge", "1");
         }
-        const panel = document.getElementById("beacon-panel");
-        if (panel && !panel.hidden && d.entryId) {
-          const api = inseiApi();
-          const ans = api && api.whisper ? api.whisper(d.entryId) : null;
-          if (ans) {
-            inseiAddMsg("her", "<p>" + escHtml(ans.text) + "</p>", true);
-            inseiRenderRoutes(ans.routes || []);
-          }
-        }
+      });
+      window.addEventListener("open-pagefind", function () {
+        const dot = document.getElementById("beacon-dot");
+        if (dot) dot.removeAttribute("data-nudge");
+        const pdot = document.getElementById("bcn-dot");
+        if (pdot) pdot.removeAttribute("data-nudge");
       });
     }
 
@@ -544,48 +385,13 @@ import Container from "@components/Container.astro";
       renderBeacon();
       bPanel.hidden = false;
       bcnOpen = true;
-      inseiBindForm();
-      // her pulse: size the presence canvas, wear the petal accent
-      const pulse = document.getElementById("insei-pulse");
-      if (pulse && spark && sctx) {
-        const r = pulse.getBoundingClientRect();
-        SW = Math.max(1, Math.round(r.width));
-        SH = Math.max(1, Math.round(r.height || 26));
-        SMID = SH / 2;
-        spark.width = SW;
-        spark.height = SH;
-        if (sx >= SW) sx = 0;
-        const av = getComputedStyle(document.documentElement)
-          .getPropertyValue("--petal-accent").trim();
-        const m = av.match(/(\d+)\D+(\d+)\D+(\d+)/);
-        sparkAccent = m ? `${m[1]},${m[2]},${m[3]}` : null;
-      }
       if (bScrim) {
         bScrim.hidden = false;
         requestAnimationFrame(() => requestAnimationFrame(() => bScrim.classList.add("visible")));
       }
       bBtn.setAttribute("aria-expanded", "true");
-      if (!inseiGreeted) {
-        inseiGreeted = true;
-        const t = document.getElementById("insei-transcript");
-        if (t) {
-          const bubble = document.createElement("div");
-          bubble.className = "insei-her";
-          bubble.setAttribute("aria-hidden", "true");
-          bubble.innerHTML = '<span class="insei-thinking"><i></i><i></i><i></i></span>';
-          t.appendChild(bubble);
-          window.setTimeout(function () {
-            if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
-            inseiGreet();
-          }, 800);
-        } else {
-          inseiGreet();
-        }
-      } else {
-        updateWakeWord();
-      }
-      const inp = document.getElementById("insei-input");
-      if (inp) inp.focus({ preventScroll: true });
+      updateWakeWord();
+      bPanel.focus({ preventScroll: true });
       if (inseiWakeTimer) window.clearInterval(inseiWakeTimer);
       inseiWakeTimer = window.setInterval(updateWakeWord, 2000);
       document.addEventListener("pointerdown", outsideBeacon, { capture: true });
@@ -814,133 +620,17 @@ import Container from "@components/Container.astro";
       letter-spacing: 0.04em;
       color: var(--bcn-dim);
     }
-    #insei-form { position: relative; }
-    /* her pulse flows behind the input — the heartbeat under her voice */
-    #insei-pulse {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    #insei-input, #insei-send { position: relative; z-index: 1; }
-    /* she takes a breath before answering — alive, not instant */
-    .insei-thinking { display: inline-flex; gap: 5px; padding: 0.35rem 0; }
-    .insei-thinking i {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--bcn-dim);
-      animation: insei-breathe 1.2s ease-in-out infinite;
-    }
-    .insei-thinking i:nth-child(2) { animation-delay: 0.15s; }
-    .insei-thinking i:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes insei-breathe {
-      0%, 100% { opacity: 0.25; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.15); }
-    }
-    #insei-transcript {
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      max-height: 38vh;
-      overflow-y: auto;
-      padding-right: 2px;
-      margin-bottom: 0.6rem;
-      font-size: 0.82rem;
+    .bcn-status {
+      font-size: 0.84rem;
       line-height: 1.55;
-    }
-    #insei-transcript p { margin: 0; }
-    .insei-her { color: var(--bcn-text); }
-    .insei-her[data-whisper="1"] { color: var(--bcn-dim); font-style: italic; }
-    .insei-you {
-      align-self: flex-end;
-      max-width: 88%;
-      padding: 0.3rem 0.65rem;
-      border: 1px solid color-mix(in oklch, var(--bcn-text) 30%, transparent);
       color: var(--bcn-text);
+      padding: 0.35rem 0 0.15rem;
     }
-    .insei-facts {
-      margin: 0.4rem 0 0;
-      padding-left: 1.1rem;
-      font-size: 0.75rem;
-      color: var(--bcn-dim);
+    .bcn-status p {
+      margin: 0;
     }
-    .insei-facts li { margin-bottom: 0.25rem; }
-    .insei-facts a { color: var(--bcn-text); }
-    #insei-routes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 0.65rem;
-    }
-    #insei-routes:empty { display: none; }
-    .insei-route {
-      font: inherit;
-      font-size: 0.66rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--bcn-text);
-      background: transparent;
-      border: 1px solid color-mix(in oklch, var(--bcn-text) 25%, transparent);
-      padding: 0.32rem 0.6rem;
-      cursor: pointer;
-      clip-path: polygon(
-        7px 0, 100% 0,
-        100% calc(100% - 7px), calc(100% - 7px) 100%,
-        0 100%, 0 7px
-      );
-      transition: background 140ms ease, color 140ms ease;
-    }
-    .insei-route:hover,
-    .insei-route:focus-visible {
-      background: var(--bcn-text);
-      color: var(--bcn-bg);
-    }
-    .insei-route:focus-visible { outline: 2px solid var(--bcn-text); outline-offset: 2px; }
-    #insei-form {
-      display: flex;
-      gap: 8px;
-      border-top: 1px solid color-mix(in oklch, var(--bcn-text) 15%, transparent);
-      padding-top: 0.65rem;
-    }
-    #insei-input {
-      flex: 1;
-      min-width: 0;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid color-mix(in oklch, var(--bcn-text) 25%, transparent);
-      color: var(--bcn-text);
-      font: inherit;
-      font-size: 0.82rem;
-      padding: 0.3rem 0;
-      outline: none;
-      border-radius: 0;
-    }
-    #insei-input:focus { border-bottom-color: var(--bcn-text); }
-    #insei-input::placeholder { color: var(--bcn-dim); }
-    #insei-send {
-      flex: none;
-      width: 2.1rem;
-      font: inherit;
-      color: var(--bcn-text);
-      background: transparent;
-      border: 1px solid color-mix(in oklch, var(--bcn-text) 25%, transparent);
-      cursor: pointer;
-      clip-path: polygon(
-        6px 0, 100% 0,
-        100% calc(100% - 6px), calc(100% - 6px) 100%,
-        0 100%, 0 6px
-      );
-      transition: background 140ms ease, color 140ms ease;
-    }
-    #insei-send:hover,
-    #insei-send:focus-visible {
-      background: var(--bcn-text);
-      color: var(--bcn-bg);
-    }
-    /* idle nudge: her eye brightens once, never a popup */
+    /* whisper mark: dot brightens when an unheard whisper lands */
+    #beacon-dot[data-nudge="1"],
     #bcn-dot[data-nudge="1"] {
       box-shadow:
         0 0 12px color-mix(in oklch, var(--sw2) 95%, transparent),

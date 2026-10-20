@@ -195,6 +195,11 @@ import Search from "astro-pagefind/components/Search";
     query();
     if (!inseiOracle) return;
     const q = inputEl?.value.trim() ?? "";
+    if (q) {
+      try {
+        sessionStorage.setItem("insei.oracleThread", JSON.stringify({ query: q }));
+      } catch {}
+    }
     const drawer = searchEl?.querySelector(".pagefind-ui__drawer");
     const insei = window.__insei;
 
@@ -423,11 +428,27 @@ import Search from "astro-pagefind/components/Search";
     else startSpring();
     attachObserver();
     window.dispatchEvent(new Event("open-pagefind"));
+
+    let restored = false;
+    try {
+      if (sessionStorage.getItem("insei.oracleRestore") === "1") {
+        sessionStorage.removeItem("insei.oracleRestore");
+        const raw = sessionStorage.getItem("insei.oracleThread");
+        if (raw) {
+          const t = JSON.parse(raw);
+          if (t && t.query && inputEl) {
+            inputEl.value = t.query;
+            restored = true;
+          }
+        }
+      }
+    } catch {}
+
     renderInseiRegion();
     requestAnimationFrame(() => {
       container.scrollTop = scrollMemory;
       document.querySelector("#search input")?.focus({ preventScroll: true });
-      renderInseiRegion();
+      if (restored) renderInseiRegion();
     });
   }
 
@@ -456,6 +477,16 @@ import Search from "astro-pagefind/components/Search";
   window.openPagefind = openPagefind;
   window.closePagefind = closePagefind;
   window.togglePagefind = () => (pf.open ? closePagefind() : openPagefind());
+
+  document.addEventListener("astro:before-preparation", () => {
+    try {
+      const q = inputEl?.value.trim();
+      if (q) {
+        sessionStorage.setItem("insei.oracleThread", JSON.stringify({ query: q }));
+        sessionStorage.setItem("insei.oracleRestore", "1");
+      }
+    } catch {}
+  });
 
   /* ── one-time document bindings (survive view transitions) ── */
 
