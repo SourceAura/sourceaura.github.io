@@ -174,7 +174,9 @@ const { title, description, image = "/og.png" } = Astro.props;
     if (userTheme === "light" || userTheme === "dark") {
       toggleTheme(userTheme === "dark");
     } else {
-      toggleTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
+      // Dark is the default (his ruling, 2026-10-21): the OS scheme
+      // is not consulted. Only a saved choice says otherwise.
+      toggleTheme(true);
     }
   }
 

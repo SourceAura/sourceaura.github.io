@@ -118,10 +118,9 @@ ThemeSwitch: a Theme Switcher. Light/Dark
     if (saved) {
       applyTheme(saved);
     } else {
-      const system = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      applyTheme(system);
+      // Dark is the default (his ruling, 2026-10-21): the OS scheme
+      // is not consulted. Only a saved choice says otherwise.
+      applyTheme("dark");
     }
   }
 
