@@ -1,14 +1,14 @@
-/* ======================================================
-   MOTION PRIMITIVES
+/*
+   Motion primitives.
    Dependency-free ports of the React Bits effects used on this site.
    CSS-first; the JS that drives it lives in src/lib/motion.ts.
 
    Nothing here hides content on its own: the reveal states are scoped under
    `.js-motion`, which is only added by an inline script in Head.astro. No JS
    (or a failed bundle) means no class, so the page renders fully visible.
-====================================================== */
+*/
 
-/* ---------- GlareHover ----------
+/* GlareHover.
    A specular sweep across a surface. It reads as light travelling over glass,
    which is the same language as the crystal orb rim. Purely decorative, so it
    never receives pointer events. */
@@ -45,7 +45,7 @@
   transform: translateX(130%);
 }
 
-/* ---------- AnimatedContent ----------
+/* AnimatedContent.
    Entry reveal on scroll: displaced, blurred, then settled. */
 .js-motion [data-reveal] {
   opacity: 0;
@@ -64,7 +64,7 @@
   filter: none;
 }
 
-/* ---------- BlurText ----------
+/* BlurText.
    Per-word blur-in for headings. motion.ts wraps each word in .bt-word. */
 .js-motion [data-blur-text] .bt-word {
   display: inline-block;
@@ -84,7 +84,7 @@
   transform: none;
 }
 
-/* ---------- reduced motion ----------
+/* Reduced motion.
    Everything lands in its final state immediately; the glare is removed
    rather than merely sped up. */
 @media (prefers-reduced-motion: reduce) {
@@ -101,7 +101,7 @@
   }
 }
 
-/* ---------- SpotlightCard ----------
+/* SpotlightCard.
    A radial light that follows the pointer. Monochrome by construction: it is
    only the foreground colour at low alpha, so it can never introduce hue. */
 [data-spotlight] {
@@ -150,7 +150,7 @@
   }
 }
 
-/* ---------- SpotlightCard ----------
+/* SpotlightCard.
    A radial light that follows the pointer. Monochrome by construction: it is
    only the foreground colour at low alpha, so it can never introduce hue. */
 [data-spotlight] {
@@ -185,7 +185,7 @@
   z-index: 1;
 }
 
-/* ---------- HoloCard ----------
+/* HoloCard.
    A holographic sheen that sweeps in from the pointer. Foreground colour only,
    so it stays in palette. */
 [data-holo] {
@@ -222,7 +222,7 @@
   }
 }
 
-/* ---------- DecryptedText ----------
+/* DecryptedText.
    Characters sit behind stand-in glyphs until the card reveals, then resolve
    with a stagger. Inline spans, so wrapping is untouched. */
 .js-motion [data-decrypt] .dc-char {

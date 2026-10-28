@@ -1,5 +1,5 @@
 /**
- * Insei mind — retrieval + intent matching + composed answers.
+ * Insei mind: retrieval + intent matching + composed answers.
  * No model, no network. The corpus is the brain; this is the reflex.
  */
 import { INSEI_CORPUS, INSEI_META, type InseiEntry } from "../content/insei-corpus";
@@ -47,7 +47,7 @@ function routeLabel(id: string): string {
     help: "what can you do",
     thanks: "farewell",
     "trial-deep": "secrets of the trial",
-    boundaries: "—",
+    boundaries: "-",
   };
   return labels[id] ?? e.topics[0] ?? id;
 }
@@ -60,7 +60,7 @@ function compose(
   if (text.includes("{status}") && opts.statusLine) {
     text = text.replace("{status}", opts.statusLine());
   } else if (text.includes("{status}")) {
-    text = text.replace("{status}", "Sensei keeps his own hours — ask me again and I will read the flame.");
+    text = text.replace("{status}", "Sensei keeps his own hours: ask me again and I will read the flame.");
   }
   return {
     entryId: entry.id,

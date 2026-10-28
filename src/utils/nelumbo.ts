@@ -49,18 +49,16 @@ export default function initNelumbo() {
     document.getElementById("hud-dock") ||
     document.querySelector("[data-hud-dock]");
 
-  // ───────────────── CORE STATE ─────────────────
   let petalsOpen = false;
 
   function updatePetalVisibility() {
-    // IMPORTANT: keep hidden in sync (your CSS might also use opacity/visibility)
+    // Keep the hidden state in sync: CSS may also use opacity/visibility.
     shell.hidden = !petalsOpen;
     shell.toggleAttribute("data-petals-open", petalsOpen);
     shell.setAttribute("aria-hidden", petalsOpen ? "false" : "true");
     if (!petalsOpen) focusedIndex = -1;
   }
 
-  // HUD
   let hudOpen = false;
   let hudBootToken = 0;
 
@@ -87,7 +85,6 @@ export default function initNelumbo() {
     setHudOpen(false);
   }
 
-  // ───────────────── TOGGLE / CLOSE ─────────────────
   let isDragging = false;
   let isPulling = false;
   let pullVel = 0;
@@ -128,7 +125,7 @@ export default function initNelumbo() {
     start();
   }
 
-  // ✅ Qi toggles the carousel
+  // Qi toggles the carousel.
   function onQiToggle() {
     if (petalsOpen) closePetals();
     else openPetals();
@@ -140,7 +137,7 @@ export default function initNelumbo() {
     });
   }
 
-  // Click-away close + Esc close (keeps your previous behavior)
+  // Click-away close + Esc close.
   function onShellPointerDown(e: PointerEvent) {
     if (!petalsOpen) return;
 
@@ -166,7 +163,6 @@ export default function initNelumbo() {
     if (petalsOpen) closePetals();
   }
 
-  // ───────────────── CAROUSEL PHYSICS ─────────────────
   const BASE_FRICTION = 0.96;
   const BASE_SNAP = 0.06;
   const velClamp = 3.2;
@@ -454,11 +450,11 @@ export default function initNelumbo() {
       el.style.pointerEvents = sideVis < 0.08 ? "none" : "auto";
       el.style.visibility = sideVis < 0.02 ? "hidden" : "visible";
 
-      // keep your existing “active pop” / pull behavior exactly as you had it:
+      // Active pop and pull behavior:
       const activeBias = i === active ? 22 + (om - 0.5) * 10 : 0;
       const pull = i === active ? pullZ : 0;
 
-      // critical for your CSS counter-rotate
+      // Required by the CSS counter-rotate.
       el.style.setProperty(
         "--item-yaw",
         `${i * step + angle + snapElastic}deg`,
@@ -515,7 +511,7 @@ export default function initNelumbo() {
     rafId = requestAnimationFrame(tick);
   }
 
-  // Drag behavior (unchanged from your inline intent)
+  // Drag behavior.
   function onShellPointerMove(e: PointerEvent) {
     if (!petalsOpen) return;
     if (!isDragging) return;
@@ -532,7 +528,6 @@ export default function initNelumbo() {
     isPulling = false;
   }
 
-  // Each item interaction
   items.forEach((el) => {
     const index = Number(el.dataset.index);
     const surface =
@@ -565,7 +560,6 @@ export default function initNelumbo() {
     );
   });
 
-  // ───────────────── LISTENERS (registered once) ─────────────────
   hudClose?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -583,13 +577,11 @@ export default function initNelumbo() {
     passive: true,
   });
 
-  // ───────────────── INITIAL ─────────────────
   // Start hidden, but with transforms precomputed
   updatePetalVisibility();
   applyTransforms();
   stop();
 
-  // ───────────────── CLEANUP (Astro swaps) ─────────────────
   function cleanup() {
     window.removeEventListener("qi:toggle-petals", onQiToggle);
     shell.removeEventListener("pointerdown", onShellPointerDown as any);

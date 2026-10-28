@@ -1,5 +1,5 @@
 /**
- * Insei sense — production-safe behavioral sensing.
+ * Insei sense: production-safe behavioral sensing.
  *
  * Local only. No vectors to any server, no fetch, no cookies.
  * sessionStorage at most, cleared when the tab closes.

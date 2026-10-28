@@ -69,7 +69,7 @@ export default defineConfig({
     tailwind(),
     icon(),
     sitemap({
-      // /orb-test is a dev-only tuning harness — keep it out of the sitemap.
+      // /orb-test is a dev-only tuning harness: keep it out of the sitemap.
       filter: (page) => !page.includes("/orb-test"),
     }),
     mdx(),

@@ -127,7 +127,7 @@ ThemeSwitch: a Theme Switcher. Light/Dark
   // Initialize immediately (works on home + first load)
   initTheme();
 
-  // One global click handler — guarded: this script re-runs on every
+  // One global click handler, guarded: this script re-runs on every
   // view transition, and an unguarded binding flips the theme N times.
   if (!window.__themeSwitch) {
     window.__themeSwitch = true;

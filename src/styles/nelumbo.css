@@ -24,7 +24,7 @@
   border: none;
 }
 
-/* Hidden by default — unified into Qi 3D rendering context without isolation */
+/* Hidden by default: unified into the Qi 3D rendering context without isolation */
 .carousel-layer {
   position: fixed;
   inset: 0;
@@ -74,10 +74,7 @@
   perspective: 1500px;
   transform-style: preserve-3d;
 }
-/* ─────────────────────────────────────────────
-   Side scanner beams (like the CodePen vibe)
-   Fires on fade boundary crossings
-───────────────────────────────────────────── */
+/* Side scanner beams. Fires on fade boundary crossings. */
 
 .nel-scan {
   position: absolute;
@@ -179,7 +176,7 @@
   /* keep orb round */
   /* Billboard: cancel the parent chain's rotation exactly. The ring now carries
      rotateX(tilt) rotateY(yaw), so the surface needs rotateY(-yaw) followed by
-     rotateX(-tilt) — in that order — to face the camera square on. */
+     rotateX(-tilt), in that order, to face the camera square on. */
   transform: translateZ(0) rotateY(calc(var(--item-yaw, 0deg) * -1))
     rotateX(calc(var(--orbit-tilt, 0deg) * -1)) scale(var(--size-fix, 1));
   transform-style: preserve-3d;
@@ -206,13 +203,13 @@
   cursor: grabbing;
 }
 
-/* ────────────────────────────────────────────────────────── */
+/*  */
 /* SIDE CARD-SCANNER LINES                                    */
 /* - LEFT + RIGHT fixed at fade boundaries                      */
 /* - OUT: beams converge to center line                         */
 /* - IN: beams split outward from center line                   */
 /* - JS burst particles (WAAPI)                                 */
-/* ────────────────────────────────────────────────────────── */
+/*  */
 
 .petal-scanners {
   position: fixed;
@@ -282,9 +279,9 @@
 }
 
 /* Container (invisible itself) */
-/* ───────────────────────────────────────────── */
+/*  */
 /* Single-beam scanners (2 beams per side total) */
-/* ───────────────────────────────────────────── */
+/*  */
 
 .petal-scan {
   position: absolute;
@@ -438,9 +435,9 @@
   }
 }
 
-/* ───────────────────────────────────────────── */
+/*  */
 /* Particles (JS burst creates these elements)   */
-/* ───────────────────────────────────────────── */
+/*  */
 
 .petal-particle {
   position: absolute;
@@ -460,9 +457,9 @@
   will-change: transform, opacity;
 }
 
-/* ────────────────────────────────────────────────────────── */
-/* HUD (unchanged styling from your previous version)         */
-/* ────────────────────────────────────────────────────────── */
+/*  */
+/* HUD */
+/*  */
 
 .hud {
   position: fixed;
@@ -606,9 +603,7 @@
   }
 }
 
-/* (rest of HUD CSS stays exactly as you already have it) */
 
-/* (rest of HUD CSS stays exactly as you already have it) */
 
 .hud-glow {
   position: absolute;
@@ -947,7 +942,7 @@
   line-height: 1;
 }
 
-/* ── ESC pill ──────────────────────────────────────────────────────
+/* ESC pill.
    The close control is a dismiss pill, not a delete button. It reads as
    "dismiss" via the ESC label, and the × rotates 45° into a + on hover to
    signal collapse. Absolutely positioned so it floats over the chrome
@@ -1151,15 +1146,11 @@
   inherits: true;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   HUD CARD — "a captured star"
-   Vanilla ports: SpotlightCard · StarBorder · TiltedCard ·
-                  ClickSpark · DecryptedText (already via scrambleText)
-   Inspiration: velkaa "Kinetic Interface v4", Blog Card Slider
-   ════════════════════════════════════════════════════════════════ */
+/* HUD card. Vanilla ports: SpotlightCard, StarBorder, TiltedCard,
+   ClickSpark, DecryptedText (via scrambleText). */
 
 /* palette: glass instruments, cyan-teal + violet, prism star.
-   Shared by the HUD card AND the comments card — one instrument, two modes.
+   Shared by the HUD card and the comments card: one instrument, two modes.
    Accents flow from the global theme tokens (neon in dark, deep cyan/violet
    in light); per-post JS may still override them inline on .hud. */
 .hud,
@@ -1191,7 +1182,7 @@ html.light .hud-comments-section {
   }
 }
 
-/* ── chrome: the clipped glass everything floats above ── */
+/* chrome: the clipped glass everything floats above */
 .hud-chrome {
   position: absolute;
   inset: 0;
@@ -1207,7 +1198,7 @@ html.light .hud-comments-section {
     0 0 60px rgba(180, 140, 255, 0.07);
 }
 
-/* vignette — edges dissolve inward so the rectangle stops reading as a box */
+/* vignette: edges dissolve inward so the rectangle stops reading as a box */
 .hud-vignette {
   position: absolute;
   inset: 0;
@@ -1244,7 +1235,7 @@ html.light .hud-comments-section {
   pointer-events: none;
 }
 
-/* shooting star — the nagareboshi tracing the edge */
+/* shooting star tracing the edge */
 @property --sa {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -1333,7 +1324,7 @@ html.light .hud-comments-section {
   z-index: 0;
 }
 
-/* ── light-mode chrome: same instrument, daylight glass ── */
+/* light-mode chrome: same instrument, daylight glass */
 html.light .hud-chrome {
   border-color: rgba(11, 14, 26, 0.1);
   box-shadow:
@@ -1365,7 +1356,7 @@ html.light .hud-ghost {
   color: rgba(11, 14, 26, 0.055);
 }
 
-/* ── content floats above the chrome ── */
+/* content floats above the chrome */
 .hud-tilt {
   position: relative;
   z-index: 1;
@@ -1464,7 +1455,7 @@ html.light .hud-ghost {
   transform: translateX(120%);
 }
 
-/* title over the image — layered shadow for print depth */
+/* title over the image: layered shadow for print depth */
 .hud-titleOverlay {
   left: 12px;
   right: 12px;
@@ -1522,7 +1513,7 @@ html.light .hud-ghost {
   font-family: "Geist Mono Variable", ui-monospace, monospace;
 }
 
-/* quote — the post description, set like a pull-quote */
+/* quote: the post description, set like a pull-quote */
 .hud-quote {
   color: var(--pc-accent);
   font-style: italic;
@@ -1537,7 +1528,7 @@ html.light .hud-ghost {
   color: var(--pc-accent2);
 }
 
-/* ── staggered entrance: image/title → article → controls ── */
+/* staggered entrance: image/title article controls */
 .hud.is-open .hud-tilt > * {
   opacity: 0;
   transform: translateY(25px);
@@ -1559,7 +1550,7 @@ html.light .hud-ghost {
   }
 }
 
-/* ── pill CTA ── */
+/* pill CTA */
 .hud-pill {
   position: relative;
   display: inline-flex;
@@ -1595,11 +1586,8 @@ html.light .hud-ghost {
   transform: scale(0.97);
 }
 
-/* ════════════════════════════════════════════════════════════
-   AMBIENT KEYFRAMES — salvaged from the kinetic-interface study.
-   hudGlow: slow breathing glow · hudSpecks: drifting dust ·
-   revealSweep: one-shot boot scan. All reduced-motion gated.
-   ════════════════════════════════════════════════════════════ */
+/* Ambient keyframes: hudGlow (slow breathing glow), hudSpecks (drifting
+   dust), revealSweep (one-shot boot scan). All reduced-motion gated. */
 @media (prefers-reduced-motion: no-preference) {
   @keyframes hudGlow {
     0%, 100% { opacity: 0.35; transform: scale(1); }
@@ -1664,7 +1652,7 @@ html.light .hud-ghost {
   overflow: hidden;
 }
 
-/* ── reduced motion: calm fade, nothing else ── */
+/* reduced motion: calm fade, nothing else */
 @media (prefers-reduced-motion: reduce) {
   .hud.is-open .hud-frame {
     animation: hudInSimple 0.2s ease both;
@@ -1695,7 +1683,7 @@ html.light .hud-ghost {
   }
 }
 
-/* ── tether cord: links the HUD card to the comments card ── */
+/* tether cord: links the HUD card to the comments card */
 .hud-tether {
   position: fixed;
   inset: 0;
@@ -1720,7 +1708,7 @@ html.light .hud-ghost {
   stroke-width: 1;
 }
 
-/* ── ambient tint + depth-of-field while the card is open ── */
+/* ambient tint + depth-of-field while the card is open */
 body.hud-open::after {
   content: "";
   position: fixed;

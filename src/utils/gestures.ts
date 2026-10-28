@@ -1,4 +1,3 @@
-// src/utils/gestures.ts
 // Global gesture interpreter (pinch + swipe ready)
 
 export type Gesture =
@@ -14,13 +13,9 @@ type GestureHandler = (g: Gesture, e: PointerEvent) => void;
 let handler: GestureHandler | null = null;
 let mounted = false;
 
-/* ───────────────── REGISTER ───────────────── */
-
 export function registerGestureHandler(fn: GestureHandler) {
   handler = fn;
 }
-
-/* ───────────────── CORE DETECTION ───────────────── */
 
 const pointers = new Map<number, PointerEvent>();
 let lastDistance = 0;
@@ -30,8 +25,6 @@ function distance(a: PointerEvent, b: PointerEvent) {
   const dy = a.clientY - b.clientY;
   return Math.hypot(dx, dy);
 }
-
-/* ───────────────── MOUNT (ONCE) ───────────────── */
 
 export function mountGestures() {
   if (mounted) return;
@@ -51,7 +44,6 @@ export function mountGestures() {
       if (!pointers.has(e.pointerId)) return;
       pointers.set(e.pointerId, e);
 
-      // ── PINCH IN ──
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
         const d = distance(a, b);

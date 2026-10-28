@@ -9,7 +9,7 @@ import Container from "@components/Container.astro";
     aria-expanded="false"
     aria-haspopup="dialog"
     aria-controls="beacon-panel"
-    aria-label="Insei — keeper of the ark — open"
+    aria-label="Insei · keeper of the ark · open"
     class="group relative flex w-full items-center overflow-hidden rounded-full border border-black/15 hover:bg-black/5 focus-visible:bg-black/5 dark:border-white/20 dark:hover:bg-white/5 dark:focus-visible:bg-white/5"
     style="background-color: transparent; cursor: pointer;"
   >
@@ -56,9 +56,7 @@ import Container from "@components/Container.astro";
   </div>
 
   <script type="module">
-    /* ===============================
-       TIME + TEMPORAL FLARES
-    =============================== */
+    /* Time and temporal flares */
     let flare = 0;
     let lastSecond = null;
 
@@ -86,9 +84,7 @@ import Container from "@components/Container.astro";
     updateCurrentTime();
     setInterval(updateCurrentTime, 1000);
 
-    /* ===============================
-       CANVAS SETUP
-    =============================== */
+    /* Canvas setup */
     const canvas = document.getElementById("heartbeat");
     const ctx = canvas.getContext("2d");
 
@@ -102,11 +98,9 @@ import Container from "@components/Container.astro";
 
     let x = 0;
     let t = 0;
-    let bcnOpen = false; // NOW panel expanded — sparkline runs only then
+    let bcnOpen = false; // NOW panel expanded: sparkline runs only then
 
-    /* ===============================
-       PAGEFIND COMPRESSION
-    =============================== */
+    /* Pagefind compression */
     let compression = 1;
 
     window.addEventListener("open-pagefind", () => {
@@ -116,9 +110,7 @@ import Container from "@components/Container.astro";
       compression = 1;
     });
 
-    /* ===============================
-       COLOR + QI PHASE
-    =============================== */
+    /* Color and Qi phase */
     function getRGB() {
       return document.documentElement.classList.contains("dark")
         ? "255,255,255"
@@ -141,9 +133,7 @@ import Container from "@components/Container.astro";
       return readLiveStyles().phase;
     }
 
-    /* ===============================
-       PARTICLES
-    =============================== */
+    /* Particles */
     const particles = Array.from({ length: 28 }, () => ({
       x: Math.random() * W,
       y: MID,
@@ -163,7 +153,6 @@ import Container from "@components/Container.astro";
           p.glyphLock = 0;
         }
 
-        // Qi-biased attraction
         const phaseBias = Math.sin(phase * Math.PI * 2) * 2;
         const targetY = waveY + phaseBias;
         p.y += (targetY - p.y) * 0.08;
@@ -186,9 +175,7 @@ import Container from "@components/Container.astro";
       ctx.globalAlpha = 1;
     }
 
-    /* ===============================
-       FRAME LOOP
-    =============================== */
+    /* Frame loop */
     function frame() {
       const rgb = getRGB();
       const phase = getQiPhase();
@@ -229,7 +216,6 @@ import Container from "@components/Container.astro";
           wave += Math.sin(nx * Math.PI * 24 + t * 2) * flare * 2;
         }
 
-        // Add Ase mood-based modulation
         wave *= (1 + aseWake * 0.3);
 
         wave *= compression;
@@ -269,9 +255,7 @@ import Container from "@components/Container.astro";
     if (reduceMotion) { drawStatic(); }
     else frame();
 
-    /* ===============================
-       BEACON — status dot + NOW panel
-       =============================== */
+    /* Beacon: status dot and NOW panel */
     // Flip BEACON_STATUS by hand when you want to override the clock:
     // "auto" | "lab" | "bookings" | "rest"
     const BEACON_STATUS = "auto";
@@ -280,7 +264,7 @@ import Container from "@components/Container.astro";
 
     const BEACON_STATES = {
       lab:      { key: "lab",      label: "IN THE LAB",     sub: "the small hours are his hours", dot: "lab" },
-      bookings: { key: "bookings", label: "TAKING BOOKINGS", sub: "computer repair — Nashville", dot: "lab" },
+      bookings: { key: "bookings", label: "TAKING BOOKINGS", sub: "computer repair · Nashville", dot: "lab" },
       rest:     { key: "rest",     label: "RECHARGING",      sub: "back in the small hours",      dot: "rest" },
     };
 
@@ -301,7 +285,7 @@ import Container from "@components/Container.astro";
 
     function beaconState() {
       if (BEACON_STATUS !== "auto") return BEACON_STATES[BEACON_STATUS] || BEACON_STATES.rest;
-      // his time, his rhythm: the lab runs 20:00–06:00 America/Chicago
+      // The lab runs 20:00-06:00 America/Chicago.
       const hour = Number(
         new Intl.DateTimeFormat("en-US", {
           timeZone: "America/Chicago", hour: "numeric", hour12: false,
@@ -316,7 +300,7 @@ import Container from "@components/Container.astro";
     const bDot = document.getElementById("beacon-dot");
 
     // The header carries a transform (PageFind lift), which would hijack
-    // position:fixed on descendants — the panel would center on the header
+    // position:fixed on descendants: the panel would center on the header
     // bar and the scrim would shrink to a strip. They live on <body> instead.
     if (bScrim && bScrim.parentElement !== document.body)
       document.body.appendChild(bScrim);
@@ -342,16 +326,14 @@ import Container from "@components/Container.astro";
       updateWakeWord();
     }
 
-    /* ===============================
-       INSEI — the keeper window (presence)
-       =============================== */
+    /* Insei: the keeper window */
     let inseiWakeTimer = 0;
 
     function inseiStatusLine() {
       const st = beaconState();
-      if (st.key === "lab") return "Sensei is in the lab — the small hours are sensei's hours.";
-      if (st.key === "bookings") return "Sensei is taking commissions — the mending of machines, Nashville.";
-      return "Sensei rests — the lab rekindles in " + labCountdown().replace("back in the lab in ", "") + ".";
+      if (st.key === "lab") return "Sensei is in the lab: the small hours are sensei's hours.";
+      if (st.key === "bookings") return "Sensei is taking commissions: the mending of machines, Nashville.";
+      return "Sensei rests: the lab rekindles in " + labCountdown().replace("back in the lab in ", "") + ".";
     }
 
     function updateWakeWord() {
@@ -455,7 +437,7 @@ import Container from "@components/Container.astro";
   </script>
 
   <style>
-    /* beacon dot — synthwave gradient when live, dim when resting */
+    /* beacon dot: synthwave gradient when live, dim when resting */
     .beacon-dot {
       display: block;
       width: 8px;
@@ -481,7 +463,7 @@ import Container from "@components/Container.astro";
       50% { transform: scale(1.3); opacity: 1; }
     }
 
-    /* scrim — PageFind's exact recipe */
+    /* scrim: PageFind's exact recipe */
     #beacon-scrim {
       position: fixed;
       inset: 0;
@@ -502,8 +484,7 @@ import Container from "@components/Container.astro";
       #beacon-scrim { transition: none; }
     }
 
-    /* Insei window — velkaa Shizuku restraint: monochrome glass, one color moment (her eye).
-       Centered like PageFind, quiet like the terminal. */
+    /* Insei window: monochrome glass, one color moment (her eye). Centered like PageFind. */
     #beacon-panel {
       --bcn-bg: rgba(10, 10, 10, 0.65);
       --bcn-text: #f8f8ff;
@@ -613,7 +594,7 @@ import Container from "@components/Container.astro";
       margin: 0 1px;
       line-height: 1;
     }
-    /* keeper window — her presence, transcript, paths, and voice */
+    /* keeper window: her presence, transcript, paths, and voice */
     .bcn-wake {
       font-weight: 400;
       text-transform: none;

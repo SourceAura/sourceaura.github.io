@@ -1,10 +1,9 @@
 ---
 /*
-PageFind: the search instrument.
-A command-palette in the site's own design language — glass panel, corner
-brackets, accent glow, telemetry — fully token-driven for both themes.
-Now unified with Insei: her voice on top, Pagefind results beneath.
-Command verbs (/book, /tour, /home) bypass full-text search.
+PageFind: the search instrument. A command palette in the site's own design
+language (glass panel, corner brackets, accent glow, telemetry), fully
+token-driven for both themes. Unified with Insei: her voice on top, Pagefind
+results beneath. Command verbs (/book, /tour, /home) bypass full-text search.
 */
 import Search from "astro-pagefind/components/Search";
 ---
@@ -135,7 +134,7 @@ import Search from "astro-pagefind/components/Search";
     rafSpring = requestAnimationFrame(tickSpring);
   }
 
-  /* ── Insei Voice & Rotating Placeholders ── */
+  /* Insei voice and rotating placeholders */
 
   const PLACEHOLDER_PROMPTS = [
     "Ask about the seven…",
@@ -174,8 +173,8 @@ import Search from "astro-pagefind/components/Search";
     );
     const inLab = hour >= 20 || hour < 6;
     return inLab
-      ? "Sensei is in the lab — the small hours are sensei's hours."
-      : "Sensei rests — back in the lab in the small hours.";
+      ? "Sensei is in the lab: the small hours are sensei's hours."
+      : "Sensei rests: back in the lab in the small hours.";
   }
 
   function limitSentences(text, max = 3) {
@@ -203,7 +202,7 @@ import Search from "astro-pagefind/components/Search";
     const drawer = searchEl?.querySelector(".pagefind-ui__drawer");
     const insei = window.__insei;
 
-    // DIRECTIVE 3: Command verbs starting with /
+    // Command verbs starting with /
     if (q.startsWith("/")) {
       // Verbs never hit Pagefind and never hit the intent engine
       if (drawer) drawer.style.display = "none";
@@ -220,7 +219,7 @@ import Search from "astro-pagefind/components/Search";
 
       if (verb === "/book") {
         if (inseiVoice) {
-          inseiVoice.innerHTML = "<p>Sensei takes repair commissions in Nashville — the mending of machines. Directing your dispatch.</p>";
+          inseiVoice.innerHTML = "<p>Sensei takes repair commissions in Nashville: the mending of machines. Directing your dispatch.</p>";
           inseiVoice.style.display = "";
         }
         if (inseiRoutes) {
@@ -345,9 +344,9 @@ import Search from "astro-pagefind/components/Search";
       }
       // divider visibility is driven by refreshResults() based on Pagefind results
     } else {
-      // No confident answer — ceremonial yield to results
+      // No confident answer: yield to the results below
       if (inseiVoice) {
-        inseiVoice.innerHTML = "<p>That is beyond what sensei has entrusted to me — the Ark yields its records below.</p>";
+        inseiVoice.innerHTML = "<p>That is beyond what sensei has entrusted to me: the Ark yields its records below.</p>";
         inseiVoice.style.display = "";
         inseiVoice.classList.remove("insei-unroll");
         void inseiVoice.offsetWidth;
@@ -361,7 +360,7 @@ import Search from "astro-pagefind/components/Search";
     }
   }
 
-  /* ── results: count, empty state, keyboard nav ── */
+  /* results: count, empty state, keyboard nav */
 
   function resultItems() {
     return [...document.querySelectorAll("#search .pagefind-ui__result")];
@@ -421,7 +420,7 @@ import Search from "astro-pagefind/components/Search";
     if (link) window.location.href = link.href;
   }
 
-  /* ── open / close ── */
+  /* open / close */
 
   function openPagefind() {
     query();
@@ -503,7 +502,7 @@ import Search from "astro-pagefind/components/Search";
     } catch {}
   });
 
-  /* ── one-time document bindings (survive view transitions) ── */
+  /* one-time document bindings (survive view transitions) */
 
   if (!window.__pfBound) {
     window.__pfBound = true;
@@ -647,10 +646,8 @@ import Search from "astro-pagefind/components/Search";
 </script>
 
 <style is:global>
-  /* ════════════════════════════════════════════════════════════
-     PAGEFIND — the search instrument
-     Token-driven: --pf-* locals, --pc-accent / --pc-accent2 global.
-     ════════════════════════════════════════════════════════════ */
+  /* PageFind: the search instrument.
+     Token-driven: --pf-* locals, --pc-accent / --pc-accent2 global. */
 
   #pagefind-shell {
     min-height: 100dvh;
@@ -667,7 +664,7 @@ import Search from "astro-pagefind/components/Search";
     --pf-dim: rgba(11, 14, 26, 0.6);
   }
 
-  /* ── backdrop scrim ── */
+  /* backdrop scrim */
   #backdrop {
     background: transparent;
     transition: background 240ms ease;
@@ -681,7 +678,7 @@ import Search from "astro-pagefind/components/Search";
     background: color-mix(in oklch, white 28%, transparent);
   }
 
-  /* ── the panel ── */
+  /* the panel */
   #pagefind-container {
     background: var(--pf-bg);
     border: 1px solid color-mix(in oklch, var(--pf-accent) 25%, transparent);
@@ -760,7 +757,7 @@ import Search from "astro-pagefind/components/Search";
     min-height: 0;
   }
 
-  /* ── the input ── */
+  /* the input */
   #pagefind-container .pagefind-ui__search-input {
     border-radius: 12px;
     overflow: hidden;
@@ -807,7 +804,7 @@ import Search from "astro-pagefind/components/Search";
     color: var(--pf-text);
   }
 
-  /* ── Insei oracle region ── */
+  /* Insei oracle region */
   #insei-oracle {
     margin: 0.6rem 0 0.35rem;
     display: flex;
@@ -909,7 +906,7 @@ import Search from "astro-pagefind/components/Search";
     background: color-mix(in oklch, var(--pf-text) 14%, transparent);
   }
 
-  /* ── results ── */
+  /* results */
   #pagefind-container .pagefind-ui__results-area {
     margin-top: 0.25rem;
   }
@@ -975,7 +972,7 @@ import Search from "astro-pagefind/components/Search";
     padding: 0.6rem 0.2rem;
   }
 
-  /* ── quick links (empty state) ── */
+  /* quick links (empty state) */
   #pf-quicklinks {
     display: flex;
     flex-wrap: wrap;
@@ -1001,7 +998,7 @@ import Search from "astro-pagefind/components/Search";
     border-radius: 0;
     border: 1px solid color-mix(in oklch, var(--pf-accent) 35%, transparent);
     background: color-mix(in oklch, var(--pf-accent) 8%, transparent);
-    /* chamfered tag corners — edgy, no pills */
+    /* chamfered tag corners: edgy, no pills */
     clip-path: polygon(
       9px 0, 100% 0,
       100% calc(100% - 9px), calc(100% - 9px) 100%,
@@ -1015,7 +1012,7 @@ import Search from "astro-pagefind/components/Search";
     transform: translateY(-1px);
   }
 
-  /* ── telemetry strip ── */
+  /* telemetry strip */
   #pf-status {
     display: flex;
     align-items: center;
@@ -1043,7 +1040,7 @@ import Search from "astro-pagefind/components/Search";
     line-height: 1;
   }
 
-  /* ── one scrollbar, done right ── */
+  /* one scrollbar */
   #pagefind-container {
     scrollbar-width: thin;
     scrollbar-color: color-mix(in oklch, var(--pf-text) 30%, transparent) transparent;

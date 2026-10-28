@@ -71,7 +71,7 @@ import Container from "@components/Container.astro";
     let lastStreak = 0;
     let hasAscended = false;
 
-    /* ── Starfield ──────────────────────────── */
+    /* Starfield */
     let stars = [];
     let raf = 0;
 
@@ -122,7 +122,7 @@ import Container from "@components/Container.astro";
     document.addEventListener("astro:before-swap", () => cancelAnimationFrame(raf), { once: true });
     resize();
 
-    /* ── Decrypt headline ───────────────────── */
+    /* Decrypt headline */
     function decryptHeadline() {
       if (reduceMotion) return;
       const text = headline.textContent;
@@ -145,7 +145,7 @@ import Container from "@components/Container.astro";
     }
     decryptHeadline();
 
-    /* ── Helpers ────────────────────────────── */
+    /* Helpers */
     function getPhase() {
       if (count < 36) return "AWAKEN";
       if (count < 72) return "GROW";
@@ -157,7 +157,7 @@ import Container from "@components/Container.astro";
       return p === "AWAKEN" ? 10 : p === "GROW" ? 8 : 5;
     }
 
-    /* ── Update ─────────────────────────────── */
+    /* Update */
     function updateSeed() {
       const pct = Math.min(count / THRESHOLD, 1);
       const phase = getPhase();
@@ -185,7 +185,7 @@ import Container from "@components/Container.astro";
       }
     }
 
-    /* ── Sparks ─────────────────────────────── */
+    /* Sparks */
     function spawnSparks() {
       if (reduceMotion) return;
       const rect = seed.getBoundingClientRect();
@@ -215,7 +215,7 @@ import Container from "@components/Container.astro";
       setTimeout(() => seed.style.transform = "", 150);
     }
 
-    /* ── Streak shower ──────────────────────── */
+    /* Streak shower */
     function spawnStreak() {
       if (reduceMotion) return;
       const streak = document.createElement("div");
@@ -225,7 +225,7 @@ import Container from "@components/Container.astro";
       setTimeout(() => streak.remove(), 1500);
     }
 
-    /* ── Ascension ──────────────────────────── */
+    /* Ascension */
     function ascend() {
       portal.hidden = false;
       if (!reduceMotion) {
@@ -239,7 +239,7 @@ import Container from "@components/Container.astro";
       }
     }
 
-    /* ── Interaction ────────────────────────── */
+    /* Interaction */
     function cultivate(n = 1) {
       if (count >= THRESHOLD) return;
       count = Math.min(count + n, THRESHOLD);

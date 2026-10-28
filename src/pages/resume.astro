@@ -7,18 +7,16 @@ import Layout from "@layouts/Layout.astro";
 import Container from "@components/Container.astro";
 ---
 
-<Layout title="Resume" description="0xSrcAura — Web Developer, Entry-Level Cybersecurity">
+<Layout title="Resume" description="0xSrcAura · Web Developer, Entry-Level Cybersecurity">
   <Container>
     <!-- Ghost typography looming behind everything -->
     <div class="ghost-title ghost-drift-x" aria-hidden="true">RÉSUMÉ</div>
 
-    <!-- ══════════════════════════════════════════
-         TERMINAL VIEW (hidden until summoned)
-         ══════════════════════════════════════════ -->
+    <!-- TERMINAL VIEW (hidden until summoned) -->
     <div class="article-card term-card" id="resume-term">
       <div class="term-chrome">
         <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
-        <span class="term-title">src@euthymia — resume.sh</span>
+        <span class="term-title">src@euthymia · resume.sh</span>
         <span class="term-tools">
           <a class="term-tool" href="https://github.com/SourceAura" target="_blank" rel="noopener" aria-label="GitHub" data-tip="GitHub" data-tip-pos="below">gh &#8599;</a>
           <a class="term-tool" href="mailto:sourceaura.dev@gmail.com" aria-label="Email" data-tip="Email" data-tip-pos="below">mail</a>
@@ -35,14 +33,12 @@ import Container from "@components/Container.astro";
           autocomplete="off"
           autocapitalize="off"
           spellcheck="false"
-          aria-label="Terminal input — type help for commands"
+          aria-label="Terminal input: type help for commands"
         />
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         ARTICLE — THE READING CHAMBER
-         ══════════════════════════════════════════ -->
+    <!-- Article: the reading chamber -->
     <article class="article-card scan-sweep" id="resume-doc" data-pagefind-body data-reveal hidden>
       <div class="corner-brackets" aria-hidden="true">
         <span class="bracket tl"></span><span class="bracket tr"></span>
@@ -53,23 +49,23 @@ import Container from "@components/Container.astro";
 
       <div class="article-content">
         <p class="lede" data-reveal>
-          Self-taught builder working in the small hours. I ship real systems —
-          multiplayer game servers, voice-driven Linux shells, recon automation —
+          Self-taught builder working in the small hours. I ship real systems:
+          multiplayer game servers, voice-driven Linux shells, recon automation,
           and I verify everything I claim.
         </p>
 
         <div class="article prose dark:prose-invert" data-blur-headings>
           <h2>Experience</h2>
-          <h3>Independent Web Developer <span class="dim">— 2024 → present</span></h3>
+          <h3>Independent Web Developer <span class="dim">· 2024 → present</span></h3>
           <ul>
-            <li>Designed and built <strong>Euthymia: Soul Alterz</strong> — a full TypeScript multiplayer client/server web game (Protocol War lore, 3 races, 2 factions, base building, in-game economy, gamified ethical-hacking loop).</li>
-            <li>Building <strong>Insei: Ghost in the Shell</strong> — a local-first voice familiar for Linux; voice loop verified end-to-end (Whisper wake-word → command dispatch → live compositor control), 132-test suite green.</li>
-            <li>Runs a local-first <strong>bug-bounty recon workflow</strong> — scope-guarded automation (subfinder → httpx → nuclei) with two-stage local triage; every finding verified by hand.</li>
+            <li>Designed and built <strong>Euthymia: Soul Alterz</strong>: a full TypeScript multiplayer client/server web game (Protocol War lore, 3 races, 2 factions, base building, in-game economy, gamified ethical-hacking loop).</li>
+            <li>Building <strong>Insei: Ghost in the Shell</strong>: a local-first voice familiar for Linux; voice loop verified end-to-end (Whisper wake-word → command dispatch → live compositor control), 132-test suite green.</li>
+            <li>Runs a local-first <strong>bug-bounty recon workflow</strong>: scope-guarded automation (subfinder → httpx → nuclei) with two-stage local triage; every finding verified by hand.</li>
           </ul>
 
-          <h3>Tier 2 Technical Support <span class="dim">— Agero, 2015 → 2017</span></h3>
+          <h3>Tier 2 Technical Support <span class="dim">· Agero, 2015 → 2017</span></h3>
           <ul>
-            <li><strong>Promoted to Tier 2</strong> — premium, escalation-level support handling the complex customer issues Tier 1 could not resolve.</li>
+            <li><strong>Promoted to Tier 2</strong>: premium, escalation-level support handling the complex customer issues Tier 1 could not resolve.</li>
             <li>Received and resolved a wide variety of customer transactions and issues, efficiently and ethically.</li>
             <li>Provided technical assistance and support to team members and customers alike; maintained compliance with all company protocols and policies.</li>
           </ul>
@@ -85,7 +81,7 @@ import Container from "@components/Container.astro";
           </ul>
 
           <h2>Education</h2>
-          <p>Independence University — coursework in Graphic Arts <span class="dim">(did not complete; no degree awarded)</span>. Design coursework feeds the front-end work.</p>
+          <p>Independence University: coursework in Graphic Arts <span class="dim">(did not complete; no degree awarded)</span>. Design coursework feeds the front-end work.</p>
 
           <h2>Now</h2>
           <p>Portfolio first, applications daily. The work is public at <a href="https://github.com/SourceAura">github.com/SourceAura</a> and playable at <a href="/euthymia">/euthymia</a>. If you want the formal document, <a href="mailto:sourceaura.dev@gmail.com">ask and it's yours</a>.</p>
@@ -118,16 +114,16 @@ import Container from "@components/Container.astro";
       whoami: [
         "0xSrcAura",
         "Web Developer · Entry-Level Cybersecurity",
-        "Base: Nashville, TN — open to remote · typing 71 GWAM",
+        "Base: Nashville, TN · open to remote · typing 71 GWAM",
       ],
       experience: [
-        "Independent Web Developer — 2024 → present",
-        "  · Euthymia: Soul Alterz — TypeScript multiplayer client/server web game",
-        "  · Insei: Ghost in the Shell — local-first voice familiar for Linux (ground zero seeded)",
+        "Independent Web Developer · 2024 → present",
+        "  · Euthymia: Soul Alterz, TypeScript multiplayer client/server web game",
+        "  · Insei: Ghost in the Shell, local-first voice familiar for Linux (ground zero seeded)",
         "  · Local-first bug-bounty recon workflow (subfinder → httpx → nuclei)",
         "",
-        "Tier 2 Technical Support — Agero, 2015 → 2017",
-        "  · Promoted to Tier 2 — premium escalation-level support",
+        "Tier 2 Technical Support · Agero, 2015 → 2017",
+        "  · Promoted to Tier 2, premium escalation-level support",
       ],
       arsenal: [
         "TypeScript · JavaScript · HTML5 · CSS3 · Python · Bash",
@@ -136,8 +132,8 @@ import Container from "@components/Container.astro";
         "nuclei · httpx · subfinder · Whisper on-device pipelines",
       ],
       education: [
-        "Independence University — coursework in Graphic Arts",
-        "(did not complete; no degree awarded) — design feeds the front-end work.",
+        "Independence University: coursework in Graphic Arts",
+        "(did not complete; no degree awarded): design feeds the front-end work.",
       ],
       contact: [
         "mail ......... sourceaura.dev@gmail.com",
@@ -147,10 +143,10 @@ import Container from "@components/Container.astro";
       hire: [
         "Portfolio first, applications daily.",
         "The work is public and playable. If you want the formal document,",
-        "write to sourceaura.dev@gmail.com — it's yours.",
+        "write to sourceaura.dev@gmail.com: it's yours.",
       ],
       petals: [
-        "recent petals —",
+        "recent petals:",
         "  13 · i am that is, that is i am",
         "  12 · Meet Me",
         "  11 · The Small Hours",
@@ -179,7 +175,7 @@ import Container from "@components/Container.astro";
         return;
       }
       const boot = [
-        "euthymia resume shell v1.0 — all systems nominal",
+        "euthymia resume shell v1.0 · all systems nominal",
         "type ‘help’ to list commands.",
       ];
       if (reduce) {
@@ -263,11 +259,11 @@ import Container from "@components/Container.astro";
         print(["loading euthymia…"]);
         setTimeout(() => (window.location.href = EUTHYMIA_URL), 450);
       } else if (cmd === "sudo hire me") {
-        print(["nice try. write to sourceaura.dev@gmail.com — that's the real sudo."]);
+        print(["nice try. write to sourceaura.dev@gmail.com: that's the real sudo."]);
       } else if (DATA[cmd]) {
         print(DATA[cmd]);
       } else {
-        print(["command not found: " + raw + " — try ‘help’."]);
+        print(["command not found: " + raw + ": try ‘help’."]);
       }
       out.scrollTop = out.scrollHeight;
     }
@@ -346,7 +342,7 @@ import Container from "@components/Container.astro";
     text-align: center;
   }
 
-  /* ── terminal ── */
+  /* terminal */
   .term-card { margin-bottom: 2rem; overflow: hidden; }
   .term-chrome {
     display: flex; align-items: center; gap: 0.45rem;
@@ -401,7 +397,7 @@ import Container from "@components/Container.astro";
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem;
   }
 
-  /* ── article ── */
+  /* article */
   .article-card {
     position: relative; border-radius: 14px; overflow: hidden;
     border: 1px solid color-mix(in oklch, currentColor 10%, transparent);
@@ -439,7 +435,7 @@ import Container from "@components/Container.astro";
 </style>
 
 <style is:global>
-  /* ── print: the formal document ── */
+  /* print: the formal document */
   @media print {
     [data-role="app-header"],
     .app-footer,

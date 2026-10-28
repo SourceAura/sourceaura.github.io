@@ -1,8 +1,8 @@
 /**
- * Insei boot — imported once by Layout.astro (production-safe).
+ * Insei boot: imported once by Layout.astro (production-safe).
  * Wires the sense module and publishes the mind on window.__insei
  * for the keeper window's inline script to consume (no bundler imports
- * inside inline scripts — the AseHud/window.__ase pattern).
+ * inside inline scripts: the AseHud/window.__ase pattern).
  */
 import { initInseiSense } from "./insei-sense";
 import {

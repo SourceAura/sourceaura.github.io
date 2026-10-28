@@ -1,15 +1,11 @@
 ---
-/* Nelumbo
-Rose Lotus - Rotating LED Display.
-Nelumbo displays a 3D carousel of petals + a HUD.
+/*
+Nelumbo: rotating LED display. A 3D carousel of petals plus a HUD.
 
-Updates:
-- Carousel hidden by default, toggled by Qi.astro click
-- HUD opens ONLY on long press
-- Orbs ~20% smaller
-- Petals never distort/stretch (counter-rotate surface to face camera)
-- HUD docked under PageFind input (#hud-dock)
-- NEW: Side “card scanner” lines pulse when an orb crosses the fade boundary (scan out/in)
+The carousel is hidden by default and toggled by a Qi.astro click; the HUD
+opens only on long press. Petals counter-rotate to face the camera so they
+never distort. The HUD docks under the PageFind input (#hud-dock), and side
+scanner lines pulse when an orb crosses the fade boundary.
 */
 import Qi from "@components/Qi.astro";
 import Orb from "@components/Orb.astro";
@@ -373,7 +369,7 @@ import {
   }
 
   // Keep the comments iframe on the page's theme: the cards are daylight
-  // glass in light mode, dark glass in dark mode — the thread must match.
+  // glass in light mode, dark glass in dark mode: the thread must match.
   __observer(new MutationObserver(() => {
     if (!hudGiscusBooted) return;
     const frame = hudGiscusWrapper?.querySelector("iframe.giscus-frame");
@@ -450,7 +446,7 @@ import {
           hudReactions?.setAttribute("data-has-reactions", "true");
           animateCount(hudReactionsCount);
 
-          // Count the number up, but not the "99+" cap — that is a label,
+          // Count the number up, but not the "99+" cap: that is a label,
           // not a value.
           if (d.total > 99) hudReactionsCount.textContent = "99+";
           else window.__countUp?.(hudReactionsCount, d.total, 600);
@@ -788,12 +784,12 @@ import {
   __track(mq, "change", updateRadius);
   updateRadius();
 
-  // ---------- Orbit: pointer parallax ----------
+  // Orbit: pointer parallax
   // The camera leans a few degrees toward the pointer. Small on purpose: this
   // should be felt rather than seen.
   //
   // It runs on its own rAF because Nelumbo's main loop parks itself once the
-  // ring settles — the camera has to keep tracking while the ring is at rest.
+  // ring settles: the camera has to keep tracking while the ring is at rest.
   const PARALLAX_X = 3.4;
   const PARALLAX_Y = 2.2;
   let panX = 0;
@@ -1018,7 +1014,6 @@ import {
     return (tmp.innerText || tmp.textContent || "").trim();
   }
 
-  // --- draggable HUD scroll (installed once) ---
   function enableDragScroll(scroller) {
     if (!scroller) return;
     if (scroller.dataset.dragScroll === "1") return;
@@ -1257,7 +1252,7 @@ import {
 
   function snapToNearest(immediate = false) {
     // find the index whose yaw is closest to "front/center"
-    // (your "center" is effectively the active index computed from angle)
+    // (the "center" is effectively the active index computed from angle)
     const normalized = ((angle % 360) + 360) % 360;
     const nearest = ((Math.round(-normalized / step) % count) + count) % count;
     snapToIndex(nearest, immediate);
@@ -1618,8 +1613,6 @@ import {
     { once: true },
   );
 
-  // ── HUD card: vanilla ports of SpotlightCard / TiltedCard / ClickSpark ──
-  //    Tether cord ─────────────────────────────────────────────────
   // Tether cord: draw a live SVG line between the HUD card and the
   // comments card so the two read as one instrument in two modes.
   const tetherSvg = document.createElementNS(
@@ -1659,7 +1652,7 @@ import {
   }
   (() => {
 
-  // Reading progress bar — passive scroll listener
+  // Reading progress bar: passive scroll listener
   const progress = hud.querySelector(".hud-progress");
   const articleBody = hud.querySelector(".hud-article-body");
   if (progress && articleBody) {
@@ -1685,7 +1678,6 @@ import {
     }
   });
 
-  //    Spotlight / tilt / ghost / spark / progress / keys ─────────
   const hud = document.getElementById("petal-hud");
   if (!hud) return;
 
@@ -1696,7 +1688,7 @@ import {
   const live = fine && !reduce;
   const tilt = hud.querySelector(".hud-tilt");
 
-  // SpotlightCard + TiltedCard — rAF-throttled, transforms only
+  // SpotlightCard + TiltedCard: rAF-throttled, transforms only
   let raf = 0;
   hud.addEventListener(
     "pointermove",
@@ -1736,7 +1728,7 @@ import {
     sync();
   }
 
-  // ClickSpark — a small burst off the controls
+  // ClickSpark: a small burst off the controls
   if (!reduce) {
     hud.querySelectorAll("[data-spark]").forEach((btn) => {
       btn.addEventListener("click", (e) => {

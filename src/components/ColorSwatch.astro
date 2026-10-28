@@ -1,6 +1,6 @@
 ---
 /**
- * Dynamic Color Swatch - Fixed Version
+ * Dynamic Color Swatch
  * Extracts colors from focused Orb particles and applies to site highlights
  */
 const { width = 300, height = 200 } = Astro.props;
@@ -20,7 +20,6 @@ const canvasId = `${uid}_canvas`;
     if (window.__colorSwatchMounted.has(uid)) return;
     window.__colorSwatchMounted.add(uid);
 
-    // Default theme palettes
     const defaultPalettes = {
       dark: [
         { name: 'Dark Base', rgb: '0,0,0', hex: '#000000' },
@@ -43,13 +42,11 @@ const canvasId = `${uid}_canvas`;
     let currentPalette = defaultPalettes.dark;
     let isDark = true;
 
-    // Enhanced logging with Ase HUD integration
     function log(message, data = {}) {
       const timestamp = new Date().toLocaleTimeString();
       const logMessage = `[${timestamp}] 🎨 ${message}`;
       console.log(logMessage, data);
       
-      // Send to Ase HUD console
       const aseConsole = document.getElementById('ase-console-logs');
       if (aseConsole) {
         aseConsole.innerHTML += `${logMessage}<br>`;
@@ -57,17 +54,14 @@ const canvasId = `${uid}_canvas`;
       }
     }
 
-    // Simple and reliable color extraction
     function extractOrbColors() {
       try {
-        // Get all Orb canvases
         const allOrbs = document.querySelectorAll('.orb-canvas');
         if (allOrbs.length === 0) {
           log('No Orbs found');
           return null;
         }
 
-        // Get focused index from carousel
         const focusedIndex = window.__focusedIndex;
         if (focusedIndex === undefined || focusedIndex === null || focusedIndex === -1) {
           console.log('🎨 ColorSwatch: No focused Orb');
@@ -111,7 +105,6 @@ const canvasId = `${uid}_canvas`;
         const orbCtx = focusedOrb.getContext('2d');
         if (orbCtx) {
           try {
-            // Small center sample
             const sampleSize = 20;
             const imageData = orbCtx.getImageData(
               focusedOrb.width/2 - sampleSize/2, 
@@ -140,7 +133,6 @@ const canvasId = `${uid}_canvas`;
               }
             }
             
-            // Get most frequent color
             if (colorMap.size > 0) {
               const sortedColors = Array.from(colorMap.values())
                 .sort((a, b) => b.count - a.count)
@@ -169,7 +161,6 @@ const canvasId = `${uid}_canvas`;
       }
     }
 
-    // Update palette display
     function updateColorDisplay(palette) {
       const colorDisplay = document.getElementById(`${uid}_colors`);
       if (!colorDisplay) return;
@@ -189,7 +180,6 @@ const canvasId = `${uid}_canvas`;
       
       colorDisplay.innerHTML = colorHtml;
       
-      // Apply colors to CSS variables
       const root = document.documentElement;
       palette.forEach((color, index) => {
         root.style.setProperty(`--dynamic-color-${index + 1}`, color.hex);
@@ -199,7 +189,6 @@ const canvasId = `${uid}_canvas`;
       log('Display updated', palette.length, 'colors');
     }
 
-    // Detect theme changes
     function updateTheme() {
       const rootStyle = getComputedStyle(document.documentElement);
       isDark = rootStyle.color.includes('0, 0, 0') || 
@@ -208,7 +197,6 @@ const canvasId = `${uid}_canvas`;
       updateColorDisplay(currentPalette);
     }
 
-    // Monitor focused index changes
     function startFocusMonitoring() {
       let lastFocusedIndex = window.__focusedIndex;
       
@@ -221,7 +209,6 @@ const canvasId = `${uid}_canvas`;
           
           lastFocusedIndex = currentFocusedIndex;
           
-          // Extract colors when focus changes
           const orbColors = extractOrbColors();
           if (orbColors && orbColors.length > 0) {
             currentPalette = orbColors;
@@ -230,14 +217,12 @@ const canvasId = `${uid}_canvas`;
         }
       }, 200);
       
-      // Cleanup on navigation
       window.addEventListener('astro:before-swap', () => {
         clearInterval(checkInterval);
         window.__colorSwatchMounted.delete(uid);
       }, { once: true });
     }
 
-    // Initialize
     updateTheme();
     startFocusMonitoring();
 

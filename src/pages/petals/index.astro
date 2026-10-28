@@ -22,7 +22,7 @@ const posts = (await getCollection("petals"))
   </head>
 
   <Container>
-    <!-- ───────────────── CHRONICLE DECK ───────────────── -->
+    <!-- Chronicle deck -->
     <section class="chronicle space-y-12 py-24" data-pagefind-body>
       <div class="spine" aria-hidden="true">
         <div class="spine-fill"></div>
@@ -75,7 +75,7 @@ const posts = (await getCollection("petals"))
       }
     </section>
 
-    <!-- ───────────────── NELUMBO (ALT VIEW) ───────────────── -->
+    <!-- Nelumbo (alt view) -->
     <section class="pt-32">
       <Nelumbo posts={posts} />
     </section>
@@ -83,7 +83,7 @@ const posts = (await getCollection("petals"))
 </Layout>
 
 <style>
-  /* ───────────────── CHRONICLE DECK ───────────────── */
+  /* Chronicle deck */
 
   .chronicle {
     display: flex;
@@ -110,7 +110,7 @@ const posts = (await getCollection("petals"))
     background: color-mix(in oklch, currentColor 6%, transparent);
   }
 
-  /* ───────── RAILS: index/date above, read time + CTA below ───────── */
+  /* Rails: index/date above, read time + CTA below */
 
   .chron-rail {
     display: flex;
@@ -143,7 +143,7 @@ const posts = (await getCollection("petals"))
     font-variant-numeric: tabular-nums;
   }
 
-  /* ───────── BODY: thumbnail + text ───────── */
+  /* Body: thumbnail + text */
 
   .chron-main {
     display: grid;
@@ -186,7 +186,7 @@ const posts = (await getCollection("petals"))
     font-size: 0.88rem;
   }
 
-  /* ───────── SPINAL IGNITION — synthwave '84 timeline ───────── */
+  /* Spinal ignition: synthwave '84 timeline */
 
   .chronicle {
 
@@ -293,7 +293,7 @@ const posts = (await getCollection("petals"))
     }
   }
 
-  /* ───────── RESPONSIVE ───────── */
+  /* Responsive */
 
   @media (max-width: 640px) {
     .chron-main {

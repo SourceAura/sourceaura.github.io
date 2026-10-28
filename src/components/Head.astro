@@ -58,10 +58,6 @@ const { title, description, image = "/og.png" } = Astro.props;
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image, Astro.site)} />
 
-<!-- PageFind -->
-<!-- <link href="/pagefind/pagefind-ui.css" rel="stylesheet" /> -->
-<!-- <script is:inline src="/pagefind/pagefind-ui.js"></script> -->
-
 <ViewTransitions />
 
 <script is:inline>
@@ -74,7 +70,7 @@ const { title, description, image = "/og.png" } = Astro.props;
     setGiscusTheme();
 
     // (back-to-top click lives in BackToTop.astro; the legacy theme/
-    // back-to-prev buttons below no longer exist — removed.)
+    // back-to-prev buttons below no longer exist.)
 
     // Global listeners bind once: init() re-runs on every view transition.
     if (!window.__headGlobal) {

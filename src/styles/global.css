@@ -7,9 +7,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ======================================================
-   BASE THEME TOKENS (DARK = DEFAULT)
-====================================================== */
+/* Base theme tokens (dark = default) */
 @layer base {
   :root {
     /* ---- Tailwind / shadcn system ---- */
@@ -46,10 +44,10 @@
     --ui-muted: hsl(var(--muted-foreground));
     --ui-border: hsl(var(--border));
 
-    /* ---- SITE ACCENTS — Oasis '83 (teal/gold in dark) ---- */
+    /* Site accents: Oasis '83 (teal/gold in dark) */
     --pc-accent: #43aa88;
     --pc-accent2: #f6c309;
-    /* ---- OASIS GRADIENT STOPS — desert dusk (single source of truth) ---- */
+    /* Oasis gradient stops: desert dusk (single source of truth) */
     --sw1: #a20042;
     --sw2: #f6c309;
     --sw3: #f19f20;
@@ -95,9 +93,7 @@
   }
 }
 
-/* ======================================================
-   BASE ELEMENTS
-====================================================== */
+/* Base elements */
 @layer base {
   * {
     @apply border-border;
@@ -114,10 +110,8 @@ body {
   @apply size-full;
 }
 
-/* ════════════════════════════════════════════════════════════
-   OASIS ATMOSPHERE — velkaa depth in Oasis '83 light.
-   The whole viewport floats on teal/gold dusk over near-black.
-   ════════════════════════════════════════════════════════════ */
+/* Oasis atmosphere: velkaa depth in Oasis '83 light.
+   The whole viewport floats on teal/gold dusk over near-black. */
 body {
   background:
     radial-gradient(
@@ -146,7 +140,7 @@ html.light body {
     ),
     #f7f3e8;
 }
-/* header text — ghostwhite, like the footer */
+/* header text: ghostwhite, like the footer */
 header[data-role="app-header"] {
   color: #f8f8ff;
 }
@@ -165,7 +159,7 @@ body:has(#petal-shell[data-petals-open]) #qi-root {
   z-index: 3;
 }
 
-/* shooting-star border instrument — HUD cards, PageFind, Beacon share it.
+/* shooting-star border instrument: HUD cards, PageFind, Beacon share it.
    The comet's color comes from each host's accent (petal-driven). */
 @property --sa {
   syntax: "<angle>";
@@ -192,7 +186,7 @@ body:has(#petal-shell[data-petals-open]) #qi-root {
   }
 }
 
-/* peripheral fade — breaks the rigid rectangle, velkaa-style */
+/* peripheral fade: breaks the rigid rectangle, velkaa-style */
 body::after {
   content: "";
   position: fixed;
@@ -205,11 +199,9 @@ html.light body::after {
   background: radial-gradient(ellipse at center, transparent 60%, rgba(60, 45, 20, 0.12) 100%);
 }
 
-/* ════════════════════════════════════════════════════════════
-   GHOST DRIFT — velkaa's NIHILITY, set in motion.
+/* Ghost drift: velkaa's NIHILITY, set in motion.
    Fixed-centered ghosts and in-flow ghosts each keep
-   their centering transform inside the keyframe.
-   ════════════════════════════════════════════════════════════ */
+   their centering transform inside the keyframe. */
 @keyframes ghost-drift-center {
   0%, 100% { transform: translate(-50%, -50%) translateX(-2.5%); }
   50% { transform: translate(-50%, -50%) translateX(2.5%); }
@@ -228,10 +220,8 @@ html.light body::after {
   .ghost-drift-y { animation: ghost-drift-y 46s ease-in-out infinite; }
 }
 
-/* ════════════════════════════════════════════════════════════
-   SCAN SWEEP — velkaa's laser line, drawn across any surface
-   wearing .scan-sweep. Gated on reduced-motion.
-   ════════════════════════════════════════════════════════════ */
+/* Scan sweep: velkaa's laser line, drawn across any surface
+   wearing .scan-sweep. Gated on reduced-motion. */
 @media (prefers-reduced-motion: no-preference) {
   .scan-sweep { position: relative; overflow: hidden; }
   .scan-sweep::after {
@@ -263,9 +253,7 @@ body {
   @apply flex flex-col font-sans antialiased;
 }
 
-/* ======================================================
-   LAYOUT
-====================================================== */
+/* Layout */
 header {
   @apply fixed left-0 right-0 top-0 z-50 h-7 bg-background/70 py-7 saturate-200 backdrop-blur-sm;
 }
@@ -278,18 +266,14 @@ footer {
   @apply py-6 text-sm;
 }
 
-/* ======================================================
-   ARTICLE / PROSE
-====================================================== */
+/* Article / prose */
 article {
   @apply prose prose-neutral dark:prose-invert max-w-full;
   @apply prose-img:mx-auto prose-img:my-auto;
   @apply prose-headings:font-semibold;
 }
 
-/* ======================================================
-   CODE BLOCKS
-====================================================== */
+/* Code blocks */
 pre {
   @apply border border-primary/15 py-5;
 }
@@ -304,9 +288,7 @@ pre {
   --astro-code-color-background: hsl(var(--background));
 }
 
-/* ─────────────────────────────────────────────
-   Universal tooltips — any element with data-tip
-   ───────────────────────────────────────────── */
+/* Universal tooltips: any element with data-tip */
 [data-tip] {
   position: relative;
 }

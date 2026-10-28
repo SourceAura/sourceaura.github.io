@@ -228,7 +228,6 @@ LanguageSwitcher: Dropdown for changing site language
     if (flagEl) flagEl.textContent = lang.flag;
     if (codeEl) codeEl.textContent = lang.code;
     
-    // Update dropdown options
     updateDropdownOptions();
   }
 
@@ -267,21 +266,17 @@ LanguageSwitcher: Dropdown for changing site language
     const currentPath = window.location.pathname;
     const pathParts = currentPath.split('/').filter(Boolean);
     
-    // Remove current locale from path if it exists
     if (languages[pathParts[0]]) {
       pathParts.shift();
     }
     
-    // Build new path
     let newPath = pathParts.join('/');
     if (newPath) newPath = '/' + newPath;
     
-    // Add new locale prefix if not English (default)
     if (langCode !== 'en') {
       newPath = '/' + langCode + newPath;
     }
     
-    // Navigate to new language
     window.location.href = newPath;
   }
 
@@ -326,14 +321,12 @@ LanguageSwitcher: Dropdown for changing site language
   }
   if (!window.__langGlobal) {
     window.__langGlobal = true;
-    // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
       const switcher = document.getElementById('language-switcher');
       if (switcher && !switcher.contains(e.target)) {
         closeDropdown();
       }
     });
-    // Close dropdown on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeDropdown();

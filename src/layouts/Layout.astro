@@ -37,7 +37,7 @@ const { title, description, image, prev, next } = Astro.props
       </script>
     ) : null}
 
-    <!-- Ase bootstrap — DEV ONLY.
+    <!-- Ase bootstrap: DEV ONLY.
          Dynamic import behind a build-time-false branch, so the telemetry
          client is tree-shaken out of production entirely: external visitors
          get no listeners, no timers, and no requests to the local Ase service. -->
@@ -53,12 +53,12 @@ const { title, description, image, prev, next } = Astro.props
       import "../lib/motion";
     </script>
 
-    <!-- Insei keeper — production-safe: local sensing + corpus mind, no network. -->
+    <!-- Insei keeper: production-safe. Local sensing + corpus mind, no network. -->
     <script>
       import "../lib/insei";
     </script>
 
-    <!-- Existing gesture script (unchanged) -->
+    <!-- Gesture script -->
     <script is:inline type="module">
       import {
         mountGestures,
@@ -89,7 +89,7 @@ const { title, description, image, prev, next } = Astro.props
     <script>
       // Petal accent: the current petal's hero image lends its dominant hue
       // to PageFind + the Beacon sparkline via --petal-accent.
-      // Cleared on every non-petal page — the site tokens are the fallback.
+      // Cleared on every non-petal page: the site tokens are the fallback.
       if (!window.__petalAccent) {
         window.__petalAccent = true;
         const applyPetalAccent = () => {

@@ -14,7 +14,7 @@ export const SITE = {
   DESCRIPTION: "euthymia [ eu·​thy·​mia] (noun): ",
   DEFINITION: "a normal, tranquil mental state or mood.",
   SEO_DESCRIPTION:
-    "sourceaura — a sandbox of poetry and programming. Interactive experiments, notes, and projects, built with Astro.",
+    "sourceaura: a sandbox of poetry and programming. Interactive experiments, notes, and projects, built with Astro.",
   NUM_POSTS_ON_HOMEPAGE: 7,
   NUM_PROJECTS_ON_HOMEPAGE: 7,
   EMAIL: "sourceaura@proton.me",
@@ -38,7 +38,6 @@ export const HOME: Metadata = {
 
 export const PETALS: Metadata = {
   TITLE: "petals",
-  // TIMESTAMP: "2022-12-01",
   DESCRIPTION: "A collection of particles I am passionate about.",
   GITHUB: "github.com/sourceaura",
   TWITTER: "twitter.com/sourceaura",

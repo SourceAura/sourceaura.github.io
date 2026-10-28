@@ -30,12 +30,11 @@ interface Props {
 
   nearPlaneEpsilon?: number;
 
-  /* ---- Crystal layer (opt-in) ----
-     Adds the Crystalized-Ball vocabulary — electric rim strands, travelling
-     flares, sparks, haze — around the existing texture-mapped particle sphere.
+  /* Crystal layer (opt-in): electric rim strands, travelling flares,
+     sparks and haze around the existing texture-mapped particle sphere.
      The sphere itself is untouched: the rim takes its colour from the post
-     image's dominant tone, and every particle still samples the image at its
-     own (u,v). Default off, so the orb renders exactly as before unless asked. */
+     image's dominant tone, and every particle still samples the image at
+     its own (u,v). Default off. */
   crystal?: boolean;
   glow?: number;
   haze?: number;
@@ -144,7 +143,6 @@ const cap = Math.max(1, Math.min(width, height));
 
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // ---------- Pulse (from CSS var --pulse) ----------
     // Sampling the CSS var ~10Hz avoids expensive getComputedStyle per frame.
     let pulse = 0.5;
     const samplePulse = () => {
@@ -163,11 +161,9 @@ const cap = Math.max(1, Math.min(width, height));
 
     let lastPulse = getPulse();
 
-    // ---------- Identify which carousel item this orb belongs to ----------
     const hostItem = wrap.closest?.(".carousel-item");
     const orbIndex = hostItem ? Number(hostItem.dataset.index) : -1;
 
-    // ---------- Disintegration state ----------
     let dis = {
       active: false,
       level: 0,
@@ -185,13 +181,11 @@ const cap = Math.max(1, Math.min(width, height));
         dis.level = dis.mode === "out" ? 1 : 0;
         return dis.level;
       }
-      // smooth fade curve
       const s = t * t * (3 - 2 * t);
       dis.level = dis.mode === "out" ? s : 1 - s;
       return dis.level;
     }
 
-    // Listen for scanner pulses coming from Nelumbo
     function onScan(ev) {
       const d = ev?.detail;
       if (!d) return;
@@ -207,7 +201,6 @@ const cap = Math.max(1, Math.min(width, height));
 
     window.addEventListener("nelumbo:scan", onScan);
 
-    // ---------- Pointer interaction ----------
     // Mouse: gentle attraction toward the cursor. Click: radial burst.
     const pointerFine = matchMedia("(pointer: fine)").matches;
     const pointer = { x: 0, y: 0, active: false, inside: false };
@@ -238,13 +231,12 @@ const cap = Math.max(1, Math.min(width, height));
     }
     wrap.addEventListener("pointerdown", onPointerDown);
 
-    // ---------- Visibility (perf) ----------
     // How much work an orb is worth is a function of how visible it actually
     // is. During a carousel transition most petals sit between 5% and 30%
     // opacity; rendering those at full cost is where the frame budget goes.
     let lastVisCheck = 0;
-    let visScore = 1; // 0..1 — the host item's opacity
-    let effort = 1; // 0..1 — work budget derived from it
+    let visScore = 1; // 0..1: the host item's opacity
+    let effort = 1; // 0..1: work budget derived from it
 
     function updateVisibilityScore(now) {
       if (now - lastVisCheck < 180) return;
@@ -276,7 +268,6 @@ const cap = Math.max(1, Math.min(width, height));
       }
     }
 
-    // ---------- Theme cache ----------
     let cachedMode = "source-over";
     let isDark = false;
     let fallbackRGB = "0,0,0";
@@ -302,13 +293,11 @@ const cap = Math.max(1, Math.min(width, height));
       attributeFilter: ["class", "style"],
     });
 
-    // ---------- Texture ----------
     let texReady = false;
     let texW = 0,
       texH = 0;
     let texData = null;
 
-    // ---------- Dominant tone (drives the crystal layer) ----------
     let toneRGB = { r: 255, g: 255, b: 255 };
     let hotRGB = { r: 255, g: 255, b: 255 };
 
@@ -450,7 +439,7 @@ const cap = Math.max(1, Math.min(width, height));
       return { r, g, b, a };
     }
 
-    // ---------- Square sizing (IMPORTANT: measure layout size, not transformed rect) ----------
+    // Square sizing: measure layout size, not the transformed rect.
     let S = 256;
     let dpr = 1;
     let dprCap = 4;
@@ -480,12 +469,10 @@ const cap = Math.max(1, Math.min(width, height));
     ro.observe(wrap);
     resizeToLayoutSquare();
 
-    // ---------- Projection ----------
     const fLen = 320;
     const zMax = fLen - 2;
     const sphereCenterZ = () => -3 - sphereRad;
 
-    // ---------- Particle pool ----------
     const N = Math.max(1, maxParticles | 0);
 
     const x = new Float32Array(N);
@@ -513,7 +500,6 @@ const cap = Math.max(1, Math.min(width, height));
     }
 
     function resetParticle(i) {
-      // random point on sphere surface
       const th = Math.random() * Math.PI * 2;
       const ph = Math.acos(Math.random() * 2 - 1);
 
@@ -527,16 +513,14 @@ const cap = Math.max(1, Math.min(width, height));
 
       const scz = sphereCenterZ();
 
-      // start ON the surface
       x[i] = sphereRad * nx;
       y[i] = sphereRad * ny;
       z[i] = scz + sphereRad * nz;
 
-      // keep your "locked specks" behavior exactly as before
       const isLocked = Math.random() < lockRatio;
       locked[i] = isLocked ? 1 : 0;
 
-      // ✅ CHANGE: emitted particles move OUTWARD from the surface (Test.astro vibe)
+      // Emitted particles move outward from the surface.
       if (isLocked) {
         vx[i] = 0;
         vy[i] = 0;
@@ -562,7 +546,7 @@ const cap = Math.max(1, Math.min(width, height));
       // Base emission scales with --pulse (0..1)
       const p = getPulse();
 
-      // 0.65..1.85 multiplier (tweak to taste)
+      // 0.65..1.85 multiplier.
       const mult = 0.65 + p * 1.2;
 
       const n = Math.max(0, ((particlesPerFrame * mult) | 0) + (extra | 0));
@@ -576,13 +560,11 @@ const cap = Math.max(1, Math.min(width, height));
 
     for (let i = 0; i < Math.min(N, 1100); i++) resetParticle(i);
 
-    // ---------- Test-like lifetime envelope ----------
     const attack = 50;
     const hold = 50;
     const decay = 100;
     const life = attack + hold + decay;
 
-    // ---------- Crystal layer ----------
     // Everything below is additive and only runs when `crystal` is true.
     const CRY = {
       strands: Math.max(0, Math.min(8, strands | 0)),
@@ -612,7 +594,7 @@ const cap = Math.max(1, Math.min(width, height));
 
       ctx.globalCompositeOperation = isDark ? "lighter" : "source-over";
 
-      // --- haze: light pooling around and under the sphere ---
+      // haze: light pooling around and under the sphere
       if (CRY.haze > 0) {
         const outer = Math.min(R * 2.2, S * 0.5);
         const g = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, outer);
@@ -625,7 +607,7 @@ const cap = Math.max(1, Math.min(width, height));
         ctx.fill();
       }
 
-      // --- strands: electric arcs braided around the rim ---
+      // strands: electric arcs braided around the rim
       if (CRY.strands > 0) {
         // A barely-visible orb doesn't need all eight braids. These are the
         // most expensive part of the layer: n paths x 72 segments per frame.
@@ -662,7 +644,7 @@ const cap = Math.max(1, Math.min(width, height));
         }
       }
 
-      // --- flares: slow travelling licks of light on the rim ---
+      // flares: slow travelling licks of light on the rim
       if (CRY.flares > 0 && effort > 0.25) {
         const n = 3;
         for (let i = 0; i < n; i++) {
@@ -681,7 +663,7 @@ const cap = Math.max(1, Math.min(width, height));
         }
       }
 
-      // --- rim: soft wide pass, then a tighter hot pass ---
+      // rim: soft wide pass, then a tighter hot pass
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
       ctx.strokeStyle = rgbaOf(tone, 0.3 * CRY.glow * fade);
@@ -706,7 +688,7 @@ const cap = Math.max(1, Math.min(width, height));
 
       ctx.globalCompositeOperation = isDark ? "lighter" : "source-over";
 
-      // --- sparks: short arcs discharging along the inside of the rim ---
+      // sparks: short arcs discharging along the inside of the rim
       if (CRY.sparks > 0 && effort > 0.25) {
         sparkAcc += CRY.sparks * 0.16;
         while (sparkAcc >= 1) {
@@ -743,7 +725,6 @@ const cap = Math.max(1, Math.min(width, height));
       ctx.stroke();
     }
 
-    // ---------- Render loop ----------
     let turnAngle = 0;
     let raf = 0;
 
@@ -772,7 +753,7 @@ const cap = Math.max(1, Math.min(width, height));
         return;
       }
 
-      // "Thump" burst when pulse crosses upward (optional but fun)
+      // "Thump" burst when the pulse crosses upward.
       const p = getPulse();
       const burst = lastPulse < 0.78 && p >= 0.78 ? 18 : 0; // tweak threshold + size
       lastPulse = p;
@@ -819,13 +800,12 @@ const cap = Math.max(1, Math.min(width, height));
 
         age[i]++;
 
-        // Test.astro: recycle particles after envelope completes
         if (age[i] > life) {
           resetParticle(i);
           continue;
         }
 
-        // Test.astro: alpha envelope (attack/hold/decay)
+        // Alpha envelope (attack/hold/decay).
         let pAlpha = 1;
         if (age[i] < attack) pAlpha = age[i] / attack;
         else if (age[i] < attack + hold) pAlpha = 1;
@@ -904,7 +884,6 @@ const cap = Math.max(1, Math.min(width, height));
         const py = y[i] * m + projCenterY;
         if (px < -2 || px > W + 2 || py < -2 || py > H + 2) continue;
 
-        // Pointer attraction + click burst
         if (!locked[i] && effort > 0.1) {
           if (pointer.active && pointer.inside) {
             const dxp = px - pointer.x;

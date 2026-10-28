@@ -1,4 +1,3 @@
-// Translation utility functions
 export function getCurrentLocale(): string {
   if (typeof window !== 'undefined') {
     const path = window.location.pathname;
@@ -16,8 +15,7 @@ export function getCurrentLocale(): string {
   return 'en';
 }
 
-// Simple synchronous translation function
-// For now, returns English - in production you'd load actual translations
+// Returns English for now; production loads actual translations.
 export function t(key: string): string {
   const translations = {
     'en': {

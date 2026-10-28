@@ -3,12 +3,12 @@ import type { APIRoute } from "astro";
 const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN;
 
 // This endpoint reads Vercel KV and calls the GitHub GraphQL API, so it must
-// run on demand — it cannot be baked into the static build.
+// run on demand: it cannot be baked into the static build.
 export const prerender = false;
 
 // Vercel KV needs KV_REST_API_URL / KV_REST_API_TOKEN, which Vercel injects in
 // production. They are absent in local dev, and the client is a Proxy that
-// throws the moment a method is accessed without them — which paints Vercel's
+// throws the moment a method is accessed without them, which paints Vercel's
 // error overlay over the whole page. The cache is an enhancement, not a
 // dependency, so every KV call is best-effort: if it is unavailable the
 // endpoint still works, just uncached.
@@ -38,7 +38,7 @@ export const GET: APIRoute = async ({ url }) => {
 
   const key = `reactions:${id}`;
 
-  // 1️⃣ Try cache first
+  // Try cache first
   const cached = await kvGet<number>(key);
   if (typeof cached === "number") {
     return new Response(JSON.stringify({ total: cached }), {
@@ -46,7 +46,7 @@ export const GET: APIRoute = async ({ url }) => {
     });
   }
 
-  // 2️⃣ Fetch from GitHub
+  // Fetch from GitHub
   const res = await fetch("https://api.github.com/graphql", {
     method: "POST",
     headers: {
@@ -72,7 +72,7 @@ export const GET: APIRoute = async ({ url }) => {
   const json = await res.json();
   const total = json?.data?.node?.reactions?.totalCount ?? 0;
 
-  // 3️⃣ Cache for 5 minutes
+  // Cache for 5 minutes
   await kvSet(key, total);
 
   return new Response(JSON.stringify({ total }), {

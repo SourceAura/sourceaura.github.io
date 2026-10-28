@@ -1,10 +1,8 @@
 /**
- * Motion primitives — dependency-free ports of the React Bits effects used on
- * this site. The CSS half lives in src/styles/motion.css.
- *
- * Degrades safely by construction: the hidden states are scoped under
- * `.js-motion`, which only the inline gate in Head.astro ever sets. If JS is
- * off or this bundle fails, nothing is hidden.
+ * Motion primitives: dependency-free ports of the React Bits effects used
+ * on this site. The CSS half lives in src/styles/motion.css. Hidden states
+ * are scoped under `.js-motion` (set only by the inline gate in
+ * Head.astro), so with JS off or a failed bundle, nothing stays hidden.
  */
 
 const REVEAL_MARGIN = "0px 0px -12% 0px";
@@ -175,11 +173,9 @@ export function initMotion(): void {
 
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // ---------- SpotlightCard / HoloCard ----------
   initSpotlight();
   initHolo();
 
-  // ---------- DecryptedText ----------
   const decryptEls = [
     ...document.querySelectorAll<HTMLElement>("[data-decrypt]"),
   ];
@@ -193,7 +189,6 @@ export function initMotion(): void {
   if (reduced) decryptEls.forEach(revealDecrypt);
   else onEnter(decryptEls, revealDecrypt);
 
-  // ---------- AnimatedContent ----------
   // Threshold 0 on purpose: rootMargin already holds the trigger back until the
   // element is properly in frame, and a non-zero threshold is unreachable for
   // any element taller than the viewport.
@@ -201,10 +196,9 @@ export function initMotion(): void {
   if (reduced) reveals.forEach((el) => el.classList.add("is-in"));
   else onEnter(reveals, (el) => el.classList.add("is-in"), 0);
 
-  // ---------- BlurText ----------
   // Rendered markdown cannot carry the attribute, so headings inside a
   // [data-blur-headings] scope opt in by selector. The attribute is stamped on
-  // each heading (not the scope) so they are observed individually — a tall
+  // each heading (not the scope) so they are observed individually: a tall
   // scope container would never satisfy an intersection threshold.
   document
     .querySelectorAll<HTMLElement>("[data-blur-headings] :is(h1, h2)")
@@ -217,7 +211,6 @@ export function initMotion(): void {
   if (reduced) blurEls.forEach((el) => el.classList.add("is-in"));
   else onEnter(blurEls, (el) => el.classList.add("is-in"), 0);
 
-  // ---------- CountUp ----------
   // Declarative form: the target is known at render time. For values that
   // arrive async, call countUp() directly instead.
   const counters = [
@@ -243,11 +236,10 @@ function boot(): void {
 }
 
 /**
- * Safety net. The observers above are correct for normally-laid-out content,
- * but a scroll container, an `overflow: hidden` ancestor or a late-rendering
- * panel can leave an element permanently unobserved — and therefore stuck at
- * opacity 0. Content must never stay hidden, so anything actually on screen
- * that has not transitioned yet is revealed after a short delay.
+ * Safety net. A scroll container, an `overflow: hidden` ancestor or a
+ * late-rendering panel can leave an element permanently unobserved and
+ * stuck at opacity 0, so anything on screen that has not transitioned yet
+ * is revealed after a short delay.
  */
 window.setTimeout(() => {
   const inView = (el: HTMLElement) => {

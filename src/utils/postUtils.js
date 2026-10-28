@@ -6,12 +6,10 @@ export function getFirstImage(content) {
     let match;
     let imageUrl;
 
-    // Try to match Markdown syntax first
     match = content.match(markdownRegex);
     if (match && match[1]) {
         imageUrl = match[1];
     } else {
-        // If no Markdown image found, try HTML syntax
         match = content.match(htmlRegex);
         if (match && match[1]) {
             imageUrl = match[1];
@@ -19,16 +17,15 @@ export function getFirstImage(content) {
     }
 
     if (imageUrl) {
-        // Check if it's a relative URL
         if (imageUrl.startsWith('./') || imageUrl.startsWith('../') || !imageUrl.startsWith('http')) {
-            // Handle relative URL (you might need to prepend a base path)
+            // Handle relative URL (a base path may need to be prepended)
             return `/content${imageUrl}`;
         } else {
             return imageUrl;
         }
     }
 
-    // If no image found, return null or a default image URL
+    // No image found: return null or a default image URL
     return null; // or return '/path/to/default/image.jpg';
 }
 

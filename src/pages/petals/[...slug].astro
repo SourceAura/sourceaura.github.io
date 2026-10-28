@@ -6,9 +6,7 @@ import Giscus from "@components/Giscus.astro";
 import PostNavigation from "@components/PostNavigation.astro";
 import { readingTime } from "@utils/utils";
 
-/* ─────────────────────────────────────────────
-   Static paths
-   ───────────────────────────────────────────── */
+/* Static paths */
 export async function getStaticPaths() {
   const posts = (await getCollection("petals")).filter((p) => !p.data.draft);
   return posts.map((post) => ({ params: { slug: post.slug }, props: post }));
@@ -16,9 +14,7 @@ export async function getStaticPaths() {
 
 type Props = CollectionEntry<"petals">;
 
-/* ─────────────────────────────────────────────
-   Current post
-   ───────────────────────────────────────────── */
+/* Current post */
 const post = Astro.props as Props;
 const { Content } = await post.render();
 
@@ -60,9 +56,7 @@ const nextPost =
       {post.data.title}
     </div>
 
-    <!-- ══════════════════════════════════════════
-         CINEMATIC HERO
-         ══════════════════════════════════════════ -->
+    <!-- Cinematic hero -->
     <section class="hero" data-hero>
       <div class="hero-frame">
         {
@@ -81,9 +75,7 @@ const nextPost =
       </h1>
     </section>
 
-    <!-- ══════════════════════════════════════════
-         TELEMETRY STRIP
-         ══════════════════════════════════════════ -->
+    <!-- Telemetry strip -->
     <div class="telemetry" data-reveal>
       <span class="chip">
         <span class="chip-label">Date</span>
@@ -103,9 +95,7 @@ const nextPost =
       </a>
     </div>
 
-    <!-- ══════════════════════════════════════════
-         ARTICLE — THE READING CHAMBER
-         ══════════════════════════════════════════ -->
+    <!-- Article: the reading chamber -->
     <article class="article-card scan-sweep" data-pagefind-body data-reveal>
       <!-- HUD corner brackets -->
       <div class="corner-brackets" aria-hidden="true">
@@ -171,22 +161,16 @@ const nextPost =
       </div>
     </article>
 
-    <!-- ══════════════════════════════════════════
-         PREV / NEXT NAVIGATION
-         ══════════════════════════════════════════ -->
+    <!-- Prev / next navigation -->
     <PostNavigation prevPost={prevPost} nextPost={nextPost} />
 
-    <!-- ══════════════════════════════════════════
-         BACK TO ORBIT
-         ══════════════════════════════════════════ -->
+    <!-- Back to orbit -->
     <a href="/" class="back-to-orbit">
       <span aria-hidden="true">←</span>
       <span>Back to Orbit</span>
     </a>
 
-    <!-- ══════════════════════════════════════════
-         GISCUS COMMENTS
-         ══════════════════════════════════════════ -->
+    <!-- Giscus comments -->
     <div id="giscus-wrapper" class="comments is-collapsed">
       <Giscus />
     </div>
@@ -196,12 +180,10 @@ const nextPost =
   <div class="reading-progress" aria-hidden="true" />
 </Layout>
 
-<!-- ─────────────────────────────────────────────
-     SCRIPTS
-     ───────────────────────────────────────────── -->
+<!-- Scripts -->
 <script is:inline>
   (() => {
-    /* ── Accent coloration ──────────────────────
+    /* Accent coloration.
        Sample the hero image's dominant colour and tint the whole page. */
     const heroImg = document.querySelector("[data-hero-img]");
     const root = document.documentElement;
@@ -276,7 +258,7 @@ const nextPost =
       else heroImg.addEventListener("load", applyAccent, { once: true });
     }
 
-    /* ── Reading progress bar ─────────────────── */
+    /* Reading progress bar */
     const progress = document.querySelector(".reading-progress");
     if (progress) {
       let ticking = false;
@@ -297,7 +279,7 @@ const nextPost =
       update();
     }
 
-    /* ── Staggered entrance choreography ──────── */
+    /* Staggered entrance choreography */
     const revealEls = document.querySelectorAll("[data-reveal]");
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -316,7 +298,7 @@ const nextPost =
       });
     }
 
-    /* ── Giscus message listener (counts) ────── */
+    /* Giscus message listener (counts) */
     const onGiscusMessage = (event) => {
       if (event.origin !== "https://giscus.app") return;
       const g = event.data?.giscus;
@@ -353,7 +335,7 @@ const nextPost =
     window.addEventListener("message", onGiscusMessage);
     __cleanups.push(() => window.removeEventListener("message", onGiscusMessage));
 
-    /* ── Giscus toggle ───────────────────────── */
+    /* Giscus toggle */
     const toggle = document.querySelector("[data-toggle-giscus]");
     const giscus = document.getElementById("giscus-wrapper");
     if (toggle && giscus) {
@@ -367,13 +349,10 @@ const nextPost =
 </script>
 
 <style>
-  /* ══════════════════════════════════════════════════════════════
-     PETAL POST PAGE — HUD card design language
-     The card opened up into a full room. Same DNA, expanded.
-     ══════════════════════════════════════════════════════════════ */
+  /* Petal post page: HUD card design language */
 
 
-  /* ---------- Ghost typography ---------- */
+  /* Ghost typography */
   .ghost-title {
     position: fixed;
     top: 50%;
@@ -394,7 +373,7 @@ const nextPost =
     max-width: 100vw;
   }
 
-  /* ---------- Cinematic hero ---------- */
+  /* Cinematic hero */
   .hero {
     position: relative;
     margin-bottom: 2rem;
@@ -467,7 +446,7 @@ const nextPost =
     z-index: 1;
   }
 
-  /* Hero title — overlaid at lower edge, layered 3D text-shadow */
+  /* Hero title: overlaid at lower edge, layered 3D text-shadow */
   .hero-title {
     position: absolute;
     bottom: 1.5rem;
@@ -486,7 +465,7 @@ const nextPost =
     line-height: 1.2;
   }
 
-  /* ---------- Telemetry strip ---------- */
+  /* Telemetry strip */
   .telemetry {
     display: flex;
     gap: 0.75rem;
@@ -542,7 +521,7 @@ const nextPost =
     50% { opacity: 1; transform: scale(1.04); }
   }
 
-  /* ---------- Article card — the reading chamber ---------- */
+  /* Article card: the reading chamber */
   .article-card {
     position: relative;
     border-radius: 16px;
@@ -599,7 +578,7 @@ const nextPost =
     z-index: 1;
   }
 
-  /* Article content — centered reading column */
+  /* Article content: centered reading column */
   .article-content {
     position: relative;
     z-index: 2;
@@ -694,7 +673,7 @@ const nextPost =
     padding: 0;
   }
 
-  /* ---------- Reaction / comment controls ---------- */
+  /* Reaction / comment controls */
   .article-controls {
     display: flex;
     gap: 1rem;
@@ -751,7 +730,7 @@ const nextPost =
     color: var(--pc-accent);
   }
 
-  /* ---------- Reading progress bar ---------- */
+  /* Reading progress bar */
   .reading-progress {
     position: fixed;
     top: 0;
@@ -764,7 +743,7 @@ const nextPost =
     will-change: width;
   }
 
-  /* ---------- Back to orbit ---------- */
+  /* Back to orbit */
   .back-to-orbit {
     display: inline-flex;
     align-items: center;
@@ -785,7 +764,7 @@ const nextPost =
     color: var(--pc-accent);
   }
 
-  /* ---------- Giscus wrapper ---------- */
+  /* Giscus wrapper */
   #giscus-wrapper {
     position: relative;
     border-radius: 16px;
@@ -823,7 +802,7 @@ const nextPost =
     max-width: 100%;
   }
 
-  /* ---------- Entrance choreography ---------- */
+  /* Entrance choreography */
   [data-reveal] {
     opacity: 0;
     transform: translateY(20px);
@@ -835,7 +814,7 @@ const nextPost =
     transform: translateY(0);
   }
 
-  /* ---------- Responsive ---------- */
+  /* Responsive */
   @media (max-width: 640px) {
     .article-card {
       padding: 1.5rem;
@@ -881,7 +860,7 @@ const nextPost =
     }
   }
 
-  /* ---------- Reduced motion ---------- */
+  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     .hero-scanline,
     .chip {

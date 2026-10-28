@@ -1,6 +1,6 @@
 ---
 title: "Euthymia: Soul Alterz"
-description: "A full multiplayer web game — client, server, lore, and an ethical-hacking game loop. Playable right here."
+description: "A full multiplayer web game: client, server, lore, and an ethical-hacking game loop. Playable right here."
 date: "2026-10-18"
 demoURL: "https://sourceaura.vercel.app/euthymia"
 repoURL: "https://github.com/SourceAura/Euthymia"
@@ -12,22 +12,22 @@ draft: false
 
 ![Euthymia: Soul Alterz](/images/euthymia.png)
 
-{/* NOTE: the v1 repo (SourceAura/Euthymia) is private — keep that in mind
+{/* NOTE: the v1 repo (SourceAura/Euthymia) is private; keep that in mind
     when this petal goes live. The demo link points at the playable
     portfolio slice on /euthymia, which is public. Consider making a
     public mirror of the v1 code, or point repoURL at the portfolio repo
     until then. */}
 
-> A multiplayer web game with a soul — and a security layer.
+> A multiplayer web game with a soul, and a security layer.
 
 **Euthymia: Soul Alterz** is a full client/server multiplayer web game I'm
 building toward publish: web first, then PWA, itch.io, and Steam.
-Free-to-play, never pay-to-win — the design doc says it plainly: *sell
+Free-to-play, never pay-to-win. The design doc says it plainly: *sell
 identity, never power.*
 
 ## The world
 
-Protocol War lore. Three races — Shardborn, Ghostborn, Qi-born — two
+Protocol War lore. Three races (Shardborn, Ghostborn, Qi-born), two
 factions, Sanctum base building, an Archivist shop, and a QC economy.
 The vertical slice is ~85%: the core loop and multiplayer are live.
 
@@ -35,18 +35,18 @@ The vertical slice is ~85%: the core loop and multiplayer are live.
 
 - **TypeScript client + server**, real client/server architecture with a
   live connection between them.
-- **GitHub + Discord OAuth, fail-closed** — verified working, secrets in a
+- **GitHub + Discord OAuth, fail-closed**: verified working, secrets in a
   gitignored `.env`, auth that refuses to run misconfigured.
-- **The Yokai loop** — gamified ethical hacking as a game mechanic: scan →
+- **The Yokai loop**: gamified ethical hacking as a game mechanic: scan →
   analyze the vulnerability → synthesize a patch → deploy it → earn the
   bounty. Security *is* the gameplay.
-- **Security-before-deploy discipline** — the server is a monolith with no
+- **Security-before-deploy discipline**: the server is a monolith with no
   persistence yet, and it stays private until validation, auth hardening,
   and tests are in. No shipping secrets.
 
 ## Playable here
 
-The portfolio slice — the text-game chapel of the full cathedral — runs
+The portfolio slice (the text-game chapel of the full cathedral) runs
 live on this site at [/euthymia](/euthymia).
 
 *Status: vertical slice live. Publish path: web app → PWA → itch.io → Steam.*

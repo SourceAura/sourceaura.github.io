@@ -18,7 +18,7 @@
   #qi-root {
     position: fixed;
     inset: 0;
-    z-index: 1; /* behind page content — home raises it, see global.css */
+    z-index: 1; /* behind page content: home raises it, see global.css */
     pointer-events: none;
     perspective: 1500px;
     transform-style: preserve-3d;
@@ -38,7 +38,7 @@
     pointer-events: none;
   }
 
-  /* ✅ Only the core area is interactive */
+  /* Only the core area is interactive */
   #qi-core-hit {
     position: absolute;
     left: var(--qi-center-x, 50%);
@@ -67,7 +67,7 @@ if (!window.__qiInit) {
   const canvas = document.getElementById("qi-vis");
   const ctx = canvas?.getContext("2d", { alpha: true });
 
-  // ───────────────── CORE STATE (REQUIRED) ─────────────────
+  // Core state (required)
 
   let isLight = false;
   let isMobile =
@@ -100,7 +100,7 @@ if (!window.__qiInit) {
     return x * x + y * y <= CORE_RADIUS * CORE_RADIUS;
   }
 
-  // ✅ Switch interaction to the dedicated core hit target (no page-blocking)
+  // Switch interaction to the dedicated core hit target (no page-blocking)
   const HOLD_MS = 420;
   let holdTimer = 0;
   let holdFired = false;
@@ -143,12 +143,12 @@ if (!window.__qiInit) {
     holdFired = false;
   });
 
-  /* ───────── PETAL TOGGLE (CORE-LIMITED) ───────── */
+  /* Petal toggle (core-limited) */
 
   const BINS = 240;
   const audio = new Float32Array(BINS);
   const smooth = new Float32Array(BINS);
-  /* ───────────────── THEME ───────────────── */
+  /* Theme */
   function updateTheme() {
     isLight = document.documentElement.classList.contains("light");
   }
@@ -158,7 +158,7 @@ if (!window.__qiInit) {
     attributeFilter: ["class"],
   });
 
-  /* ───────────────── RESIZE (DETHRASH) ───────────────── */
+  /* Resize (dethrash) */
   let lastW = 0;
   let lastH = 0;
   let resizeQueued = false;
@@ -198,7 +198,7 @@ if (!window.__qiInit) {
   addEventListener("resize", queueResize, { passive: true });
   addEventListener("orientationchange", queueResize, { passive: true });
 
-  /* ───────────────── BATTERY-AWARE THROTTLING 🔋 ───────────────── */
+  /* Battery-aware throttling */
   let perfScale = 1; // 1 = full
 
   async function initBattery() {
@@ -229,7 +229,7 @@ if (!window.__qiInit) {
   }
   initBattery();
 
-  /* ───────────────── DEVICE TILT PARALLAX 🌐 (THROTTLED) ───────────────── */
+  /* Device tilt parallax (throttled) */
   let tiltX = 0; // -1..1
   let tiltY = 0; // -1..1
   let tiltOK = false;
@@ -263,7 +263,7 @@ if (!window.__qiInit) {
     );
   }
 
-  /* ───────────────── OM ENTRAINMENT (CACHED READ) ───────────────── */
+  /* OM entrainment (cached read) */
   let omPulse = 0.5;
   function sampleOmPulse() {
     const v = getComputedStyle(document.documentElement).getPropertyValue(
@@ -279,7 +279,7 @@ if (!window.__qiInit) {
     return omPulse;
   }
 
-  /* ───────────────── WAKE STATE ───────────────── */
+  /* Wake state */
   let wake = 0;
   function setWake(on) {
     wake += on ? 0.25 : -0.12;
@@ -290,7 +290,7 @@ if (!window.__qiInit) {
     if (e.key === "Escape") setWake(false);
   });
 
-  /* ───────────────── AUDIO MOCK ───────────────── */
+  /* Audio mock */
   function updateAudio() {
     for (let i = 0; i < audio.length; i++) {
       audio[i] = Math.max(
@@ -300,7 +300,7 @@ if (!window.__qiInit) {
     }
   }
 
-  /* ───────────────── FFT SMOOTHING (FAST ATTACK, SLOW RELEASE) ───────────────── */
+  /* FFT smoothing (fast attack, slow release) */
   function smoothFFT() {
     const attack = 0.22 * perfScale + 0.06;
     const release = 0.06 * perfScale + 0.02;
@@ -320,7 +320,7 @@ if (!window.__qiInit) {
     }
   }
 
-  /* ───────────────── SESSION MEMORY ───────────────── */
+  /* Session memory */
   const PHASE_KEY = "qi-neural-phase";
   let sessionPhase =
     Number(localStorage.getItem(PHASE_KEY)) || Math.random() * Math.PI * 2;
@@ -328,7 +328,7 @@ if (!window.__qiInit) {
     localStorage.setItem(PHASE_KEY, sessionPhase.toFixed(4));
   }, 5000);
 
-  /* ───────────────── RIPPLES ───────────────── */
+  /* Ripples */
   const RIPPLES = [];
 
   function createRipple() {
@@ -342,7 +342,7 @@ if (!window.__qiInit) {
     }
   }
 
-  /* ───────────────── CEPHALON CORE ───────────────── */
+  /* Cephalon core */
   function drawCephalon(radius) {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
@@ -393,7 +393,7 @@ if (!window.__qiInit) {
     ctx.restore();
   }
 
-  /* ───────────────── MAIN DRAW ───────────────── */
+  /* Main draw */
   let lastT = performance.now();
   let tickN = 0;
 
@@ -441,7 +441,6 @@ if (!window.__qiInit) {
     const neuralRadius = 36;
 
     if (heavyFrame || prefersReduced) {
-      // dust removed
     }
 
     drawCephalon(cephalonRadius);
@@ -546,7 +545,6 @@ if (!window.__qiInit) {
     start();
   }
 
-  // Emit qi center update event
   function updateQiCenter() {
     const qi = document.getElementById("qi-root");
     if (!qi) return;
@@ -559,7 +557,6 @@ if (!window.__qiInit) {
     document.documentElement.style.setProperty("--qi-center-y", `${centerY}px`);
   }
 
-  // initial + responsive
   updateQiCenter();
   addEventListener("resize", updateQiCenter);
   addEventListener("orientationchange", updateQiCenter);

@@ -1,9 +1,7 @@
 
-/* ══════════════════════════════════════════════════════════════
-   EUTHYMIA — cultivation chamber
-   ══════════════════════════════════════════════════════════════ */
+/* Euthymia: cultivation chamber */
 
-/* ---------- Ghost typography ---------- */
+/* Ghost typography */
 .ghost-euthymia {
   position: fixed;
   top: 50%;
@@ -20,7 +18,7 @@
   user-select: none;
 }
 
-/* ---------- velkaa framing ---------- */
+/* velkaa framing */
 .euthymia-vignette {
   position: fixed;
   inset: 0;
@@ -61,7 +59,7 @@ html.light .euthymia-vignette {
 .bracket.bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
 .bracket.br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
 
-/* ---------- Laser scanline ---------- */
+/* Laser scanline */
 .laser-scanline {
   position: fixed;
   top: 0;
@@ -79,7 +77,7 @@ html.light .euthymia-vignette {
   to { top: 102%; }
 }
 
-/* ---------- Level-up flare ---------- */
+/* Level-up flare */
 .level-flare {
   position: fixed;
   inset: 0;
@@ -91,7 +89,7 @@ html.light .euthymia-vignette {
 }
 .level-flare.is-active { opacity: 1; }
 
-/* ---------- Game container ---------- */
+/* Game container */
 .game-container {
   position: relative;
   z-index: 5;
@@ -101,7 +99,7 @@ html.light .euthymia-vignette {
   padding: 2rem 1rem;
 }
 
-/* ---------- HUD ---------- */
+/* HUD */
 .hud {
   padding: 1.5rem;
   background: rgba(8, 10, 18, 0.86);
@@ -134,7 +132,7 @@ html.light .euthymia-vignette {
 
 .dc-char { display: inline-block; }
 
-/* ---------- HUD chips ---------- */
+/* HUD chips */
 .hud-stats {
   display: flex;
   gap: 0.5rem;
@@ -173,7 +171,7 @@ html.light .euthymia-vignette {
   50% { opacity: 1; transform: scale(1.04); }
 }
 
-/* ---------- Ascension progress bar ---------- */
+/* Ascension progress bar */
 .ascension-bar {
   height: 3px;
   background: rgba(255, 255, 255, 0.08);
@@ -189,7 +187,7 @@ html.light .euthymia-vignette {
   transition: width 0.5s ease;
 }
 
-/* ---------- Log (reading well) ---------- */
+/* Log (reading well) */
 .log {
   max-width: 60ch;
   margin: 0 auto 1.5rem;
@@ -200,7 +198,7 @@ html.light .euthymia-vignette {
   position: relative;
 }
 
-/* ⛔ SACRED — DO NOT TOUCH the text fade ⛔ */
+/* Do not touch the text fade. */
 .log-entry {
   font-family: "Geist Mono", monospace;
   font-size: 0.8rem;
@@ -224,7 +222,7 @@ html.light .euthymia-vignette {
 }
 /* ⛔ END SACRED ⛔ */
 
-/* ---------- Action pills ---------- */
+/* Action pills */
 .actions {
   display: flex;
   justify-content: center;
@@ -278,7 +276,7 @@ html.light .action-pill:hover {
   margin-top: 1rem;
 }
 
-/* ---------- Modals ---------- */
+/* Modals */
 .modal {
   display: none;
   position: fixed;
@@ -367,7 +365,7 @@ html.light .action-pill:hover {
 }
 .close:hover { color: var(--pc-accent); }
 
-/* ---------- Innovate modal ---------- */
+/* Innovate modal */
 .innovation {
   display: flex;
   flex-direction: column;
@@ -385,7 +383,7 @@ html.light .action-pill:hover {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* ---------- Crafting modal ---------- */
+/* Crafting modal */
 .crafting-list {
   display: flex;
   flex-direction: column;
@@ -409,7 +407,7 @@ html.light .action-pill:hover {
   border-color: color-mix(in oklch, var(--pc-accent) 40%, transparent);
 }
 
-/* ---------- Cultivate modal ---------- */
+/* Cultivate modal */
 .cultivate-content { text-align: center; }
 
 .cultivate-title {
@@ -475,7 +473,7 @@ html.light .action-pill:hover {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* ---------- Explore modal ---------- */
+/* Explore modal */
 #exploreOptions {
   display: flex;
   flex-direction: column;
@@ -499,7 +497,7 @@ html.light .action-pill:hover {
   border-color: color-mix(in oklch, var(--pc-accent) 40%, transparent);
 }
 
-/* ---------- Sparks ---------- */
+/* Sparks */
 .spark {
   position: fixed;
   width: 4px;
@@ -515,7 +513,7 @@ html.light .action-pill:hover {
   to { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
 }
 
-/* ---------- Responsive ---------- */
+/* Responsive */
 @media (max-width: 360px) {
   .game-container { padding: 1rem 0.5rem; }
   .hud { padding: 1rem; }
@@ -525,7 +523,7 @@ html.light .action-pill:hover {
   .bracket { width: 16px; height: 16px; }
 }
 
-/* ---------- Reduced motion ---------- */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .spark { display: none; }
   .laser-scanline { animation: none; }

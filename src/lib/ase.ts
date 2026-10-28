@@ -13,14 +13,12 @@ export interface AseTelemetry {
   searchCount: number;
   searchDepth: number;
   timeOnSite: number;
-  // Enhanced metrics
   scrollAcceleration: number;
   clickHeatmap: number;
   keyboardRhythm: number;
   sessionDepth: number;
   focusIntensity: number;
   explorationPattern: number;
-  // Autonomous training metrics
   trainingEpochs: number;
   lastMilestone: number;
   breakthroughLevel: number;
@@ -66,14 +64,12 @@ export class AseClient {
     searchCount: 0,
     searchDepth: 0,
     timeOnSite: 0,
-    // Enhanced metrics
     scrollAcceleration: 0,
     clickHeatmap: 0,
     keyboardRhythm: 0,
     sessionDepth: 0,
     focusIntensity: 0,
     explorationPattern: 0,
-    // Autonomous training metrics
     trainingEpochs: 0,
     lastMilestone: 0,
     breakthroughLevel: 0,
@@ -120,7 +116,6 @@ export class AseClient {
   }
 
   private getCurrentSection(): string {
-    // Detect current section based on scroll position and elements
     const sections = document.querySelectorAll("section, [id]");
     const scrollY = window.scrollY;
     
@@ -153,7 +148,6 @@ export class AseClient {
   private calculateClickConcentration(clicks: Array<{x: number, y: number, time: number}>): number {
     if (clicks.length < 2) return 0;
     
-    // Calculate average distance between clicks
     let totalDistance = 0;
     let count = 0;
     
@@ -165,17 +159,14 @@ export class AseClient {
     }
     
     const avgDistance = count > 0 ? totalDistance / count : 0;
-    // Lower average distance = higher concentration
     return Math.max(0, 1 - avgDistance);
   }
 
   private updateCadenceEnergy() {
-    // Calculate energy based on recent activity patterns
     const recentActivity = this.metrics.interactionCount / Math.max((Date.now() - this.startTime) / 1000, 1);
     const scrollEnergy = this.metrics.scrollVelocity;
     const focusEnergy = this.metrics.focusIntensity;
     
-    // Combine different energy sources
     this.metrics.cadenceEnergy = (
       recentActivity * 0.4 +
       scrollEnergy * 0.3 +
@@ -193,7 +184,6 @@ export class AseClient {
   private initTrackers() {
     this.updateContext();
     
-    // Enhanced Scroll Velocity & Acceleration
     let lastScrollY = window.scrollY;
     let lastScrollTime = Date.now();
     let lastVelocity = 0;
@@ -209,12 +199,10 @@ export class AseClient {
         currentVelocity = dy / dt; // px/ms
         this.metrics.scrollVelocity = currentVelocity * 10; // reduced scaling
         
-        // Calculate acceleration
         const acceleration = Math.abs(currentVelocity - lastVelocity) / dt * 1000;
         this.metrics.scrollAcceleration = Math.min(acceleration, 1.0);
         lastVelocity = currentVelocity;
         
-        // Track scroll patterns
         scrollEvents.push({ time: now, velocity: currentVelocity });
         if (scrollEvents.length > 100) scrollEvents.shift();
         
@@ -226,7 +214,6 @@ export class AseClient {
       lastScrollTime = now;
     }, { passive: true });
 
-    // Velocity decay
     setInterval(() => {
       if (Date.now() - lastScrollTime > 100) { // decay after 100ms of no scroll
         currentVelocity *= 0.85; // exponential decay
@@ -237,24 +224,19 @@ export class AseClient {
       }
     }, 50);
 
-    // Enhanced Click Heatmap Tracking
     const clickPositions: Array<{x: number, y: number, time: number}> = [];
     window.addEventListener("click", (e) => {
       this.metrics.interactionCount++;
       
-      // Track click positions for heatmap analysis
       const x = e.clientX / window.innerWidth;
       const y = e.clientY / window.innerHeight;
       clickPositions.push({ x, y, time: Date.now() });
       
-      // Keep only recent clicks
       clickPositions.splice(0, clickPositions.length, ...clickPositions.filter(pos => Date.now() - pos.time < 30000));
       
-      // Calculate click concentration (heatmap intensity)
       this.metrics.clickHeatmap = this.calculateClickConcentration(clickPositions);
     }, { passive: true });
 
-    // Enhanced Keyboard Rhythm Tracking
     const keyTimes: number[] = [];
     window.addEventListener("keydown", () => {
       this.metrics.interactionCount++;
@@ -262,10 +244,8 @@ export class AseClient {
       const now = Date.now();
       keyTimes.push(now);
       
-      // Keep only recent keystrokes
       keyTimes.splice(0, keyTimes.length, ...keyTimes.filter(time => now - time < 10000));
       
-      // Calculate typing rhythm variance
       if (keyTimes.length > 2) {
         const intervals: number[] = [];
         for (let i = 1; i < keyTimes.length; i++) {
@@ -277,7 +257,6 @@ export class AseClient {
       }
     }, { passive: true });
 
-    // Session Depth & Exploration Pattern
     let visitedSections = new Set();
     let pageTransitions = 0;
     
@@ -289,7 +268,6 @@ export class AseClient {
       }
     };
     
-    // Track page transitions for exploration pattern
     let lastPage = window.location.pathname;
     const checkPageTransition = () => {
       const currentPage = window.location.pathname;
@@ -301,7 +279,6 @@ export class AseClient {
       }
     };
     
-    // Focus Intensity Tracking
     const focusEvents: number[] = [];
     let lastFocusTime = Date.now();
     
@@ -310,7 +287,6 @@ export class AseClient {
       const focusDuration = now - lastFocusTime;
       focusEvents.push(focusDuration);
       
-      // Keep only recent focus events
       focusEvents.splice(0, focusEvents.length, ...focusEvents.filter(duration => duration < 300000)); // 5 minutes
       
       if (focusEvents.length > 0) {
@@ -321,7 +297,6 @@ export class AseClient {
       lastFocusTime = now;
     };
     
-    // Track various user activities
     // Declared above its first use so the handlers below never close over a
     // `let` that is still in its temporal dead zone.
     let lastActivity = Date.now();
@@ -342,10 +317,8 @@ export class AseClient {
       trackFocus();
     }, { passive: true });
     
-    // Check for page transitions
     setInterval(checkPageTransition, 1000);
 
-    // Idle Tracking
     setInterval(() => {
       const now = Date.now();
       const idle = now - lastActivity;
@@ -355,7 +328,6 @@ export class AseClient {
       this.metrics.idleRatio = this.metrics.idleTime / (now - this.startTime);
       this.metrics.timeOnSite = (now - this.startTime) / 60000;
       
-      // Update cadence energy based on recent activity
       this.updateCadenceEnergy();
     }, 1000);
   }
@@ -363,7 +335,6 @@ export class AseClient {
   public async sync() {
     if (!ASE_ENABLED) return;
 
-    // Enhanced vector with sophisticated metrics
     const vector = [
       this.clamp(this.metrics.scrollVelocity * 20),
       this.clamp(this.metrics.scrollAcceleration),
@@ -395,7 +366,6 @@ export class AseClient {
         this.lastUpdate = Date.now();
         this.dispatchUpdate(data.embedding, this.lastLatency);
         
-        // Auto-Trigger HUD on behavioral variance
         if (import.meta.env.DEV && Math.abs(data.embedding[0]) > 0.85) {
           window.dispatchEvent(new CustomEvent("qi:toggle-petals"));
         }
@@ -410,7 +380,6 @@ export class AseClient {
   public async logSession() {
     if (!ASE_ENABLED) return false;
 
-    // Enhanced vector for training data
     const vector = [
       this.clamp(this.metrics.scrollVelocity * 20),
       this.clamp(this.metrics.scrollAcceleration),
@@ -466,7 +435,7 @@ export class AseClient {
     }
 
     // Autonomous training milestone detection. Emitted as an event rather than
-    // injected as a floating DOM node — the HUD decides how to surface it.
+    // injected as a floating DOM node: the HUD decides how to surface it.
     this.metrics.trainingEpochs++;
     const currentMilestone = Math.floor(this.metrics.trainingEpochs / 100); // Every 100 epochs
 

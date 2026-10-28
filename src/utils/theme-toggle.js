@@ -9,17 +9,14 @@ function setupThemeToggle() {
     : "light";
   const initialTheme = savedTheme || systemTheme;
 
-  // Apply the initial theme
   applyTheme(initialTheme);
 
-  // Theme toggle event listener
   themeToggle?.addEventListener("click", () => {
     const currentTheme = html.classList.contains("dark") ? "dark" : "light";
     const newTheme = currentTheme === "dark" ? "light" : "dark";
     applyTheme(newTheme);
   });
 
-  // Listen for system theme changes
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
     if (!localStorage.getItem("theme")) {
       applyTheme(e.matches ? "dark" : "light");
@@ -34,7 +31,6 @@ function applyTheme(theme) {
   localStorage.setItem("theme", theme);
 }
 
-// Run the setup on initial load
 document.addEventListener("DOMContentLoaded", setupThemeToggle);
 
 // Re-run the setup when the content changes (for Astro page changes)

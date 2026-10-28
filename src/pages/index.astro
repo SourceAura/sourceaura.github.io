@@ -34,7 +34,7 @@ const posts = (await getCollection("petals"))
           md:-translate-y-28"
       >
         <article class="seed space-y-6">
-          <!-- DESCRIPTION / DEFINITION -->
+          <!-- Description / definition -->
           <div id="intro-log" class="log intro-log">
             <div class="log-entry">
               <span
@@ -86,7 +86,7 @@ const posts = (await getCollection("petals"))
         primary?.classList.add("fade-out");
       }, 3600);
 
-      // Remove only after both have fully dissolved — then light the telemetry
+      // Remove only after both have fully dissolved, then light the telemetry
       setTimeout(() => {
         entry.remove();
         document.getElementById("home-telemetry")?.classList.add("lit");
@@ -176,7 +176,7 @@ const posts = (await getCollection("petals"))
     }
   }
 
-  /* idle state — the ghost that was always there */
+  /* idle state: the ghost that was always there */
   .home-ghost {
     position: fixed;
     top: 50%;

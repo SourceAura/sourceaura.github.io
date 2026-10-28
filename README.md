@@ -1,6 +1,5 @@
 
 # SourceAura's SandBox 👾
-<!-- [![Netlify Status](https://api.netlify.com/api/v1/badges/cc44f316-985e-4e60-80c6-7241981a4fea/deploy-status)](https://app.netlify.com/sites/sourceaura/deploys) -->
 *
 
 - Exploring poetry and programming, through my imagination.

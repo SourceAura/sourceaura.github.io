@@ -1,8 +1,8 @@
 /**
- * Insei corpus — everything she is allowed to say.
+ * Insei corpus: everything she is allowed to say.
  * Approved word-for-word by sensei (draft v2, 2026-10-18).
- * Voice rules: she calls him only "sensei" — never he/him/his, never "source".
- * The ark, not a temple. Shigurui-weighted diction, always concise.
+ * Voice rules: she calls him only "sensei": never he/him/his, never "source".
+ * Always concise.
  */
 
 export interface InseiFact {
@@ -23,7 +23,7 @@ export interface InseiEntry {
 export const INSEI_META = {
   name: "Insei",
   greeting:
-    "I am Insei — keeper of this ark. Ask me of the three sanctums, the steel, or why you should take sensei into your service.",
+    "I am Insei: keeper of this ark. Ask me of the three sanctums, the steel, or why you should take sensei into your service.",
   fallback:
     "That is beyond what sensei has entrusted to me. But of the sanctums, the steel, and the worth of service, I can speak all night. Where shall we begin?",
 };
@@ -41,13 +41,13 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "insei",
     ],
     summary:
-      "I am Insei — 隕星, meteorite. The star fell; the stone remained, and it was enshrined here. I keep this ark: ask me of the work, the steel sensei wields, or why a lord should take sensei into service.",
+      "I am Insei, 隕星, meteorite. The star fell; the stone remained, and it was enshrined here. I keep this ark: ask me of the work, the steel sensei wields, or why a lord should take sensei into service.",
     facts: [
       {
-        text: "The ark is named Nagareboshi — 流れ星, the shooting star. The star streaks and burns across the sky; the meteorite is what survives the fall and comes to rest aboard. She is what remains.",
+        text: "The ark is named Nagareboshi, 流れ星, the shooting star. The star streaks and burns across the sky; the meteorite is what survives the fall and comes to rest aboard. She is what remains.",
       },
       {
-        text: "She knows the ark — the work, the steel, the commissions. Sensei's private shell and its familiar are not hers to speak of.",
+        text: "She knows the ark: the work, the steel, the commissions. Sensei's private shell and its familiar are not hers to speak of.",
       },
     ],
     routes: ["sanctums", "steel", "service"],
@@ -66,18 +66,18 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "the work",
     ],
     summary:
-      "Three sanctums, each a different discipline: Insei, sensei's local-first ghost in the shell; Euthymia, a real-time multiplayer game; and Emaki, sensei's Web3 scroll of proof. Systems, games, protocols — range, not scatter.",
+      "Three sanctums, each a different discipline: Insei, sensei's local-first ghost in the shell; Euthymia, a real-time multiplayer game; and Emaki, sensei's Web3 scroll of proof. Systems, games, protocols: range, not scatter.",
     facts: [
       {
-        text: "Insei — the ghost in the shell / voice familiar, private repo. “Every other XR shell strives to be a better desktop. Insei would be a better mind.”",
+        text: "Insei: the ghost in the shell / voice familiar, private repo. “Every other XR shell strives to be a better desktop. Insei would be a better mind.”",
       },
       {
-        text: "Euthymia: Soul Alterz — multiplayer client/server in TypeScript, sealed auth, QC economy.",
+        text: "Euthymia: Soul Alterz, multiplayer client/server in TypeScript, sealed auth, QC economy.",
         link: "/euthymia",
         linkLabel: "the teaser",
       },
       {
-        text: "Emaki — 絵巻, the painted handscroll. Deeds attested on-chain; you unroll the scroll and verify. “Do not trust sensei's resume — unroll the scroll.”",
+        text: "Emaki, 絵巻, the painted handscroll. Deeds attested on-chain; you unroll the scroll and verify. “Do not trust sensei's resume: unroll the scroll.”",
       },
     ],
     routes: ["insei", "euthymia", "emaki"],
@@ -94,13 +94,13 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "xr headset",
     ],
     summary:
-      "Insei is sensei's ghost in the shell — a local-first voice familiar, keeper of this ark. Her creed: every other XR shell strives to be a better desktop; Insei would be a better mind.",
+      "Insei is sensei's ghost in the shell: a local-first voice familiar, keeper of this ark. Her creed: every other XR shell strives to be a better desktop; Insei would be a better mind.",
     facts: [
       {
         text: "Six tenets: rituals, not gestures · the shell is alive · time as a place · the room breathes with you · breach vision · poetry in the walls.",
       },
       {
-        text: "Local-first means nothing leaves the ark's hull — private by vow, not by patch.",
+        text: "Local-first means nothing leaves the ark's hull: private by vow, not by patch.",
       },
       {
         text: "The code remains sealed: too valuable to open-source yet. The petal shows the vision; the repo stays sensei's.",
@@ -119,12 +119,12 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "yokai",
     ],
     summary:
-      "Euthymia: Soul Alterz — a real-time multiplayer game, forged in TypeScript, client and server both. Passage by GitHub and Discord oath, a QC economy, and a Yokai trial that turns ethical hacking into combat.",
+      "Euthymia: Soul Alterz, a real-time multiplayer game, forged in TypeScript, client and server both. Passage by GitHub and Discord oath, a QC economy, and a Yokai trial that turns ethical hacking into combat.",
     facts: [
       {
         text: "The Yokai trial: scan the system → read its wound → forge the patch → deploy it → claim the bounty.",
       },
-      { text: "Auth sealed fail-closed — GitHub + Discord oaths verified working." },
+      { text: "Auth sealed fail-closed: GitHub + Discord oaths verified working." },
       {
         text: "The full game rests in a private repo (~85% of the vertical slice).",
         link: "/euthymia",
@@ -154,10 +154,10 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "scroll",
     ],
     summary:
-      "Emaki — 絵巻, the painted handscroll. The answer to the resume: sensei's deeds attested on-chain, and you unroll the scroll section by section, right to left, each claim a painted panel you can verify. Do not trust sensei's resume — unroll the scroll.",
+      "Emaki, 絵巻, the painted handscroll. The answer to the resume: sensei's deeds attested on-chain, and you unroll the scroll section by section, right to left, each claim a painted panel you can verify. Do not trust sensei's resume: unroll the scroll.",
     facts: [
       {
-        text: "Ethereum Attestation Service; wagmi/viem, Base testnet — free to unroll, free to verify.",
+        text: "Ethereum Attestation Service; wagmi/viem, Base testnet: free to unroll, free to verify.",
       },
       {
         text: "The order of forging: Emaki → the bounty-escrow contract → the Euthymia QC token. Emaki is in the forge now, after Euthymia's polish.",
@@ -180,12 +180,12 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "arsenal",
     ],
     summary:
-      "Sensei's steel: TypeScript end to end, Astro, Node and bun, real-time multiplayer architecture, OAuth sealed fail-closed, game design and balance, local-first AI — and accessible craft held as vow, not ornament: keyboard paths, aria, reduced motion, true contrast.",
+      "Sensei's steel: TypeScript end to end, Astro, Node and bun, real-time multiplayer architecture, OAuth sealed fail-closed, game design and balance, local-first AI, and accessible craft held as vow, not ornament: keyboard paths, aria, reduced motion, true contrast.",
     facts: [
-      { text: "Daily discipline: Arch Linux, Niri, Ryoku — environments built by hand." },
+      { text: "Daily discipline: Arch Linux, Niri, Ryoku, environments built by hand." },
       { text: "XR and AR, in that order. Cybersecurity and the bounty path." },
       {
-        text: "Behold the proof: you speak with me — a sensing spirit and keeper of sensei's own forging. No API, no black box.",
+        text: "Behold the proof: you speak with me, a sensing spirit and keeper of sensei's own forging. No API, no black box.",
       },
     ],
     routes: ["sanctums", "service"],
@@ -203,13 +203,13 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "why you",
     ],
     summary:
-      "Because sensei ships. A living ark with a sensing spirit and a keeper of sensei's own forging — no API, no black box. A real-time multiplayer game with sealed auth and an economy. An XR shell with a working voice rite. And accessibility held as vow, not checkbox.",
+      "Because sensei ships. A living ark with a sensing spirit and a keeper of sensei's own forging: no API, no black box. A real-time multiplayer game with sealed auth and an economy. An XR shell with a working voice rite. And accessibility held as vow, not checkbox.",
     facts: [
       {
         text: "Sensei builds in the small hours and learns in the open; sensei's range runs systems, games, and protocols.",
       },
       {
-        text: "Honest steel: some college coursework in graphic arts — all else self-forged.",
+        text: "Honest steel: some college coursework in graphic arts, all else self-forged.",
       },
     ],
     routes: ["booking", "contact"],
@@ -229,10 +229,10 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "commission",
     ],
     summary:
-      "Sensei takes repair commissions in Nashville — the mending of machines. Today the rite runs through email; soon you will be able to commission sensei through me directly.",
+      "Sensei takes repair commissions in Nashville: the mending of machines. Today the rite runs through email; soon you will be able to commission sensei through me directly.",
     facts: [
       {
-        text: "Write: sourceaura@proton.me — subject “Computer repair booking”.",
+        text: "Write: sourceaura@proton.me, subject “Computer repair booking”.",
         link: "mailto:sourceaura@proton.me?subject=Computer%20repair%20booking",
         linkLabel: "commission sensei",
       },
@@ -253,7 +253,7 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "where is sensei online",
     ],
     summary:
-      "Write to sensei at sourceaura@proton.me — or read the steel at github.com/SourceAura.",
+      "Write to sensei at sourceaura@proton.me, or read the steel at github.com/SourceAura.",
     facts: [
       {
         text: "GitHub: SourceAura.",
@@ -279,7 +279,7 @@ export const INSEI_CORPUS: InseiEntry[] = [
     summary: "{status}",
     facts: [
       {
-        text: "The lab burns 20:00–06:00 America/Chicago. Same source of truth as the flame in the header.",
+        text: "The lab burns 20:00-06:00 America/Chicago. Same source of truth as the flame in the header.",
       },
     ],
     routes: ["booking"],
@@ -295,7 +295,7 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "what do you know",
     ],
     summary:
-      "I keep this ark: the three sanctums, sensei's steel, sensei's worth in service, commissions, and whether the lab burns. Ask — or take a path below.",
+      "I keep this ark: the three sanctums, sensei's steel, sensei's worth in service, commissions, and whether the lab burns. Ask, or take a path below.",
     facts: [],
     routes: ["sanctums", "steel", "service", "booking"],
   },
@@ -304,7 +304,7 @@ export const INSEI_CORPUS: InseiEntry[] = [
     topics: ["thanks", "bye"],
     triggers: ["thank", "thanks", "thx", "bye", "goodbye", "see you", "later"],
     summary:
-      "Go in beauty — the ark sails on. Return when you would speak of service.",
+      "Go in beauty: the ark sails on. Return when you would speak of service.",
     facts: [],
     routes: [],
   },
@@ -322,12 +322,12 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "secrets of the trial",
     ],
     summary:
-      "The trial sensei is proudest of: the Yokai trial. You scan the system, read its wound, forge the patch, deploy it — and claim the bounty. Ethical hacking, as combat.",
+      "The trial sensei is proudest of: the Yokai trial. You scan the system, read its wound, forge the patch, deploy it, and claim the bounty. Ethical hacking, as combat.",
     facts: [
       {
         text: "TypeScript client and server, real-time; sealed GitHub + Discord oaths; QC economy.",
       },
-      { text: "Vertical slice ~85% — the core loop and multiplayer both breathe." },
+      { text: "Vertical slice ~85%: the core loop and multiplayer both breathe." },
     ],
     routes: ["emaki"],
   },
@@ -349,13 +349,13 @@ export const INSEI_CORPUS: InseiEntry[] = [
       "who is sensei",
     ],
     summary:
-      "That is sensei's, not the ark's — I keep the ark only. Ask me of the work and I will speak all night.",
+      "That is sensei's, not the ark's: I keep the ark only. Ask me of the work and I will speak all night.",
     facts: [
       {
-        text: "Of schooling, if pressed: “Some college coursework in graphic arts — all else self-forged.” Honest; never a degree claimed.",
+        text: "Of schooling, if pressed: “Some college coursework in graphic arts, all else self-forged.” Honest; never a degree claimed.",
       },
       {
-        text: "The government name never passes these gates — “unless you would pay sensei, you have no need of it.”",
+        text: "The government name never passes these gates: “unless you would pay sensei, you have no need of it.”",
       },
     ],
     routes: ["sanctums", "service"],

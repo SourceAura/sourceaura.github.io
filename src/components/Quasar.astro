@@ -93,7 +93,7 @@ Quasar: a component that displays a StarField background.
     }
   }
 
-  // Meteors: the field's own stars going blaze — same radial warp flow as
+  // Meteors: the field's own stars going blaze, same radial warp flow as
   // every other star, just faster, bigger, brighter. Additive only.
   class Meteor {
     constructor(cx, cy, spread) {
@@ -119,7 +119,7 @@ Quasar: a component that displays a StarField background.
       const d = this.speed * dtSec;
       this.x += this.ux * d;
       this.y += this.uy * d;
-      // burn out on time or past the field edge — same boundary as the stars
+      // burn out on time or past the field edge: same boundary as the stars
       const half = spread / 2;
       const out =
         this.x < cx - half ||
@@ -227,7 +227,7 @@ Quasar: a component that displays a StarField background.
           this._raf = 0;
           return;
         }
-        // resume
+        // Resume: reset the clock so the paused interval does not jump the animation.
         this.lastTime = performance.now();
         this.lastDraw = 0;
         if (!this._raf) this._raf = requestAnimationFrame(this.frame);
